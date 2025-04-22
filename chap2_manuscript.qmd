@@ -1,0 +1,21 @@
+---
+title: A data-driven approach to identifying archetypes of farmland loss to inform policy and protection efforts
+author: Carolyn Koehn
+abstract: |
+  Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period. The processes leading to this conversion are variable and often highly localized. Uncertainty regarding the causal process of agricultural lands loss limits local efforts to address or mitigate the loss through agricultural lands protection. A better understanding of the different processes of agricultural lands loss and the associated factors can inform the development of effective, diverse toolboxes of agricultural lands protection to apply in different localities. In this chapter, I will use a multi-dimensional cluster analysis to identify archetypes of change over time in counties where agricultural lands are at risk of conversion. I will draw on data from the US Census, the American Community Survey, the US Census of Agriculture, land cover classifications from American Farmland Trust [AFT], and nature’s contributions to people models from chapter 1 to calculate descriptive metrics for 26 counties in southern Idaho that fall within the Snake River Plain ecoregion. Identifying and understanding patterns and associated indicators of working lands loss will allow for more informed and effective working lands protection and development planning. Our workflow for identifying archetypes of agricultural land loss uses publicly available data and can be used in other threatened regions to describe and address processes of land use change.
+date: last-modified
+bibliography: chap2.bib
+number-sections: true
+---
+
+Archetypes of pathways to agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. Our research questions are:
+
+1. Are there identifiable archetypes of agricultural lands loss in the western U.S.?
+2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
+3. Which of nature’s contributions to people are associated with and most threatened by different archetypes of land use change?
+
+# References {.unnumbered}
+
+:::{#refs}
+
+:::

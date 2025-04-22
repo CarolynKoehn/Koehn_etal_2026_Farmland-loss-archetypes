@@ -1,17 +1,16 @@
 project:
   type: manuscript
+  
+manuscript: 
+  article: chap2_manuscript.qmd
 
 execute:
+  echo: false
   freeze: auto
 
 format:
-  html:
-    toc: true
-    comments:
-      hypothesis: true
-  docx: default
-  jats: default
-  agu-pdf: default
+  pdf:
+    keep-tex: true
 
 
 
