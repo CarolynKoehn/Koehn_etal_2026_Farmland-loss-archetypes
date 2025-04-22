@@ -1,0 +1,142 @@
+---
+title: "NCP archetypes"
+author: "Carolyn Koehn"
+---
+
+# Setup
+
+```{r}
+#| label: setup
+
+# Load libraries
+library(tidyverse)
+library(terra)
+library(sf)
+library(exactextractr)
+library(NbClust)
+library(factoextra)
+
+# Create spatial references
+pixel_size <- 1000
+epsg <- 5070
+
+# Get county boundaries
+aoi <- tigris::counties("ID") %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>%
+  st_transform(epsg)
+```
+
+NCP data from chapter 1:
+
+```{r}
+#| label: "get NCP data"
+
+# get list of file paths
+NCP_data_files <- list.files("../data/NCP_data", pattern = ".tif",
+                             full.names = TRUE,
+                             recursive = TRUE)
+
+# read data files into list
+NCP_data <- lapply(NCP_data_files, function(x) rast(x))
+names(NCP_data) <- NCP_data_files %>%
+  str_remove("../data/NCP_data/") %>%
+  str_remove(".tif")
+
+# check that all are aligned
+# careful with this step - it may apply spatial functions that can warp data
+template <- NCP_data[[1]]
+aligned_rasts <- lapply(NCP_data, function(x) {
+  if(crs(x) != crs(template)) {x <- project(x, template)}
+  if(sum(res(x) != res(template)) > 0) {x <- resample(x, template)}
+  if(sum(origin(x) != origin(template)) > 0) {x <- resample(x, template)}
+  if(sum(ext(x) != ext(template)) > 0) {x <- resample(x, template)}
+  
+  return(x)
+})
+
+NCP_data <- rast(aligned_rasts)
+names(NCP_data) <- names(aligned_rasts)
+```
+
+# By-County Clustering
+
+Extract NCP info for each county:
+
+```{r}
+NCP_by_county <- exact_extract(x = NCP_data,
+                               y = aoi,
+                               fun = "mean")
+rownames(NCP_by_county) <- aoi$NAME
+```
+
+Build a data frame for clustering:
+
+```{r}
+# remove highly correlated variables
+corrplot(cor(NCP_by_county), tl.cex=0.3, method="number")
+
+NCP_reduced <- NCP_by_county %>%
+  select(-c(`mean.climate_mitigation/tot_c_cur_1km`,
+            `mean.food_and_feed/5-yr_CropYieldValue`,
+            #`mean.recreation/rec_prob`,
+            `mean.habitat/hab_quality_1km`,
+            `mean.habitat/TNC_terrestrial_resilience_z-score_adj`))
+
+corrplot(cor(NCP_reduced), tl.cex=0.3, method="number")
+
+# scale data
+NCP_clustering_data <- scale(NCP_reduced)
+
+# get estimated number of clusters
+num_clusts_rec <- NbClust(NCP_clustering_data,
+                          max.nc = 9, 
+                          method = "kmeans",
+                          index = "all")
+
+# create clusters
+NCP_clusters <- kmeans(NCP_clustering_data,
+                       centers = 3)
+```
+
+Assess clusters:
+
+```{r}
+# plot results of kmeans model
+fviz_cluster(NCP_clusters, data = NCP_clustering_data)
+
+# plot clusters on map
+plot(cbind(aoi, NCP_clusters$cluster)["NCP_clusters.cluster"])
+
+# visualize differences
+NCP_by_county_clusts <- data.frame(cbind(NCP_clustering_data, NCP_clusters$cluster)) %>%
+  rename("cluster" = "V18") %>%
+  pivot_longer(cols = starts_with("mean."),
+               names_to = "NCP",
+               values_to = "mean")
+
+# boxplots of all included NCP
+ggplot(NCP_by_county_clusts) +
+  geom_boxplot(aes(x = mean, y = NCP),
+               outliers = FALSE) +
+  facet_wrap(facets = "cluster")
+
+# variant with those overlapping 0 removed
+whisker_lengths <- NCP_by_county_clusts %>%
+  group_by(cluster, NCP) %>%
+  summarise(upper_whisker = min(max(mean), quantile(mean, 0.75) + 1.5 * IQR(mean)),
+            lower_whisker = max(min(mean), quantile(mean, 0.25) - 1.5 * IQR(mean))) %>%
+  mutate(touches_zero = ifelse(upper_whisker>0 & lower_whisker>0, FALSE,
+                               ifelse(upper_whisker<0 & lower_whisker<0, FALSE, TRUE))) %>%
+  select(-c(upper_whisker, lower_whisker))
+
+left_join(NCP_by_county_clusts, whisker_lengths) %>%
+  ggplot() +
+  geom_boxplot(aes(x = mean, y = NCP,
+                   fill = touches_zero),
+               outliers = FALSE) +
+  facet_wrap(facets = "cluster")
+```
+
+
+
+# Spatial Clustering
