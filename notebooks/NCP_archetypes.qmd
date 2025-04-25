@@ -15,6 +15,8 @@ library(sf)
 library(exactextractr)
 library(NbClust)
 library(factoextra)
+library(geocmeans)
+library(tmap)
 
 # Create spatial references
 pixel_size <- 1000
@@ -73,7 +75,7 @@ Build a data frame for clustering:
 
 ```{r}
 # remove highly correlated variables
-corrplot(cor(NCP_by_county), tl.cex=0.3, method="number")
+corrplot::corrplot(cor(NCP_by_county), tl.cex=0.3, method="number")
 
 NCP_reduced <- NCP_by_county %>%
   select(-c(`mean.climate_mitigation/tot_c_cur_1km`,
@@ -82,7 +84,7 @@ NCP_reduced <- NCP_by_county %>%
             `mean.habitat/hab_quality_1km`,
             `mean.habitat/TNC_terrestrial_resilience_z-score_adj`))
 
-corrplot(cor(NCP_reduced), tl.cex=0.3, method="number")
+corrplot::corrplot(cor(NCP_reduced), tl.cex=0.3, method="number")
 
 # scale data
 NCP_clustering_data <- scale(NCP_reduced)
@@ -93,7 +95,7 @@ num_clusts_rec <- NbClust(NCP_clustering_data,
                           method = "kmeans",
                           index = "all")
 
-# create clusters
+# create Kmeans clusters
 NCP_clusters <- kmeans(NCP_clustering_data,
                        centers = 3)
 ```
@@ -137,6 +139,289 @@ left_join(NCP_by_county_clusts, whisker_lengths) %>%
   facet_wrap(facets = "cluster")
 ```
 
+Compare to Cmeans clustering:
+
+```{r}
+Cmean <- CMeans(data = NCP_clustering_data,
+                k = 3,
+                m = 1.5,
+                maxiter = 500,
+                standardize = FALSE, 
+                seed = 456, 
+                tol = 0.00001, 
+                verbose = FALSE)
+calcqualityIndexes(NCP_clustering_data, Cmean$Belongings, m = 1.5)
+
+beta_values <- selectParameters("GFCM", data = NCP_clustering_data, 
+                                k = 4, m = 1.5,
+                                beta = seq(0,1,0.05), spconsist = FALSE,
+                                tol = 0.00001, seed = 456)
+knitr::kable(beta_values[c("beta","Silhouette.index","XieBeni.index","Explained.inertia")],
+             col.names = c("beta", "silhouette index", "Xie and Beni index", "explained inertia"),
+             digits = 3)
+# we want all three to be high but need to choose a balance
+# choosing beta = 0.45
+
+GCmean <- GCMeans(NCP_clustering_data,
+                  k = 3,
+                  m = 1.5, 
+                  beta = 0.45,
+                  500,standardize = FALSE, seed=456,
+                  tol = 0.00001, verbose = FALSE)
+r1 <- calcqualityIndexes(NCP_clustering_data, GCmean$Belongings,m=1.5)
+r2 <- calcqualityIndexes(NCP_clustering_data, Cmean$Belongings,m=1.5)
+df <- cbind(unlist(r1), unlist(r2))
+
+knitr::kable(df,
+             digits = 3,col.names = c("GFCM", "FCM"))
+# like the vignette, the GFCM provides a solution that is less fuzzy (higher explained inertia and lower partition entropy) but keeps a good silhouette index and an even better Xie and Beni index.
+
+cmeansMaps<- mapClusters(aoi,Cmean$Belongings,undecided = 0.45)
+GcmeansMaps<- mapClusters(aoi,GCmean$Belongings,undecided = 0.45)
+tmap_arrange(cmeansMaps$ProbaMaps[[1]],GcmeansMaps$ProbaMaps[[1]], nrow = 1, ncol = 2)
+tmap_arrange(cmeansMaps$ProbaMaps[[2]],GcmeansMaps$ProbaMaps[[2]], 
+          nrow = 1, ncol = 2)
+tmap_arrange(cmeansMaps$ProbaMaps[[3]],GcmeansMaps$ProbaMaps[[3]], 
+          nrow = 1, ncol = 2)
+
+clusterC <- apply(Cmean$Belongings, MARGIN = 1, 
+                  FUN = function(x) which.max(x))
+clusterGC <- apply(GCmean$Belongings, MARGIN = 1, 
+                  FUN = function(x) which.max(x))
+clusterK <- NCP_clusters$cluster
+
+# all same groupings except Twin Falls
+plot(cbind(aoi, clusterK)["clusterK"], main = "Kmeans clusters")
+plot(cbind(aoi, clusterC)["clusterC"], main = "Cmeans clusters")
+plot(cbind(aoi, clusterGC)["clusterGC"], main = "Gen. Cmeans clusters")
+
+spiderPlots(NCP_clustering_data, GCmean$Belongings,
+            chartcolors = c("darkorange3","darkgreen","royalblue"))
+
+# ensuring clustering stability
+bootvalues <- boot_group_validation(GCmean, nsim = 1000, maxiter = 1000, 
+                                     tol = 0.0001, verbose = FALSE)
+melted_df <- reshape2::melt(bootvalues$group_consistency)
+melted_df$variable <- as.factor(melted_df$variable)
+ggplot() +
+  geom_histogram(mapping = aes(x = value), data = melted_df, bins = 30) +
+  labs(title = "stability of clusters", subtitle = "for 1000 iterations",
+       x = "Jaccard index") +
+  facet_wrap(vars(variable), ncol=2)
+
+# group 1 is particularly unstable
+df_gp1 <- bootvalues$group_centers[["group1"]]
+melted_df <- reshape2::melt(df_gp1)
+melted_df$variable <- as.factor(melted_df$variable)
+ggplot() +
+  geom_histogram(mapping = aes(x = value), data = melted_df, bins = 30) +
+  labs(title = "stability of group 3 centers", subtitle = "for 1000 iterations") +
+  xlim(-3,3)+
+  facet_wrap(vars(variable), ncol=3)
+# the center values aren't really centered
+# not sure what that means
+```
 
 
 # Spatial Clustering
+
+The first code chunk follows the vignette for geocmeans for rasters
+
+```{r}
+# fill NCP NAs with 0
+for(i in c(9, 11, 13)) {
+  aligned_rasts[[i]] <- mask(ifel(is.na(aligned_rasts[[i]]), 
+                                0, aligned_rasts[[i]]),
+                           aligned_rasts[[1]])
+}
+
+# finding an appropriate k and m values (using a multicore plan)
+future::plan(future::multisession(workers = 2))
+FCMvalues <- select_parameters.mc(algo = "FCM", data = aligned_rasts, 
+                               k = 2:12, m = seq(1.1,2,0.1), 
+                               spconsist = FALSE, 
+                               indices = c("XieBeni.index",
+                                           "Explained.inertia",
+                                           "Negentropy.index",
+                                           "Silhouette.index"),
+                               verbose = TRUE)
+
+# plotting the silhouette index values
+ggplot(FCMvalues) + 
+  geom_raster(aes(x = m, y = k, fill = Silhouette.index)) + 
+  geom_text(aes(x = m, y = k, label = round(Silhouette.index,2)), size = 2)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=0.125) 
+
+# plotting the explained inertia
+ggplot(FCMvalues) + 
+  geom_raster(aes(x = m, y = k, fill = Explained.inertia)) + 
+  geom_text(aes(x = m, y = k, label = round(Explained.inertia,2)), size = 2)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=0.125)
+
+# choosing k=4 and m=1.1
+
+FCM_result <- CMeans(aligned_rasts, k = 4, m = 1.1, standardize = TRUE,
+                     verbose = FALSE, seed = 789, tol = 0.001, init = "kpp")
+
+maps1 <- mapClusters(object = FCM_result, undecided = 0.45)
+
+# plotting membership values for group 2
+maps1$ProbaMaps[[2]] + theme(legend.position = "bottom")
+
+# plotting the most likely categories
+maps1$ClusterPlot + theme(legend.position = "bottom") + scale_fill_brewer(palette = "Set2")
+
+GFCMvalues <- select_parameters.mc(algo = "GFCM", data = aligned_rasts,
+                             k = 4, m = seq(1.1,2,0.1), 
+                             beta = seq(0.1,0.9,0.1),
+                             spconsist = FALSE, verbose = TRUE, 
+                             init = "kpp",
+                             indices = c("XieBeni.index",
+                                         "Explained.inertia",
+                                         "Negentropy.index",
+                                         "Silhouette.index"))
+
+# plotting the explained inertia
+ggplot(GFCMvalues) + 
+  geom_raster(aes(x = m, y = beta, fill = Explained.inertia)) + 
+  geom_text(aes(x = m, y = beta, label = round(Explained.inertia,2)), size = 2)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=1)
+
+# plotting the silhouette index
+ggplot(GFCMvalues) + 
+  geom_raster(aes(x = m, y = beta, fill = Silhouette.index)) + 
+  geom_text(aes(x = m, y = beta, label = round(Silhouette.index,2)), size = 2)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=1)
+
+# choosing k=4, m=1.3, b=0.8
+
+GFCM_result <- GCMeans(aligned_rasts, k = 4, m = 1.3, beta = 0.8,
+                       standardize = TRUE,
+                       verbose = FALSE, seed = 789, tol = 0.001)
+
+# reorganizing the groups for an easier comparison
+GFCM_result <- groups_matching(FCM_result, GFCM_result)
+maps2 <- mapClusters(object = GFCM_result, undecided = 0.45)
+
+# plotting membership values for group 2
+maps2$ProbaMaps[[2]] + theme(legend.position = "bottom")
+
+# plotting the most likely categories
+maps2$ClusterPlot + theme(legend.position = "bottom") +
+  scale_fill_brewer(palette = "Set2")
+# groups 2 and 4 changed quite a bit actually
+
+# on to spatial!
+w1 <- matrix(1, nrow = 3, ncol = 3)
+w2 <- matrix(1, nrow = 5, ncol = 5)
+w3 <- matrix(1, nrow = 7, ncol = 7)
+
+future::plan(future::multisession(workers = 2))
+SGFCMvalues <- select_parameters.mc(algo = "SGFCM", 
+                                    data = aligned_rasts, k = 4, m = 1.3,
+                             beta = 0.8, alpha = seq(0.5,2,0.1),
+                             window = list(w1,w2,w3),
+                             spconsist = TRUE, nrep = 5, 
+                             verbose = TRUE, chunk_size = 4,
+                             seed = 456, init = "kpp",
+                             indices = c("XieBeni.index",
+                                         "Explained.inertia",
+                                         "Negentropy.index",
+                                         "Silhouette.index"))
+
+dict <- data.frame(
+  w = c(1,2,3),
+  window = c("3x3","5x5","7x7")
+)
+
+SGFCMvalues$window <- dict$window[match(SGFCMvalues$window,dict$w)]
+
+# showing the silhouette index
+ggplot(SGFCMvalues) + 
+  geom_raster(aes(x = alpha, y = window, fill = Silhouette.index)) + 
+  geom_text(aes(x = alpha, y = window, label = round(Silhouette.index,2)), size = 1.5)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=0.125)
+
+# showing the explained inertia
+ggplot(SGFCMvalues) + 
+  geom_raster(aes(x = alpha, y = window, fill = Explained.inertia)) + 
+  geom_text(aes(x = alpha, y = window, label = round(Explained.inertia,2)), size = 1.5)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=0.125)
+
+# showing the spatial inconsistency
+ggplot(SGFCMvalues) + 
+  geom_raster(aes(x = alpha, y = window, fill = spConsistency)) + 
+  geom_text(aes(x = alpha, y = window, label = round(spConsistency,2)), size = 1.5)+
+  scale_fill_viridis_c() +
+  coord_fixed(ratio=0.125)
+
+SGFCM_result <- SGFCMeans(aligned_rasts, k = 4, m = 1.3, standardize = TRUE,
+                       lag_method = "mean",
+                       window = w1, alpha = 0.5, beta = 0.8,
+                       seed = 789, tol = 0.001, verbose = FALSE, 
+                       init = "kpp")
+
+# reorganizing the groups for an easier comparison
+SGFCM_result <- groups_matching(FCM_result, SGFCM_result)
+
+maps3 <- mapClusters(object = SGFCM_result, undecided = 0.2)
+
+# plotting membership values for group 2
+maps3$ProbaMaps[[4]] + theme(legend.position = "bottom")
+
+# plotting the most likely categories
+maps3$ClusterPlot + theme(legend.position = "bottom") + 
+  scale_fill_brewer(palette = "Set2")
+
+cluster_results <- list(FCM_result, GFCM_result, SGFCM_result)
+
+indices <- sapply(cluster_results, function(clust){
+  c(calcexplainedInertia(clust$Data, clust$Belongings),
+    calcSilhouetteIdx(clust$Data, clust$Belongings),
+    spConsistency(clust, window = w1, nrep = 5)$Mean)
+})
+
+colnames(indices) <- c("FCM", "GFCM", "SGFCM")
+rownames(indices) <- c("explained inertia", "silhouette index", "spatial inconsistency")
+
+knitr::kable(indices, digits = 3)
+
+# checks
+diagGFCM <- spatialDiag(GFCM_result, window = matrix(1, nrow = 3, ncol = 3), nrep = 5)
+knitr::kable(diagGFCM$MoranValues, digits = 3, row.names = FALSE)
+
+plot(GFCM_result)
+```
+
+Spatial clusters by county
+
+```{r}
+### Summarizing function
+
+sum_cover <- function(x){
+  list(x %>%
+    group_by(value) %>%
+    summarize(total_area = sum(coverage_area)) %>%
+    mutate(proportion = total_area/sum(total_area)))
+  
+}
+
+#extract the area of each raster cell covered by the plot and summarize
+x <- exact_extract(GFCM_result$rasters$Groups, 
+                   aoi, 
+                   coverage_area = TRUE, 
+                   summarize_df = TRUE, fun = sum_cover)
+
+#add plot names to the elements of the output list
+names(x) <- aoi$NAME
+
+#merge the list elements into a df
+NCP_clusts_by_county <- bind_rows(x, .id = "Plot_buffer")
+```
+
