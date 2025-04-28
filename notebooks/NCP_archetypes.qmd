@@ -422,6 +422,15 @@ x <- exact_extract(GFCM_result$rasters$Groups,
 names(x) <- aoi$NAME
 
 #merge the list elements into a df
-NCP_clusts_by_county <- bind_rows(x, .id = "Plot_buffer")
+NCP_clusts_by_county <- bind_rows(x, .id = "NAME")
+
+NCP_clusts_by_county %>%
+  left_join(., aoi) %>%
+  st_as_sf() %>%
+  filter(!is.na(value)) %>%
+  ggplot() +
+  geom_sf(aes(alpha = proportion, fill = factor(value))) +
+  facet_wrap(vars(value), ncol=2) +
+  theme_void()
 ```
 
