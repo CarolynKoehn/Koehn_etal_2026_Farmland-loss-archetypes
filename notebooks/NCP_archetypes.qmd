@@ -69,6 +69,15 @@ NCP_by_county <- exact_extract(x = NCP_data,
                                y = aoi,
                                fun = "mean")
 rownames(NCP_by_county) <- aoi$NAME
+
+# NCP_by_county_sum <- exact_extract(x = NCP_data,
+#                                y = aoi,
+#                                fun = "sum")
+# rownames(NCP_by_county_sum) <- aoi$NAME
+# NCP_by_county_sum_per_km2 <- NCP_by_county_sum %>%
+#   cbind(., area=units::set_units(st_area(aoi), "km2")) %>%
+#   mutate(across(`sum.climate_mitigation/Carroll_2018_climate_stability`:`sum.water_quality/watershed_retention-load_ratio`, ~units::drop_units(.x/area))) %>%
+#   select(-area)
 ```
 
 Build a data frame for clustering:
@@ -100,14 +109,44 @@ NCP_clusters <- kmeans(NCP_clustering_data,
                        centers = 3)
 ```
 
+Alternate method: PCA-based kmeans following the methods of Aho et al., 2022
+
+```{r}
+# scale data
+NCP_clustering_data_pca <- scale(NCP_by_county)
+
+# run overall PCA
+all_ncp_pca <- prcomp(NCP_clustering_data_pca)
+summary(all_ncp_pca) # keep PC1-6 (explain >90% of variance)
+
+# weight PCA scores by their eigenvalue
+pca_clustering_data <- t(apply(all_ncp_pca$x[,1:6],
+                             MARGIN = 1,
+                             function(row) {row * (all_ncp_pca$sdev^2)[1:6]}))
+
+# apply kmeans clustering approach
+# get estimated number of clusters
+num_clusts_rec <- NbClust(pca_clustering_data,
+                          max.nc = 9, 
+                          method = "kmeans",
+                          index = "all")
+
+# create Kmeans clusters
+NCP_clusters_pca <- kmeans(pca_clustering_data,
+                           centers = 3)
+```
+
+
 Assess clusters:
 
 ```{r}
 # plot results of kmeans model
 fviz_cluster(NCP_clusters, data = NCP_clustering_data)
+fviz_cluster(NCP_clusters_pca, data = NCP_by_county)
 
 # plot clusters on map
 plot(cbind(aoi, NCP_clusters$cluster)["NCP_clusters.cluster"])
+plot(cbind(aoi, NCP_clusters_pca$cluster)["NCP_clusters_pca.cluster"])
 
 # visualize differences
 NCP_by_county_clusts <- data.frame(cbind(NCP_clustering_data, NCP_clusters$cluster)) %>%
@@ -116,8 +155,19 @@ NCP_by_county_clusts <- data.frame(cbind(NCP_clustering_data, NCP_clusters$clust
                names_to = "NCP",
                values_to = "mean")
 
+NCP_by_county_clusts_pca <- data.frame(cbind(scale(NCP_by_county), NCP_clusters_pca$cluster)) %>%
+  rename("cluster" = "V22") %>%
+  pivot_longer(cols = starts_with("mean."),
+               names_to = "NCP",
+               values_to = "mean")
+
 # boxplots of all included NCP
 ggplot(NCP_by_county_clusts) +
+  geom_boxplot(aes(x = mean, y = NCP),
+               outliers = FALSE) +
+  facet_wrap(facets = "cluster")
+
+ggplot(NCP_by_county_clusts_pca) +
   geom_boxplot(aes(x = mean, y = NCP),
                outliers = FALSE) +
   facet_wrap(facets = "cluster")
@@ -131,12 +181,43 @@ whisker_lengths <- NCP_by_county_clusts %>%
                                ifelse(upper_whisker<0 & lower_whisker<0, FALSE, TRUE))) %>%
   select(-c(upper_whisker, lower_whisker))
 
+whisker_lengths_pca <- NCP_by_county_clusts_pca %>%
+  group_by(cluster, NCP) %>%
+  summarise(upper_whisker = min(max(mean), quantile(mean, 0.75) + 1.5 * IQR(mean)),
+            lower_whisker = max(min(mean), quantile(mean, 0.25) - 1.5 * IQR(mean))) %>%
+  mutate(touches_zero = ifelse(upper_whisker>0 & lower_whisker>0, FALSE,
+                               ifelse(upper_whisker<0 & lower_whisker<0, FALSE, TRUE))) %>%
+  select(-c(upper_whisker, lower_whisker))
+
 left_join(NCP_by_county_clusts, whisker_lengths) %>%
   ggplot() +
   geom_boxplot(aes(x = mean, y = NCP,
                    fill = touches_zero),
                outliers = FALSE) +
   facet_wrap(facets = "cluster")
+
+left_join(NCP_by_county_clusts_pca, whisker_lengths_pca) %>%
+  ggplot() +
+  geom_boxplot(aes(x = mean, y = NCP,
+                   fill = touches_zero),
+               outliers = FALSE) +
+  facet_wrap(facets = "cluster")
+
+# compare maps between PCA and non-PCA
+clust_comb <- do.call(cbind, list(aoi, 
+                                  non_pca_clusters = NCP_clusters$cluster, 
+                                  pca_clusters = NCP_clusters_pca$cluster)) %>%
+  # assign similar clusters the same number
+  mutate(non_pca_clusters = ifelse(non_pca_clusters == 1, 3,
+                ifelse(non_pca_clusters == 2, 1, 2))) %>%
+  pivot_longer(pca_clusters:non_pca_clusters,
+               names_to = "method",
+               values_to = "cluster") %>%
+  ggplot() +
+  geom_sf(aes(fill = factor(cluster))) +
+  facet_wrap(vars(method)) +
+  theme_void()
+clust_comb
 ```
 
 Compare to Cmeans clustering:
