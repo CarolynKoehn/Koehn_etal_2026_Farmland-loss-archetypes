@@ -14,6 +14,18 @@ Archetypes of pathways to agricultural lands loss can aid in identifying where d
 2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
 3. Which of nature’s contributions to people are associated with and most threatened by different archetypes of land use change?
 
+# Methods
+
+Planning archetypes through time:
+
+- Land in farms and farm size can go back to 1959 or 1925 (with definition of farm changed)
+- 1997:     employment (CBP), ag (CofAg), land use (NLCD) - can't use if we want to include change from last time point
+- 2001-02:  employment (CBP), ag (CofAg), land use (NLCD), spatial farmland patterns (AFT)
+- 2007-09:  employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS)
+- 2012:     employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), land value (Nolte)
+- 2016-7:   employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), spatial farmland patterns (AFT), NCP (various)
+- 2022:     employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS)
+
 # References {.unnumbered}
 
 :::{#refs}
