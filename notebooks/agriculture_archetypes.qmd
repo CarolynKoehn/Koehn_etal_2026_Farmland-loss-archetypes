@@ -27,7 +27,7 @@ Data to retrieve (years: 2002, 2007, 2012, 2017, 2022):
 
 - Income, net cash farm, of operations - net income, measured in $ / operation
 - average size of farms
-- number of farms by [economic sales class, ownership]
+- number/percent of farms by ownership
 - number of hired and migrant workers
 - cash rent expense per acre (irrigated, non-irrigated, pasture)
 - [wheat (all, winter, spring, spring durum), barley, oats, corn (grain, silage), dry edible beans, dry peas, lentils, sugarbeets, hay (all, alfalfa, other), haylage, potatoes, onions (all), hops, peppermint] harvested
@@ -66,6 +66,7 @@ From Idaho Ag Statistics Bulletin:
 #| label: "retrieve data"
 
 # set API key
+readRenviron("../.Renviron")
 nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 
 # create data frame for clustering
@@ -76,10 +77,11 @@ county_ag_data <- expand.grid(county = aoi$NAME,
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
                county_name = unique(county_ag_data$county),
-               year = unique(county_ag_data$year),
+               year__GE = 2002,
                commodity_desc = "income, net cash farm",
                short_desc = "Income, net cash farm, of operations - net income, measured in $ / operation",
                domain_desc = "total")
+#retrieve
 net_income <- nassqs(params)
 
 # join
@@ -90,6 +92,82 @@ county_ag_data <- net_income %>%
   mutate(county = str_to_title(county),
          year = as.integer(year)) %>%
   left_join(county_ag_data, .)
+
+# list parameters for average size of farms
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year__GE = 2002,
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - area operated, measured in acres / operation",
+               domain_desc = "total")
+# retrieve
+avg_farm_size <- nassqs(params)
+
+# join
+county_ag_data <- avg_farm_size %>%
+  select(county_name, year, Value) %>%
+  rename("county" = "county_name",
+         "avg_farm_acres" = "Value") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)) %>%
+  left_join(county_ag_data, .)
+
+# percent farms by ownership
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year__GE = 2002,
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "tenure")
+# retrieve and clean
+farm_own <- nassqs(params)
+farm_own_perc <- farm_own %>%
+  select(county_name, year, Value, domaincat_desc) %>%
+  pivot_wider(id_cols = county_name:year,
+              names_from = domaincat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(total_farms = sum(c_across(`TENURE: (FULL OWNER)`:`TENURE: (TENANT)`))) %>%
+  mutate(across(`TENURE: (FULL OWNER)`:`TENURE: (TENANT)`,
+                ~.x / total_farms * 100))
+# for categories that add to 1, add PCA components to clustering data
+farm_own_pca <- prcomp(farm_own_perc[,3:5])
+
+# join
+county_ag_data <- farm_own_perc %>%
+  cbind(., farm_own_pca$x[,1:2]) %>% # adding components that explain >90% of variance
+  rename('ownership_pca1' = 'PC1',
+         'ownership_pca2' = 'PC2',
+         'county' = 'county_name') %>%
+  select(county, year, ownership_pca1, ownership_pca2) %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)) %>%
+  left_join(county_ag_data, .)
 ```
 
+In exploratory plots, we look for evidence of grouping (e.g. bimodal distributions in histograms, clumping in scatterplots).
+
+```{r}
+hist(county_ag_data$net_income, breaks = 20)
+hist(county_ag_data$avg_farm_acres, breaks = 20)
+hist(county_ag_data$ownership_pca1, breaks = 20)
+hist(county_ag_data$ownership_pca2, breaks = 20)
+
+# overall clumping may be seen in PCA
+ag_pca <- prcomp(scale(county_ag_data[,-c(1:2)]))
+summary(ag_pca)
+biplot(ag_pca)
+
+NbClust::NbClust(ag_pca$x, method="kmeans", index="all")
+test <- kmeans(ag_pca$x, 2)
+factoextra::fviz_pca_biplot(ag_pca, habillage=as.factor(test$cluster))
+left_join(county_ag_data, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
+  st_as_sf() %>%
+  cbind(., test$cluster) %>%
+  ggplot(aes(fill = factor(test.cluster))) +
+    geom_sf() +
+    facet_wrap(vars(year))
+```
 
