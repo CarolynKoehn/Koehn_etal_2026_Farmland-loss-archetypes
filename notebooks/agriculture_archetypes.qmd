@@ -1,0 +1,95 @@
+---
+title: "Agriculture Archetypes"
+author: "Carolyn Koehn"
+---
+
+# Setup
+
+```{r}
+#| label: setup
+
+# Load libraries
+library(tidyverse)
+library(sf)
+library(rnassqs)
+
+# Create spatial references
+pixel_size <- 1000
+epsg <- 5070
+
+# Get county boundaries
+aoi <- tigris::counties("ID") %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>%
+  st_transform(epsg)
+```
+
+Data to retrieve (years: 2002, 2007, 2012, 2017, 2022):
+
+- Income, net cash farm, of operations - net income, measured in $ / operation
+- average size of farms
+- number of farms by [economic sales class, ownership]
+- number of hired and migrant workers
+- cash rent expense per acre (irrigated, non-irrigated, pasture)
+- [wheat (all, winter, spring, spring durum), barley, oats, corn (grain, silage), dry edible beans, dry peas, lentils, sugarbeets, hay (all, alfalfa, other), haylage, potatoes, onions (all), hops, peppermint] harvested
+- number cattle (all, beef, milk)
+- acres of specialty crops (see https://www.ams.usda.gov/services/grants/scbgp/specialty-crop)
+
+<!--
+From Idaho Ag Statistics Bulletin:
+
+- [wheat (all, winter, spring, spring durum), barley, oats, corn (grain, silage), dry edible beans, dry peas, lentils, sugarbeets, hay (all, alfalfa, other), haylage, potatoes, onions (all), hops, peppermint] harvested, yield per acre, production, value of production
+- number of farms
+- average size
+- total land in farms
+- [number of farms, land in farms, average farm size] by economic sales class
+- number of workers, hours worked
+- wage rates by type of worker _(would need to be adjusted for inflation)_
+- prices received for [wheat (all, winter, spring), barley, hay (all, alfalfa, other), potatoes (all, processing, fresh market), dry edible beans, onions, milk, milk cows]
+- cash rent expense per acre (irrigated, non-irrigated, pasture)
+- [wheat (all, winter, spring, durum), barley, oats, corn (all, grain, silage), dry edible beans (chickpea, dry edible peas, lentils), potatoes, sugarbeets, hops, hay (all, alfalfa, other), peppermint, spearmint, austrian winter pea, onions] acres planted and harvested, yield per acre, production, price ($/unit crop), and value per harvested acre
+- number milk cows
+- milk per cow
+- milk/milkfat production
+- value of milk production
+- cheese production
+- cattle (all, beef, milk) inventory
+- cattle income
+- sheep inventory
+- wool production and value
+- goat inventory
+- honey production and value
+- trout sold
+-->
+
+
+```{r}
+#| label: "retrieve data"
+
+# set API key
+nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
+
+# create data frame for clustering
+county_ag_data <- expand.grid(county = aoi$NAME,
+                              year = seq(2002, 2022, 5))
+
+# list parameters for net income
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year = unique(county_ag_data$year),
+               commodity_desc = "income, net cash farm",
+               short_desc = "Income, net cash farm, of operations - net income, measured in $ / operation",
+               domain_desc = "total")
+net_income <- nassqs(params)
+
+# join
+county_ag_data <- net_income %>%
+  select(county_name, year, Value) %>%
+  rename("county" = "county_name",
+         "net_income" = "Value") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)) %>%
+  left_join(county_ag_data, .)
+```
+
+
