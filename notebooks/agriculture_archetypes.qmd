@@ -21,6 +21,10 @@ epsg <- 5070
 aoi <- tigris::counties("ID") %>%
   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>%
   st_transform(epsg)
+
+# set API key
+readRenviron("../.Renviron")
+nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 ```
 
 Data to retrieve (years: 2002, 2007, 2012, 2017, 2022):
@@ -61,13 +65,11 @@ From Idaho Ag Statistics Bulletin:
 - trout sold
 -->
 
+Average net income per operation is one measure of agricultural success.
+
 
 ```{r}
-#| label: "retrieve data"
-
-# set API key
-readRenviron("../.Renviron")
-nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
+#| label: "avg net income"
 
 # create data frame for clustering
 county_ag_data <- expand.grid(county = aoi$NAME,
@@ -92,7 +94,11 @@ county_ag_data <- net_income %>%
   mutate(county = str_to_title(county),
          year = as.integer(year)) %>%
   left_join(county_ag_data, .)
+```
 
+Farm size (both the range and average size) is another description of an agricultural system. The range is described by size categories that add up to 100% of farms, so for these data, we use PCA scores that describe >75% of the variance rather than the raw data (following the methods of Aho et al., 2022).
+
+```{r}
 # list parameters for average size of farms
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
@@ -114,7 +120,56 @@ county_ag_data <- avg_farm_size %>%
   left_join(county_ag_data, .)
 
 # farm sizes range
+# list parameters
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year__GE = 2002,
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "area operated")
+# retrieve
+farm_sizes <- nassqs(params)
 
+# clean
+farm_sizes2 <- farm_sizes %>%
+  # remove redundant categories
+  filter(!(domaincat_desc %in% c("AREA OPERATED: (180 TO 219 ACRES)",
+                                 "AREA OPERATED: (220 TO 259 ACRES)",
+                                 "AREA OPERATED: (260 TO 499 ACRES)",
+                                 "AREA OPERATED: (50.0 TO 69.9 ACRES)",
+                                 "AREA OPERATED: (70.0 TO 99.9 ACRES)",
+                                 "AREA OPERATED: (100 TO 139 ACRES)",
+                                 "AREA OPERATED: (140 TO 179 ACRES)",
+                                 "AREA OPERATED: (1,000 OR MORE ACRES)"))) %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = domaincat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
+  mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
+                ~.x/total_farms*100))
+  
+# PCA
+farm_sizes_pca <- prcomp(select(farm_sizes2, -c(county_name, year, total_farms)))
+summary(farm_sizes_pca)
+biplot(farm_sizes_pca)
+
+# join components explaining >75% of variance
+county_ag_data <- cbind(farm_sizes2, farm_sizes_pca$x[,1:2]) %>%
+  select(county_name, year, PC1, PC2) %>%
+  rename("county" = "county_name",
+         "farm_size_pc1" = "PC1",
+         "farm_size_pc2" = "PC2") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)) %>%
+  left_join(county_ag_data, .)
+  
+```
+
+The most common ownership type of farms is another characteristic of an agricultural system. There are three categories: fully owned, partly owned (farmer owns some of the land they operate and rent other lands they operate), and tenant (farmer rents all the lands they operate). Since these are percentages that add up to 100%, we use the PCA scores that explain >75% of the variance rather than the raw data (following the methods of Aho et al., 2022).
+
+```{r}
 # percent farms by ownership
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
@@ -147,36 +202,11 @@ county_ag_data <- farm_own_perc %>%
   mutate(county = str_to_title(county),
          year = as.integer(year)) %>%
   left_join(county_ag_data, .)
+```
 
-# hired workers (migrant and unpaid worker data starts 2012)
-params <- list(state_alpha = "ID",
-               agg_level_desc = "county",
-               county_name = unique(county_ag_data$county),
-               year__GE = 2002,
-               commodity_desc = c("Labor", "Farm operations"),
-               short_desc = c("Labor, hired - number of workers",
-                              "Labor, hired - operations with workers",
-                              "Farm operations - number of operations"),
-               domain_desc = "total")
-# retrieve and clean
-farm_workers <- nassqs(params)
-farm_workers_perc <- farm_workers %>%
-  select(county_name, year, short_desc, Value) %>%
-  pivot_wider(id_cols = c(county_name, year),
-              names_from = short_desc,
-              values_from = Value) %>%
-  rowwise() %>%
-  mutate(perc_farms_w_hired = `LABOR, HIRED - OPERATIONS WITH WORKERS` / `FARM OPERATIONS - NUMBER OF OPERATIONS` * 100,
-         avg_hired_per_hiring_farm = `LABOR, HIRED - NUMBER OF WORKERS` / `LABOR, HIRED - OPERATIONS WITH WORKERS`)
+A related data point is the amount of farms that pay rent and the average amount of rent they pay.
 
-# join
-county_ag_data <- farm_workers_perc %>%
-  select(county_name, year, perc_farms_w_hired, avg_hired_per_hiring_farm) %>%
-  rename("county" = "county_name") %>%
-  mutate(county = str_to_title(county),
-         year = as.integer(year)) %>%
-  left_join(county_ag_data, .)
-
+```{r}
 # cash rent expense
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
@@ -205,35 +235,130 @@ county_ag_data <- farm_rent2 %>%
   mutate(county = str_to_title(county),
          year = as.integer(year)) %>%
   left_join(county_ag_data, .)
+```
 
-# specialty crops/animals
+Hired labor is another characteristic that sets agricultural systems apart. Unfortunately, data on unpaid and migrant labor begins in 2012, so we can only include data on how many farms employ hired workers and the average amount of hired workers per farm that does hire.
+
+```{r}
+# hired workers
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
                county_name = unique(county_ag_data$county),
                year__GE = 2002,
-               short_desc = c("Specialty animal totals, (excl equine) - operations with sales",
+               commodity_desc = c("Labor", "Farm operations"),
+               short_desc = c("Labor, hired - number of workers",
+                              "Labor, hired - operations with workers",
                               "Farm operations - number of operations"),
                domain_desc = "total")
 # retrieve and clean
-specialty_animals <- nassqs(params)
-specialty_animals2 <- specialty_animals %>%
+farm_workers <- nassqs(params)
+farm_workers_perc <- farm_workers %>%
   select(county_name, year, short_desc, Value) %>%
   pivot_wider(id_cols = c(county_name, year),
               names_from = short_desc,
               values_from = Value) %>%
   rowwise() %>%
-  mutate(perc_farms_w_special_animals = `SPECIALTY ANIMAL TOTALS, (EXCL EQUINE) - OPERATIONS WITH SALES` / `FARM OPERATIONS - NUMBER OF OPERATIONS` * 100) %>%
-  mutate(perc_farms_w_special_animals = ifelse(is.na(perc_farms_w_special_animals), 0,
-                                               perc_farms_w_special_animals))
+  mutate(perc_farms_w_hired = `LABOR, HIRED - OPERATIONS WITH WORKERS` / `FARM OPERATIONS - NUMBER OF OPERATIONS` * 100,
+         avg_hired_per_hiring_farm = `LABOR, HIRED - NUMBER OF WORKERS` / `LABOR, HIRED - OPERATIONS WITH WORKERS`)
+
+# join
+county_ag_data <- farm_workers_perc %>%
+  select(county_name, year, perc_farms_w_hired, avg_hired_per_hiring_farm) %>%
+  rename("county" = "county_name") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)) %>%
+  left_join(county_ag_data, .)
+```
+
+Finally, it's worth knowing what kinds of products the farms tend to produce. The major agricultural industries of Idaho, reported in the Idaho Agricultural Statistical Bulletin are: 
+
+1. Crops
+  - wheat (all, winter, spring, spring durum)
+  - barley
+  - oats
+  - corn (grain, silage)
+  - dry edible beans
+  - dry peas
+  - lentils
+  - sugarbeets
+  - hay (all, alfalfa, other)
+  - haylage
+  - potatoes
+  - onions (all)
+  - hops
+  - peppermint
+2. Animals
+  - Cattle (all, beef, milk), including cheese production
+  - Sheep and wool
+  - Goats
+  - Trout
+  - Honey
   
+Crops grown for human consumption are considered "specialty" by the USDA (see https://www.ams.usda.gov/services/grants/scbgp/specialty-crop). The USDA also reports specialty animals (Includes equine, mink, bees, bison, deer, alpacas, etc. Excludes aquaculture, dairy, livestock, and poultry.). Here, we compile the extent of each major industry, as well as specialty items as a whole, in each county-year, then use a PCA to extract the principal components (that explain >75% of the variance) for the clustering analysis.
+
+
+```{r}
+# crops/animals (large industries and specialty crops/animals)
+# top crops
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year = unique(county_ag_data$year),
+               source_desc = "census",
+               commodity_desc = c("wheat", "barley", "oats", "corn", "beans", "peas", "lentils", "sugarbeets", "hay", "haylage", "potatoes", "onions", "hops", "mint"),
+               prodn_practice_desc = "all production practices",
+               unit_desc = "acres",
+               domain_desc = "total")
+#retrieve
+top_crops <- nassqs_acres(params, area = "AREA HARVESTED") %>%
+  # add filters for imprecise queries
+  filter(
+    # don't include traditional corn
+    (short_desc != "CORN, TRADITIONAL OR INDIAN - ACRES HARVESTED") &
+      # only keep dry edible beans that aren't lima or chickpea 
+      # (these are separate special categories)
+      !(commodity_desc == "BEANS" & class_desc != "DRY EDIBLE, (EXCL CHICKPEAS & LIMA)") &
+      # only keep dry edible peas
+      !(commodity_desc == "PEAS" & class_desc != "DRY EDIBLE") &
+      # exclude sugarbeets grown for seed
+      !(commodity_desc == "SUGARBEETS" & util_practice_desc == "SEED") &
+      # only keep the hay classes (1) all, (2) alfalfa, and (3) other
+      !(commodity_desc == "HAY" & !(class_desc %in% c("ALL CLASSES", "ALFALFA", "(EXCL ALFALFA)"))) &
+      # just keep all classes of haylage - don't split by alfalfa
+      !(commodity_desc == "HAYLAGE" & class_desc != "ALL CLASSES") &
+      # keep only the combined potato count
+      !(commodity_desc == "POTATOES" & util_practice_desc != "ALL UTILIZATION PRACTICES") &
+      # keep only the combined onion counts
+      !(commodity_desc == "ONIONS" & util_practice_desc != "ALL UTILIZATION PRACTICES") &
+      # just keep all classes of mint - don't split into peppermint and spearmint
+      !(commodity_desc == "MINT" & class_desc != "ALL CLASSES"))
+View(filter(top_crops, commodity_desc == "MINT"))
+
+# total cropland  
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
                county_name = unique(county_ag_data$county),
                year__GE = 2002,
                short_desc = "Ag land, cropland - acres",
                domain_desc = "total")
-total_cropland <- nassqs(params) %>% select(county_name, year, Value)
+total_cropland <- nassqs(params) %>% 
+  select(county_name, year, Value) %>%
+  rename("total_cropland" = "Value")
 
+# percent cropland devoted to each top crop
+top_crop_percs <- top_crops %>%
+  filter(!is.na(Value)) %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = short_desc,
+              values_from = Value) %>%
+  right_join(total_cropland) %>%
+  mutate(across(!c(county_name, year, total_cropland), 
+                ~ifelse(is.na(.x), 0, .x))) %>%
+  rowwise() %>%
+  mutate(across(!c(county_name, year, total_cropland), 
+                ~ .x / total_cropland * 100))
+
+# specialty crops
 params <- list(state_alpha = "ID",
                agg_level_desc = "county",
                county_name = unique(county_ag_data$county),
@@ -271,18 +396,46 @@ horticulture <- nassqs(state_alpha = "ID",
                prodn_practice_desc = c("all production practices", "in the open"),
                domain_desc = "total")
 
-# combine all specialy crops and calculate percent area
+# combine all specialty crops and calculate percent area
 specialty_crops_total <- rbind(specialty_crops, horticulture) %>%
   filter(!is.na(Value)) %>%
   group_by(county_name, year) %>%
   summarise(acres_specialty_crops = sum(Value)) %>%
   right_join(., total_cropland) %>%
-  rename("tot_cropland" = "Value") %>%
   rowwise() %>%
   mutate(acres_specialty_crops = ifelse(is.na(acres_specialty_crops), 0, acres_specialty_crops),
-         perc_specialty_cropland = acres_specialty_crops/tot_cropland * 100)
+         perc_specialty_cropland = acres_specialty_crops/total_cropland * 100)
 
-# join
+# crops combined
+crops_combined <- left_join(top_crop_percs, specialty_crops_total) %>%
+  select(-c(total_cropland:acres_specialty_crops))
+
+#################################
+# top animals / animal products
+
+# specialty animals
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year__GE = 2002,
+               short_desc = c("Specialty animal totals, (excl equine) - operations with sales",
+                              "Farm operations - number of operations"),
+               domain_desc = "total")
+# retrieve and clean
+specialty_animals <- nassqs(params)
+specialty_animals2 <- specialty_animals %>%
+  select(county_name, year, short_desc, Value) %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = short_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(perc_farms_w_special_animals = `SPECIALTY ANIMAL TOTALS, (EXCL EQUINE) - OPERATIONS WITH SALES` / `FARM OPERATIONS - NUMBER OF OPERATIONS` * 100) %>%
+  mutate(perc_farms_w_special_animals = ifelse(is.na(perc_farms_w_special_animals), 0,
+                                               perc_farms_w_special_animals))
+
+
+
+# join all
 county_ag_data <- left_join(specialty_crops_total, specialty_animals2) %>%
   select(county_name, year, perc_specialty_cropland, perc_farms_w_special_animals) %>%
   rename("county" = "county_name") %>%
@@ -302,8 +455,6 @@ hist(county_ag_data$perc_farms_w_hired, breaks = 20)
 hist(county_ag_data$avg_hired_per_hiring_farm, breaks = 20)
 hist(county_ag_data$perc_farms_w_rent, breaks = 20)
 hist(county_ag_data$avg_rent_per_renting_farm, breaks = 20)
-hist(county_ag_data$perc_specialty_cropland, breaks = 20)
-hist(county_ag_data$perc_farms_w_special_animals, breaks = 20)
 
 # overall clumping may be seen in PCA
 ag_pca <- prcomp(scale(county_ag_data[,-c(1:2)]))
@@ -315,8 +466,10 @@ Clustering:
 
 ```{r}
 # test clusters
-NbClust::NbClust(ag_pca$x[,1:7], method="kmeans", index="all")
-test <- kmeans(ag_pca$x[,1:7], 2)
+NbClust::NbClust(ag_pca$x[,1:8], method="kmeans", index="all")
+test <- kmeans(ag_pca$x[,1:8], 3, nstart=100)
+#NbClust::NbClust(scale(county_ag_data[,-c(1:2)]), method="kmeans", index="all")
+#test <- kmeans(scale(county_ag_data[,-c(1:2)]), 3)
 factoextra::fviz_pca_biplot(ag_pca, habillage=as.factor(test$cluster))
 
 county_year_ag_clust <- left_join(county_ag_data, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
@@ -329,9 +482,9 @@ ggplot(county_year_ag_clust, aes(fill = factor(test.cluster))) +
 
 # cluster meanings
 ag_clusts <- county_year_ag_clust %>%
-  mutate(across(net_income:perc_farms_w_special_animals,
+  mutate(across(net_income:avg_hired_per_hiring_farm,
                 ~scale(.x))) %>%
-  pivot_longer(cols = net_income:perc_farms_w_special_animals,
+  pivot_longer(cols = net_income:avg_hired_per_hiring_farm,
                names_to = "input_data_name",
                values_to = "input_data_value")
 whisker_lengths <- ag_clusts %>%
