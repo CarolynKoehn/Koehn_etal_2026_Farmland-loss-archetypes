@@ -23,7 +23,7 @@ Planning archetypes through time:
 - 2001-02:  employment (CBP), ag (CofAg), land use (NLCD), spatial farmland patterns (AFT)
 - 2007-09:  employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS)
 - 2012:     employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), land value (Nolte)
-- 2016-7:   employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), spatial farmland patterns (AFT), NCP (various)
+- 2016-17:   employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), spatial farmland patterns (AFT), NCP (various)
 - 2022:     employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS)
 
 # References {.unnumbered}
