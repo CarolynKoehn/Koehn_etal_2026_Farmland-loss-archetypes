@@ -507,7 +507,12 @@ hist(county_ag_data$industry_pca2, breaks = 20)
 hist(county_ag_data$industry_pca3, breaks = 20)
 
 # overall clumping may be seen in PCA
-ag_pca <- prcomp(scale(county_ag_data[,-c(1:2)]))
+# first, re-scale data without using standard deviation
+county_ag_scaled <- county_ag_data %>%
+  mutate(across(!c(county, year),
+                ~ (.x - mean(.x)) / (max(.x) - min(.x))))
+
+ag_pca <- prcomp(county_ag_scaled[,-c(1:2)])
 summary(ag_pca)
 biplot(ag_pca)
 ```
@@ -518,8 +523,8 @@ Clustering:
 # test clusters
 # NbClust::NbClust(ag_pca$x[,1:10], method="kmeans", index="all")
 # test <- kmeans(ag_pca$x[,1:10], 2, nstart=100)
-NbClust::NbClust(scale(county_ag_data[,-c(1:2)]), method="kmeans", index="all")
-test <- kmeans(scale(county_ag_data[,-c(1:2)]), 2)
+NbClust::NbClust(county_ag_scaled[,-c(1:2)], method="kmeans", index="all")
+test <- kmeans(county_ag_scaled[,-c(1:2)], 2)
 factoextra::fviz_pca_biplot(ag_pca, habillage=as.factor(test$cluster))
 
 county_year_ag_clust <- left_join(county_ag_data, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
