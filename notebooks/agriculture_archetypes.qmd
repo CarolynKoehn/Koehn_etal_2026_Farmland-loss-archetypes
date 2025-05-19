@@ -29,6 +29,7 @@ nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 
 Data to retrieve (years: 2002, 2007, 2012, 2017, 2022):
 
+- Land in farms (%)
 - Income, net cash farm, of operations - net income, measured in $ / operation
 - average size of farms
 - number/percent of farms by ownership
@@ -38,43 +39,45 @@ Data to retrieve (years: 2002, 2007, 2012, 2017, 2022):
 - number cattle (all, beef, milk)
 - specialty crops/animals (see https://www.ams.usda.gov/services/grants/scbgp/specialty-crop)
 
-<!--
-From Idaho Ag Statistics Bulletin:
-
-- [wheat (all, winter, spring, spring durum), barley, oats, corn (grain, silage), dry edible beans, dry peas, lentils, sugarbeets, hay (all, alfalfa, other), haylage, potatoes, onions (all), hops, peppermint] harvested, yield per acre, production, value of production
-- number of farms
-- average size
-- total land in farms
-- [number of farms, land in farms, average farm size] by economic sales class
-- number of workers, hours worked
-- wage rates by type of worker _(would need to be adjusted for inflation)_
-- prices received for [wheat (all, winter, spring), barley, hay (all, alfalfa, other), potatoes (all, processing, fresh market), dry edible beans, onions, milk, milk cows]
-- cash rent expense per acre (irrigated, non-irrigated, pasture)
-- [wheat (all, winter, spring, durum), barley, oats, corn (all, grain, silage), dry edible beans (chickpea, dry edible peas, lentils), potatoes, sugarbeets, hops, hay (all, alfalfa, other), peppermint, spearmint, austrian winter pea, onions] acres planted and harvested, yield per acre, production, price ($/unit crop), and value per harvested acre
-- number milk cows
-- milk per cow
-- milk/milkfat production
-- value of milk production
-- cheese production
-- cattle (all, beef, milk) inventory
-- cattle income
-- sheep inventory
-- wool production and value
-- goat inventory
-- honey production and value
-- trout sold
--->
-
-
-Average net income per operation is one measure of agricultural success.
-
+Agricultural presence can be measured by the percent land in farms in each county.
 
 ```{r}
-#| label: "avg net income"
+#| label: "land in farms"
 
 # create data frame for clustering
 county_ag_data <- expand.grid(county = aoi$NAME,
                               year = seq(2002, 2022, 5))
+
+# parameters to retrieve land in farms
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               county_name = unique(county_ag_data$county),
+               year__GE = 2002,
+               short_desc = c("Farm operations - acres operated",
+                              "Land area, incl non-ag - acres"),
+               domain_desc = "total")
+# retrieve
+land_in_farms <- nassqs(params)
+
+# clean and join
+county_ag_data <- land_in_farms %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = statisticcat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(land_in_farms = `AREA OPERATED` / `AREA` * 100) %>%
+  rename("county" = "county_name") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)) %>%
+  select(c(county, year, land_in_farms)) %>%
+  right_join(county_ag_data)
+```
+
+
+Average net income per operation is one measure of agricultural success.
+
+```{r}
+#| label: "avg net income"
 
 # list parameters for net income
 params <- list(state_alpha = "ID",
@@ -491,9 +494,22 @@ county_ag_data <- left_join(crops_combined, animals_combined) %>%
   left_join(county_ag_data, .)
 ```
 
+Save data:
+
+```{r}
+#| eval: false
+#| label: "save data"
+
+write.csv(county_ag_data,
+          "../data/county_ag_data.csv",
+          row.names = FALSE)
+```
+
+
 In exploratory plots, we look for evidence of grouping (e.g. bimodal distributions in histograms, clumping in scatterplots).
 
 ```{r}
+hist(county_ag_data$land_in_farms, breaks = 20)
 hist(county_ag_data$net_income, breaks = 20)
 hist(county_ag_data$avg_farm_acres, breaks = 20)
 hist(county_ag_data$ownership_pca1, breaks = 20)
@@ -509,6 +525,7 @@ hist(county_ag_data$industry_pca3, breaks = 20)
 # overall clumping may be seen in PCA
 # first, re-scale data without using standard deviation
 county_ag_scaled <- county_ag_data %>%
+  ungroup() %>%
   mutate(across(!c(county, year),
                 ~ (.x - mean(.x)) / (max(.x) - min(.x))))
 
@@ -524,7 +541,7 @@ Clustering:
 # NbClust::NbClust(ag_pca$x[,1:10], method="kmeans", index="all")
 # test <- kmeans(ag_pca$x[,1:10], 2, nstart=100)
 NbClust::NbClust(county_ag_scaled[,-c(1:2)], method="kmeans", index="all")
-test <- kmeans(county_ag_scaled[,-c(1:2)], 2)
+test <- kmeans(county_ag_scaled[,-c(1:2)], 3)
 factoextra::fviz_pca_biplot(ag_pca, habillage=as.factor(test$cluster))
 
 county_year_ag_clust <- left_join(county_ag_data, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
@@ -546,14 +563,17 @@ whisker_lengths <- ag_clusts %>%
   st_drop_geometry() %>%
   group_by(test.cluster, input_data_name) %>%
   summarise(upper_whisker = min(max(input_data_value), quantile(input_data_value, 0.75) + 1.5 * IQR(input_data_value)),
-            lower_whisker = max(min(input_data_value), quantile(input_data_value, 0.25) - 1.5 * IQR(input_data_value))) %>%
-  mutate(touches_zero = ifelse((upper_whisker>0 & lower_whisker>0) | (upper_whisker<0 & lower_whisker<0), FALSE, TRUE)) %>%
-  select(-c(upper_whisker, lower_whisker))
+            lower_whisker = max(min(input_data_value), quantile(input_data_value, 0.25) - 1.5 * IQR(input_data_value)),
+            mean = mean(input_data_value),
+            sd = sd(input_data_value)) %>%
+  mutate(touches_zero = ifelse((upper_whisker>0 & lower_whisker>0) | (upper_whisker<0 & lower_whisker<0), FALSE, TRUE),
+         mean_sd_zero = ifelse((mean+sd>0 & mean-sd>0) | (mean+sd<0 & mean-sd<0), FALSE, TRUE)) %>%
+  select(-c(upper_whisker, lower_whisker, mean, sd))
 
 left_join(ag_clusts, whisker_lengths) %>%
   ggplot() +
   geom_boxplot(aes(x = input_data_value, y = input_data_name,
-                   fill = touches_zero),
+                   fill = mean_sd_zero),
                outliers = FALSE) +
   facet_wrap(facets = "test.cluster")
 ```
