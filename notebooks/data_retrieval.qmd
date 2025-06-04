@@ -1,0 +1,204 @@
+---
+title: "Data Retrieval"
+author: "Carolyn Koehn"
+format: html
+---
+
+```{r}
+#| label: setup
+
+# load libraries
+library(tidyverse)
+library(tidycensus)
+library(rnassqs)
+library(FedData)
+library(sf)
+
+# set API keys
+readRenviron("../.Renviron")
+nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
+census_api_key(Sys.getenv('CENSUS_API_KEY'))
+
+# county data
+county_shapes <- tigris::counties("ID") %>%
+  select(c("GEOID", "NAME")) %>%
+  st_transform(5070)
+```
+
+# Resource System
+
+```{r}
+#| label: "RS data setup"
+
+rs_data <- expand.grid(county = county_shapes$NAME, 
+                        year = seq(1990, 2020, 10))
+```
+
+
+## RS3 -- Size of resource system
+
+### Agriculture
+
+#### Percent land in farms
+
+Data for 2002-2022 are available through the USDA NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 6. 
+
+```{r}
+#| label: "percent land in farms"
+
+params <- list(agg_level_desc = "county",
+               state_name = "Idaho",
+               year = c(2002, 2012, 2022),
+               short_desc = c("Farm operations - acres operated",
+                              "Land area, incl non-ag - acres"),
+               domain_desc = "total")
+
+land_in_farms <- nassqs(params)
+
+land_in_farms_1992 <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
+  filter(Year == 1992) %>%
+  select(County, Year, Perc_land_in_farms) %>%
+  rename("county" = "County",
+         "year" = "Year",
+         "land_in_farms" = "Perc_land_in_farms") %>%
+  mutate(year = year-2)
+
+# clean and join
+rs_data <- land_in_farms %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = statisticcat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(land_in_farms = `AREA OPERATED` / `AREA` * 100) %>%
+  rename("county" = "county_name") %>%
+  mutate(county = str_to_title(county),
+         year = as.numeric(year)) %>%
+  select(c(county, year, land_in_farms)) %>%
+  mutate(year = (year-2)) %>%
+  rbind(land_in_farms_1992) %>%
+  right_join(rs_data, by=c("county", "year"))
+```
+
+### Natural Amenities
+
+#### Percent forest and shrubland
+
+NLCD data were downloaded from https://www.mrlc.gov/viewer/
+
+```{r}
+#| label: "forest and shrubland"
+
+nlcd_all_years_ID <- rast()
+```
+
+### Residential
+
+```{r}
+#| label: "developed land"
+
+
+```
+
+## RS4 -- Human-constructed facilities
+
+### Agriculture
+
+#### Number farms per unit area
+
+Data for 2002-2022 are available through the USDA NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 6.
+
+```{r}
+#| label: "number farms per unit area"
+
+params <- list(agg_level_desc = "county",
+               state_name = "Idaho",
+               year = c(2002, 2012, 2022),
+               short_desc = c("Farm operations - number of operations",
+                              "Land area, incl non-ag - acres"),
+               domain_desc = "total")
+
+num_farms <- nassqs(params)
+
+num_farms_1992 <- read.csv("../data/Farm_size_1925-1992.csv") %>%
+  filter(Year == 1992 & Size == "all farms") %>%
+  left_join(read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv")) %>%
+  mutate(farms_per_acre = Num_farms / Total_county_land_acres) %>%
+  select(County, Year, farms_per_acre) %>%
+  rename("county" = "County",
+         "year" = "Year") %>%
+  mutate(year = as.numeric(year-2))
+
+# clean and join
+rs_data <- num_farms %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = statisticcat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(farms_per_acre = `OPERATIONS` / `AREA`) %>%
+  rename("county" = "county_name") %>%
+  mutate(county = str_to_title(county),
+         year = as.numeric(year)) %>%
+  select(c(county, year, farms_per_acre)) %>%
+  mutate(year = (year-2)) %>%
+  rbind(num_farms_1992) %>%
+  right_join(rs_data, by=c("county", "year"))
+```
+
+### Residential
+
+#### Number houses per unit area
+
+Data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were digitized from https://www2.census.gov/library/publications/decennial/1990/cph-2/cph-2-14.pdf (available at https://www.census.gov/library/publications/1992/dec/cph-2.html)
+
+```{r}
+#| label: "number houses per unit area"
+
+houses1990 <- read.csv("../data/1990_US_Census_data.csv")
+houses2000 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "H001001",
+                        year = 2000) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+houses2010 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "H001001",
+                        year = 2010) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+houses2020 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "H1_001N",
+                        year = 2020) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+
+county_areas <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
+  filter(Year >= 1990) %>%
+  mutate(Year = as.numeric(Year-2)) %>%
+  select(County, Year, Total_county_land_acres)
+
+housing_units <- data.frame(county = c(houses1990$County,
+                                       houses2000$NAME,
+                                       houses2010$NAME,
+                                       houses2020$NAME),
+                            year = rep(seq(1990, 2020, 10), each = nrow(houses1990)),
+                            housing_units = c(houses1990$Housing_Units,
+                                              houses2000$value,
+                                              houses2010$value,
+                                              houses2020$value)) %>%
+  left_join(county_areas,
+            by = c("county" = "County",
+                   "year" = "Year")) %>%
+  mutate(housing_units_per_acre = housing_units / Total_county_land_acres) %>%
+  select(county, year, housing_units_per_acre)
+
+# join
+rs_data <- left_join(rs_data, housing_units)
+```
+
+```{r}
+#| label: "save RS data"
+
+write.csv(rs_data,
+          "../data/RS_data.csv",
+          row.names = FALSE)
+```
+
