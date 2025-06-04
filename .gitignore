@@ -10,3 +10,5 @@
 .httr-oauth
 .DS_Store
 .Renviron
+
+*NLCD_LndCov_1985-2020.zip
