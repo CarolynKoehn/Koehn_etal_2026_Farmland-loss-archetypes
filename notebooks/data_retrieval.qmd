@@ -25,6 +25,10 @@ census_api_key(Sys.getenv('CENSUS_API_KEY'))
 # county data
 county_shapes <- tigris::counties("ID") %>%
   select(c("GEOID", "NAME"))
+
+# names and GEOIDs
+GEOID_names <- st_drop_geometry(county_shapes$NAME)
+names(GEOID_names) <- st_drop_geometry(county_shapes$GEOID)
 ```
 
 # Resource System
@@ -752,6 +756,12 @@ employment1990 <- rbind(
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
+            sic = "00"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
             sic = "07"),
   getCensus(name = "cbp",
             vintage = 1990,
@@ -804,6 +814,12 @@ employment1990 <- rbind(
 )
 
 employment2000 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = "00"),
   getCensus(name = "cbp", 
             vintage=2000,
             vars = c("EMP", "NAICS1997"),
@@ -914,6 +930,12 @@ employment2010 <- rbind(
             vars = c("EMP", "NAICS2007"),
             region = "county:*",
             regionin = "state:16",
+            naics2007 = "00"),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
             naics2007 = 11),
   getCensus(name = "cbp", 
             vintage=2010,
@@ -1019,7 +1041,8 @@ employment2020 <- getCensus(name = "cbp",
                   region = "county:*",
                   regionin = "state:16")
 
-employment_codes <- tibble(sector = c("Agriculture, Forestry, Fishing and Hunting",
+employment_codes <- tibble(sector = c("Total",
+                                      "Agriculture, Forestry, Fishing and Hunting",
                                       "Mining, Quarrying, and Oil and Gas Extraction",
                                       "Construction",
                                       "Manufacturing",
@@ -1036,9 +1059,127 @@ employment_codes <- tibble(sector = c("Agriculture, Forestry, Fishing and Huntin
                                       "Services",
                                       "Services",
                                       "Services"),
-                               sic = c("07", 10, 15, 20, 40, 40, 50, 52, 60, 60, 70, 70, 70, 70, 70, 70, 70),  
-                           naics = c(11, 21, 23, "31-33", "48-49", 22, 42, "44-45", 52, 53, 54, 56, 61, 62, 71, 72, 81))
+                               sic = c(0, 7, 10, 15, 20, 40, 40, 50, 52, 60, 60, 70, 70, 70, 70, 70, 70, 70),  
+                           naics = c("00", 11, 21, 23, "31-33", "48-49", 22, 42, "44-45", 52, 53, 54, 56, 61, 62, 71, 72, 81))
 
-employment_by_industry <- 
+recode_sic <- unique(employment_codes$sector)
+names(recode_sic) <- unique(employment_codes$sic)
+recode_naic <- employment_codes$sector
+names(recode_naic) <- employment_codes$naics
+
+employment1990_clean <- employment1990 %>%
+  mutate(GEOID = paste0(state, county),
+         county = recode(GEOID, !!!GEOID_names),
+         year=1990,
+         Industry = recode(SIC, !!!recode_sic)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(EMP)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = "Industry",
+              values_from = "employed") %>%
+  filter(county != 16999) %>%
+  replace(is.na(.), 0) %>%
+  rowwise() %>%
+  mutate(across(c(where(is.numeric)),
+                ~.x/Total * 100)) %>%
+  select(-Total)
+
+employment2000_clean <- employment2000 %>%
+  mutate(GEOID = paste0(state, county),
+         county = recode(GEOID, !!!GEOID_names),
+         year=2000,
+         NAICS1997 = str_remove_all(NAICS1997, " "),
+         Industry = recode_factor(NAICS1997, !!!recode_naic)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(EMP)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = "Industry",
+              values_from = "employed") %>%
+  filter(county != 16999) %>%
+  replace(is.na(.), 0) %>%
+  rowwise() %>%
+  mutate(across(c(where(is.numeric)),
+                ~.x/Total * 100)) %>%
+  select(-Total)
+
+employment_industries <- rbind(employment1990_clean, employment2000_clean)
+
+employment2010_clean <- employment2010 %>%
+  mutate(GEOID = paste0(state, county),
+         county = recode(GEOID, !!!GEOID_names),
+         year=2010,
+         NAICS2007 = str_remove_all(NAICS2007, " "),
+         Industry = recode_factor(NAICS2007, !!!recode_naic)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(EMP)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = "Industry",
+              values_from = "employed") %>%
+  filter(county != 16999) %>%
+  replace(is.na(.), 0) %>%
+  rowwise() %>%
+  mutate(across(c(where(is.numeric)),
+                ~.x/Total * 100)) %>%
+  select(-Total)
+
+employment_industries <- rbind(employment_industries, employment2010_clean)
+
+employment2020_clean <- employment2020 %>%
+  mutate(GEOID = paste0(state, county),
+         county = recode(GEOID, !!!GEOID_names),
+         year=2020,
+         NAICS2017 = str_remove_all(NAICS2017, " "),
+         Industry = recode_factor(NAICS2017, !!!recode_naic)) %>%
+  filter(Industry %in% employment_codes$sector) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(EMP)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = "Industry",
+              values_from = "employed") %>%
+  filter(county != 16999) %>%
+  replace(is.na(.), 0) %>%
+  rowwise() %>%
+  mutate(across(c(where(is.numeric)),
+                ~.x/Total * 100)) %>%
+  select(-Total)
+
+employment_industries <- rbind(employment_industries, employment2020_clean)
+
+employ_pca <- prcomp(employment_industries[,-c(1:2)])
+summary(employ_pca)
+#biplot(employ_pca)
+
+# join components explaining >75% of variance
+a_data <- cbind(employment_industries, employ_pca$x[,1:3]) %>%
+  select(county, year, PC1, PC2, PC3) %>%
+  rename("emply_pc1" = "PC1",
+         "emply_pc2" = "PC2",
+         "emply_pc3" = "PC3") %>%
+  right_join(a_data, by=c("county", "year"))
+```
+
+### Average age
+
+Age data downloaded from https://seer.cancer.gov/popdata/download.html.
+
+```{r}
+#| label: "average age"
+
+age_raw <- read.table(file = gzfile("../data/id.1969_2023.singleages.through89.90plus.txt.gz"),
+                      sep = "\n", strip.white = TRUE)
+
+age_formatted <- age_raw %>%
+  mutate(year = as.integer(substr(V1, 1, 4)),
+         GEOID = substr(V1, 7, 11),
+         Age = as.numeric(substr(V1, 17, 18)),
+         Pop = as.numeric(substr(V1, 19, 19+8)))
+
+age <- age_formatted %>%
+  filter(year %in% c(1990, 2000, 2010, 2020)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names)) %>%
+  group_by(county, year) %>%
+  summarise(avg_age = weighted.mean(Age, Pop))
+
+a_data <- left_join(a_data, age, by = c("county", "year"))
 ```
 
