@@ -15,6 +15,7 @@ library(terra)
 library(sf)
 library(FedData)
 library(exactextractr)
+library(censusapi)
 
 # set API keys
 readRenviron("../.Renviron")
@@ -638,4 +639,406 @@ write.csv(ru_data,
           row.names = FALSE)
 ```
 
+# Actors
+
+```{r}
+#| label: "A data setup"
+
+a_data <- expand.grid(county = county_shapes$NAME, 
+                        year = seq(1990, 2020, 10))
+```
+
+## A1 -- Number of Relevant Actors
+
+### Population density
+
+Data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were downloaded from https://www.nber.org/research/data/census-us-decennial-county-population-data-1900-1990.
+
+```{r}
+#| label: "population density"
+
+pop1990 <- read.csv("../data/cencounts.csv") %>%
+  select(pop1990, name) %>%
+  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  mutate(name = str_remove(name, "ID "),
+         name = str_remove(name, " County"))
+pop2000 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2000) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2010 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2010) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2020 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P1_001N",
+                        year = 2020) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+
+county_areas <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
+  filter(Year >= 1990) %>%
+  mutate(Year = as.numeric(Year-2)) %>%
+  select(County, Year, Total_county_land_acres)
+
+pop_dens <- data.frame(county = c(pop1990$name,
+                                  pop2000$NAME,
+                                  pop2010$NAME,
+                                  pop2020$NAME),
+                            year = rep(seq(1990, 2020, 10), each = nrow(pop1990)),
+                            pop = c(pop1990$pop1990,
+                                    pop2000$value,
+                                    pop2010$value,
+                                    pop2020$value)) %>%
+  left_join(county_areas,
+            by = c("county" = "County",
+                   "year" = "Year")) %>%
+  mutate(pop_per_acre = as.numeric(pop) / Total_county_land_acres) %>%
+  select(county, year, pop_per_acre)
+
+# join
+a_data <- left_join(a_data, pop_dens)
+```
+
+### Population change
+
+Population data sources same as above.
+
+```{r}
+#| label: "population change"
+
+pop1980 <- read.csv("../data/cencounts.csv") %>%
+  select(pop1980, name) %>%
+  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  mutate(name = str_remove(name, "ID "),
+         name = str_remove(name, " County"))
+
+pop_change <- data.frame(county = c(pop1980$name,
+                                    pop1990$name,
+                                    pop2000$NAME,
+                                    pop2010$NAME,
+                                    pop2020$NAME),
+                         year = rep(seq(1980, 2020, 10), each = nrow(pop1990)),
+                         pop = as.numeric(c(pop1980$pop1980,
+                                 pop1990$pop1990,
+                                 pop2000$value,
+                                 pop2010$value,
+                                 pop2020$value))) %>%
+  arrange(county, year) %>%
+  mutate(pop_prev = lag(pop, 1),
+         pop_change = pop - pop_prev,
+         perc_pop_change = pop_change / pop_prev * 100) %>%
+  filter(year %in% c(1990,2000,2010,2020)) %>%
+  select(county, year, perc_pop_change)
+
+# join
+a_data <- left_join(a_data, pop_change, by = c("county", "year"))
+```
+
+## A2 -- Socioeconomic attributes
+
+### Employment sectors
+
+County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
+
+```{r}
+#| label: "employment sectors"
+
+employment1990 <- rbind(
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "07"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "10"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "15"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "20"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "40"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "50"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "52"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "60"),
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "70")
+)
+
+employment2000 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 11),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 21),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 23),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = "31-33"),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = "48-49"),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 22),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 42),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = "44-45"),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 52),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 53),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 54),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 56),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 61),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 62),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 71),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 72),
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 81)
+)
+
+employment2010 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 11),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 21),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 23),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = "31-33"),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = "48-49"),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 22),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 42),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = "44-45"),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 52),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 53),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 54),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 56),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 61),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 62),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 71),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 72),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 81)
+)
+
+employment2020 <- getCensus(name = "cbp", 
+                            vintage=2020,
+                  vars = c("EMP", "NAICS2017"),
+                  region = "county:*",
+                  regionin = "state:16")
+
+employment_codes <- tibble(sector = c("Agriculture, Forestry, Fishing and Hunting",
+                                      "Mining, Quarrying, and Oil and Gas Extraction",
+                                      "Construction",
+                                      "Manufacturing",
+                                      "Transportation and Public Utilities",
+                                      "Transportation and Public Utilities",
+                                      "Wholesale Trade",
+                                      "Retail Trade",
+                                      "Finance, Insurance, and Real Estate",
+                                      "Finance, Insurance, and Real Estate",
+                                      "Services",
+                                      "Services",
+                                      "Services",
+                                      "Services",
+                                      "Services",
+                                      "Services",
+                                      "Services"),
+                               sic = c("07", 10, 15, 20, 40, 40, 50, 52, 60, 60, 70, 70, 70, 70, 70, 70, 70),  
+                           naics = c(11, 21, 23, "31-33", "48-49", 22, 42, "44-45", 52, 53, 54, 56, 61, 62, 71, 72, 81))
+
+employment_by_industry <- 
+```
 
