@@ -145,3 +145,129 @@ table(barcodes$barcode)
 
 ggplot(barcodes, aes(fill=barcode)) +
   geom_sf()
+
+################################
+# SES clusters
+
+# county data
+aoi <- tigris::counties("ID") %>%
+  select(c("GEOID", "NAME"))
+
+ru_data <- read.csv("data/RU_data.csv")
+rs_data <- read.csv("data/RS_data.csv")
+
+ses_data_list <- list(RU=ru_data, RS=rs_data)
+
+ses_data_list_sc <- lapply(ses_data_list, function(df) {
+  df %>%
+    na.omit() %>%
+    ungroup() %>%
+    mutate(across(!c(county, year),
+                  ~ (.x - mean(.x)) / (max(.x) - min(.x))))
+})
+
+ses_var_sel <- lapply(ses_data_list_sc, function(df) {
+  SelvarClustLasso(x = df[,-c(1:2)],
+                   nbcluster = 1:9,
+                   lambda = seq(20, 100, by=10),
+                   rho = 1:5,
+                   criterion = "BIC",
+                   models = mixmodGaussianModel(family = "all"),
+                   rmodel = c("LI", "LB", "LC"),
+                   imodel = c("LI", "LB"))
+})
+
+ses_data_sel <- mapply(function(df, varsel) {
+  df[,c(1:2, (varsel$S+2))]
+}, df=ses_data_list_sc, varsel=ses_var_sel)
+
+# ses_Mclust <- lapply(ses_data_sel, function(df) {
+#   Mclust(df[,-c(1:2)], G=1:15)
+# })
+# 
+# ses_mclustICL <- lapply(ses_data_sel, function(df) {
+#   mclustICL(df[,-c(1:2)], G=1:15)
+# })
+
+# visualize cluster structure and principal components
+pca_viz <- lapply(ses_data_sel, function(df) {
+  prcomp(df[,-c(1:2)])
+})
+# p1 <- factoextra::fviz_pca_biplot(pca, habillage=as.factor(mod$classification))
+# p2 <- factoextra::fviz_cluster(mod)
+factoextra::fviz_pca_biplot(pca_viz[[1]], habillage=as.factor(ses_var_sel[[1]]$partition),
+                            title = "Resource Units")
+factoextra::fviz_pca_biplot(pca_viz[[2]], habillage=as.factor(ses_var_sel[[2]]$partition),
+                            title = "Resource System")
+
+# map of clusters in all counties, all years
+clust_dat <- mapply(function(df, mod, system_name) {
+  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
+    st_as_sf() %>%
+    cbind(., mod$partition) %>%
+    mutate(cluster = paste0(system_name, mod.partition)) %>%
+    select(-mod.partition)
+}, df = ses_data_list_sc, mod = ses_var_sel, system_name=names(ses_data_list_sc))
+ggplot(clust_dat[["RU"]], aes(fill = cluster)) +
+  geom_sf() +
+  facet_wrap(vars(year))
+
+# visualize data difference between clusters
+clust_dat_pv <- lapply(clust_dat, function(df) {
+  df %>%
+    pivot_longer(cols = !c(county, year, cluster, geometry),
+                 names_to = "input_data_name",
+                 values_to = "input_data_value")
+})
+whiskers <- lapply(clust_dat_pv, function(df) {
+  df %>%
+    st_drop_geometry() %>%
+    group_by(cluster, input_data_name) %>%
+    summarise(upper_whisker = min(max(input_data_value), quantile(input_data_value, 0.75) + 1.5 * IQR(input_data_value)),
+              lower_whisker = max(min(input_data_value), quantile(input_data_value, 0.25) - 1.5 * IQR(input_data_value)),
+              mean = mean(input_data_value),
+              sd = sd(input_data_value)) %>%
+    mutate(touches_zero = ifelse((upper_whisker>0 & lower_whisker>0) | (upper_whisker<0 & lower_whisker<0), FALSE, TRUE),
+           mean_sd_zero = ifelse((mean+sd>0 & mean-sd>0) | (mean+sd<0 & mean-sd<0), FALSE, TRUE)) %>%
+    select(-c(upper_whisker, lower_whisker, mean, sd))
+})
+# viz with actual data
+left_join(clust_dat_pv[["RS"]], whiskers[["RS"]]) %>%
+  ggplot() +
+  geom_boxplot(aes(x = input_data_value, y = input_data_name,
+                   fill = mean_sd_zero),
+               outliers = FALSE) +
+  facet_wrap(facets = "cluster")
+
+barcodes <- bind_rows(clust_dat) %>%
+  select(county, year, cluster) %>%
+  group_by(county, geometry, year) %>%
+  mutate(yearcode = paste0(cluster, collapse = "")) %>%
+  select(-cluster) %>%
+  unique() %>%
+  pivot_wider(id_cols = c(county, geometry),
+              names_from = year,
+              values_from = yearcode) %>%
+  select(county, `1990`, `2000`, `2010`, `2020`, geometry) %>%
+  rowwise() %>%
+  mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
+
+# almost no common barcodes
+table(barcodes$barcode)
+
+ggplot(barcodes, aes(fill=barcode)) +
+  geom_sf()
+
+system_barcodes <- lapply(clust_dat, function(df) {
+  df %>%
+    select(county, year, cluster) %>%
+    pivot_wider(id_cols = c(county, geometry),
+                names_from = year,
+                values_from = cluster) %>%
+    select(county, `1990`, `2000`, `2010`, `2020`, geometry) %>%
+    rowwise() %>%
+    mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
+})
+table(system_barcodes[["RS"]]$barcode)
+ggplot(system_barcodes[["RU"]], aes(fill=barcode)) +
+  geom_sf()
