@@ -155,8 +155,9 @@ aoi <- tigris::counties("ID") %>%
 
 ru_data <- read.csv("data/RU_data.csv")
 rs_data <- read.csv("data/RS_data.csv")
+resource <- left_join(ru_data, rs_data)
 
-ses_data_list <- list(RU=ru_data, RS=rs_data)
+ses_data_list <- list(Resouce = resource)
 
 ses_data_list_sc <- lapply(ses_data_list, function(df) {
   df %>%
@@ -205,10 +206,10 @@ clust_dat <- mapply(function(df, mod, system_name) {
   left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
     st_as_sf() %>%
     cbind(., mod$partition) %>%
-    mutate(cluster = paste0(system_name, mod.partition)) %>%
+    #mutate(cluster = paste0("R", mod.partition)) %>%
     select(-mod.partition)
 }, df = ses_data_list_sc, mod = ses_var_sel, system_name=names(ses_data_list_sc))
-ggplot(clust_dat[["RU"]], aes(fill = cluster)) +
+ggplot(clust_dat[["Resource"]], aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year))
 
