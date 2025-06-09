@@ -408,6 +408,10 @@ developed_change <- land_cover_percents %>%
 
 # join
 ru_data <- left_join(ru_data, developed_change)
+
+# replace missing land change with 0%
+ru_data <- ru_data %>%
+  mutate(across(cropland_change:developed_change, ~ifelse(is.na(.x), 0, .x)))
 ```
 
 ## RU4 -- Economic value
