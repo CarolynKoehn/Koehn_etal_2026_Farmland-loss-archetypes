@@ -156,8 +156,10 @@ aoi <- tigris::counties("ID") %>%
 ru_data <- read.csv("data/RU_data.csv")
 rs_data <- read.csv("data/RS_data.csv")
 resource <- left_join(ru_data, rs_data)
+actors <- read.csv("data/Actor_data.csv")
 
-ses_data_list <- list(Resouce = resource)
+ses_data_list <- list(Resource = resource,
+                      Actors = actors)
 
 ses_data_list_sc <- lapply(ses_data_list, function(df) {
   df %>%
@@ -180,7 +182,8 @@ ses_var_sel <- lapply(ses_data_list_sc, function(df) {
 
 ses_data_sel <- mapply(function(df, varsel) {
   df[,c(1:2, (varsel$S+2))]
-}, df=ses_data_list_sc, varsel=ses_var_sel)
+}, df=ses_data_list_sc, varsel=ses_var_sel,
+SIMPLIFY = FALSE)
 
 # ses_Mclust <- lapply(ses_data_sel, function(df) {
 #   Mclust(df[,-c(1:2)], G=1:15)
@@ -196,20 +199,22 @@ pca_viz <- lapply(ses_data_sel, function(df) {
 })
 # p1 <- factoextra::fviz_pca_biplot(pca, habillage=as.factor(mod$classification))
 # p2 <- factoextra::fviz_cluster(mod)
-factoextra::fviz_pca_biplot(pca_viz[[1]], habillage=as.factor(ses_var_sel[[1]]$partition),
-                            title = "Resource Units")
-factoextra::fviz_pca_biplot(pca_viz[[2]], habillage=as.factor(ses_var_sel[[2]]$partition),
-                            title = "Resource System")
+factoextra::fviz_pca_biplot(pca_viz[["Resource"]], 
+                            habillage=as.factor(ses_var_sel[["Resource"]]$partition),
+                            title = "Resource")
+factoextra::fviz_pca_biplot(pca_viz[["Actors"]], 
+                            habillage=as.factor(ses_var_sel[["Actors"]]$partition),
+                            title = "Actors")
 
 # map of clusters in all counties, all years
 clust_dat <- mapply(function(df, mod, system_name) {
   left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
     st_as_sf() %>%
     cbind(., mod$partition) %>%
-    #mutate(cluster = paste0("R", mod.partition)) %>%
+    mutate(cluster = paste0(substr(system_name,1,1), mod.partition)) %>%
     select(-mod.partition)
 }, df = ses_data_list_sc, mod = ses_var_sel, system_name=names(ses_data_list_sc))
-ggplot(clust_dat[["Resource"]], aes(fill = cluster)) +
+ggplot(clust_dat[["Actors"]], aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year))
 
@@ -233,12 +238,44 @@ whiskers <- lapply(clust_dat_pv, function(df) {
     select(-c(upper_whisker, lower_whisker, mean, sd))
 })
 # viz with actual data
-left_join(clust_dat_pv[["RS"]], whiskers[["RS"]]) %>%
+left_join(clust_dat_pv[["Actors"]], whiskers[["Actors"]]) %>%
   ggplot() +
   geom_boxplot(aes(x = input_data_value, y = input_data_name,
                    fill = mean_sd_zero),
                outliers = FALSE) +
   facet_wrap(facets = "cluster")
+
+# model output
+# stdev for each cluster
+st_dev_clust <- mapply(function(mod, ses_system, input_data) {
+  list_of_stdevs <- lapply(mod$parameters@variance, 
+                           FUN = function(x) {
+                             stdevs <- sqrt(diag(x))
+                             names(stdevs) <- colnames(input_data[mod$S+2])
+                             return(stdevs)
+                             })
+  stdevs <- data.frame(bind_rows(list_of_stdevs),
+                       cluster = paste0(substr(ses_system,1,1), c(1:length(list_of_stdevs)))) %>%
+    pivot_longer(cols = !cluster,
+                 names_to = "input_data_name",
+                 values_to = "stdev")
+  return(stdevs)
+}, mod = ses_var_sel, ses_system = names(ses_var_sel), input_data = ses_data_list_sc, SIMPLIFY = FALSE)
+
+# join with mean
+mod_outs <- as.data.frame(ses_var_sel[["Actors"]]$parameters@mean)
+colnames(mod_outs) <- colnames(ses_data_list_sc[["Actors"]][ses_var_sel[["Actors"]]$S+2])
+mod_outs %>%
+  mutate(cluster = paste0("A", 1:nrow(mod_outs))) %>%
+  pivot_longer(cols = !cluster,
+               names_to = "input_data_name",
+               values_to = "mean") %>%
+  left_join(st_dev_clust[["Actors"]]) %>%
+  filter(., (mean+stdev>0 & mean-stdev>0) | (mean+stdev<0 & mean-stdev<0)) %>%
+  ggplot(aes(x = mean, y = input_data_name)) +
+  geom_point() +
+  geom_errorbar(aes(xmin = mean-stdev, xmax = mean+stdev)) +
+  facet_wrap(vars(cluster))
 
 barcodes <- bind_rows(clust_dat) %>%
   select(county, year, cluster) %>%
@@ -253,7 +290,6 @@ barcodes <- bind_rows(clust_dat) %>%
   rowwise() %>%
   mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
 
-# almost no common barcodes
 table(barcodes$barcode)
 
 ggplot(barcodes, aes(fill=barcode)) +
@@ -269,6 +305,6 @@ system_barcodes <- lapply(clust_dat, function(df) {
     rowwise() %>%
     mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
 })
-table(system_barcodes[["RS"]]$barcode)
-ggplot(system_barcodes[["RU"]], aes(fill=barcode)) +
+table(system_barcodes[["Actors"]]$barcode)
+ggplot(system_barcodes[["Actors"]], aes(fill=barcode)) +
   geom_sf()
