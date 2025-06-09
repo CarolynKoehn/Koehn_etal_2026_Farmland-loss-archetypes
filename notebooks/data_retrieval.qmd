@@ -423,7 +423,7 @@ ru_data <- ru_data %>%
 Data for 2002-2022 were downloaded from the NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 4.
 
 ```{r}
-#| label: "net cash farm"
+#| label: "farms with loss"
 
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
@@ -1205,7 +1205,8 @@ unemployment_clean <- unemployment_raw %>%
   group_by(GEOID, year) %>%
   summarise(unemployment_rate = mean(value)) %>%
   mutate(county = recode(GEOID, !!!GEOID_names)) %>%
-  select(-GEOID)
+  ungroup() %>%
+  select(county, year, unemployment_rate)
 
 # join
 a_data <- left_join(a_data, unemployment_clean, by = c("county", "year"))
@@ -1243,4 +1244,180 @@ edu_level <- rbind(high_school, bachelors) %>%
 a_data <- left_join(a_data, edu_level, by = c("county" = "Name", "year"))
 ```
 
+### Agriculture
 
+#### Farm ownership
+
+Percent of farms full-owned, part-owned, or tenant operated. We use PCA scores since these percentages add to 100%. 1990 data are from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 11.
+
+```{r}
+#| label: "farm tenure"
+
+params <- list(agg_level_desc = "county",
+               state_name = "Idaho",
+               year = c(2002, 2012, 2022),
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "tenure")
+# retrieve and clean
+farm_own <- nassqs(params)
+farm_own_perc <- farm_own %>%
+  select(county_name, year, Value, domaincat_desc) %>%
+  pivot_wider(id_cols = county_name:year,
+              names_from = domaincat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(total_farms = sum(c_across(`TENURE: (FULL OWNER)`:`TENURE: (TENANT)`))) %>%
+  mutate(across(`TENURE: (FULL OWNER)`:`TENURE: (TENANT)`,
+                ~.x / total_farms * 100)) %>%
+  rename("Num_full_owned" = "TENURE: (FULL OWNER)",
+         "Num_part_owned" = "TENURE: (PART OWNER)",
+         "Num_tenant" = "TENURE: (TENANT)",
+         "county" = "county_name") %>%
+  select(-total_farms)
+
+farm_tenure_1992 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  left_join(read.csv("../data/Farm_size_1925-1992.csv")) %>%
+  filter(Size == "all farms") %>%
+  mutate(across(starts_with("Num_"), ~.x/Num_farms * 100)) %>%
+  rename("county" = "County",
+         "year" = "Year") %>%
+  select(county, year, Num_full_owned:Num_tenant)
+
+#combine
+farm_own_perc <- rbind(farm_own_perc, farm_tenure_1992) %>%
+  na.omit()
+
+
+
+# for categories that add to 1, add PCA components to clustering data
+farm_own_pca <- prcomp(farm_own_perc[,3:5])
+
+# join
+a_data <- farm_own_perc %>%
+  cbind(., farm_own_pca$x[,1]) %>% # adding components that explain >90% of variance
+  rename('tenure_pc1' = 'farm_own_pca$x[, 1]') %>%
+  select(county, year, tenure_pc1) %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)-2) %>%
+  left_join(a_data, .)
+```
+
+#### Farms with net loss
+
+Data for 2002-2022 were downloaded from the NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 4.
+
+```{r}
+#| label: "farms with loss - actors"
+
+params <- list(agg_level_desc = "county",
+               state_name = "Idaho",
+               year = c(2002, 2012, 2022),
+               short_desc = c("Income, net cash farm, of operations - operations with loss",
+                              "Farm operations - number of operations"),
+               domain_desc = "total")
+
+farms_w_loss <- nassqs(params)
+
+farms_w_loss_1992 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  left_join(read.csv("../data/Farm_size_1925-1992.csv")) %>%
+  filter(Size == "all farms") %>%
+  mutate(perc_farms_w_net_loss = Farms_w_net_losses / Num_farms * 100) %>%
+  rename("county" = "County",
+         "year" = "Year") %>%
+  mutate(year = as.numeric(year-2)) %>%
+  select(county, year, perc_farms_w_net_loss)
+
+# clean and join
+a_data <- farms_w_loss %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = statisticcat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(perc_farms_w_net_loss = `LOSS` / `OPERATIONS` * 100) %>%
+  rename("county" = "county_name") %>%
+  mutate(county = str_to_title(county),
+         year = as.numeric(year)-2) %>%
+  select(c(county, year, perc_farms_w_net_loss)) %>%
+  rbind(farms_w_loss_1992) %>%
+  ungroup() %>%
+  right_join(a_data, by=c("county", "year"))
+```
+
+## A4 -- Location
+
+### Population in urban and rural areas
+
+Data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were digitized from https://www2.census.gov/library/publications/decennial/1990/cph-2/cph-2-14.pdf (available at https://www.census.gov/library/publications/1992/dec/cph-2.html)
+
+```{r}
+#| label: "urban rural pop"
+
+tot_pop1990 <- read.csv("../data/cencounts.csv") %>%
+  select(pop1990, name) %>%
+  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  mutate(name = str_remove(name, "ID "),
+         name = str_remove(name, " County"))
+urb_rur1990 <- read.csv("../data/1990_US_Census_data.csv")  %>%
+  select(County, Year, Pop_urban, Pop_rural) %>%
+  left_join(tot_pop1990, by = c("County" = "name"))
+urb_rur2000 <- get_decennial(geography = "county",
+                             state = "ID",
+                             variables = c("P002001", "P002002", "P002005"),
+                             year = 2000) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho")) %>%
+  pivot_wider(id_cols = NAME,
+              names_from = variable,
+              values_from = value)
+urb_rur2010 <- get_decennial(geography = "county",
+                             state = "ID",
+                             variables = c("P002001", "P002002", "P002005"),
+                             year = 2010) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho")) %>%
+  pivot_wider(id_cols = NAME,
+              names_from = variable,
+              values_from = value)
+urb_rur2020 <- get_decennial(geography = "county",
+                             state = "ID",
+                             variables = c("P2_001N", "P2_002N", "P2_003N"),
+                             year = 2020) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho")) %>%
+  pivot_wider(id_cols = NAME,
+              names_from = variable,
+              values_from = value)
+
+urb_rur <- data.frame(county = c(urb_rur1990$County,
+                                 urb_rur2000$NAME,
+                                 urb_rur2010$NAME,
+                                 urb_rur2020$NAME),
+                      year = rep(c(1990, 2000, 2010, 2020), each = nrow(urb_rur1990)),
+                      pop_urban = c(urb_rur1990$Pop_urban,
+                                    urb_rur2000$P002002,
+                                    urb_rur2010$P002002,
+                                    urb_rur2020$P2_002N),
+                      pop_rural = c(urb_rur1990$Pop_rural,
+                                    urb_rur2000$P002005,
+                                    urb_rur2010$P002005,
+                                    urb_rur2020$P2_003N),
+                      pop_total = c(urb_rur1990$pop1990,
+                                    urb_rur2000$P002001,
+                                    urb_rur2010$P002001,
+                                    urb_rur2020$P2_001N))
+
+urb_rur <- urb_rur %>%
+  rowwise() %>%
+  mutate(across(pop_urban:pop_rural, ~as.numeric(.x)/as.numeric(pop_total)*100))
+
+# join
+a_data <- left_join(a_data, urb_rur[,c("county", "year", "pop_urban")])
+```
+
+Save actors data:
+
+```{r}
+#| label: "save A data"
+
+write.csv(a_data,
+          "../data/Actor_data.csv",
+          row.names = FALSE)
+```
