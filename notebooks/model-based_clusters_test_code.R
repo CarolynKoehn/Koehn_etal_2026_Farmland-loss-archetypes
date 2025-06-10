@@ -171,7 +171,7 @@ ses_data_list_sc <- lapply(ses_data_list, function(df) {
 
 ses_var_sel <- lapply(ses_data_list_sc, function(df) {
   SelvarClustLasso(x = df[,-c(1:2)],
-                   nbcluster = 1:9,
+                   nbcluster = 1:15,
                    lambda = seq(20, 100, by=10),
                    rho = 1:5,
                    criterion = "BIC",
@@ -184,6 +184,17 @@ ses_data_sel <- mapply(function(df, varsel) {
   df[,c(1:2, (varsel$S+2))]
 }, df=ses_data_list_sc, varsel=ses_var_sel,
 SIMPLIFY = FALSE)
+
+ses_clust_mod <- lapply(ses_data_sel, function(df) {
+  mixmodCluster(data = df[,-c(1:2)],
+                nbCluster = 1:5, # mixmod doc says upper limit should be n^0.3
+                dataType = "quantitative",
+                models = mixmodGaussianModel(family = "all"),
+                criterion = "BIC",
+                strategy = new("Strategy", initMethod = "smallEM", 
+                               nbIterationInInit=20, nbTry = 5,
+                               algo = c("EM", "SEM")))
+})
 
 # ses_Mclust <- lapply(ses_data_sel, function(df) {
 #   Mclust(df[,-c(1:2)], G=1:15)
@@ -199,21 +210,27 @@ pca_viz <- lapply(ses_data_sel, function(df) {
 })
 # p1 <- factoextra::fviz_pca_biplot(pca, habillage=as.factor(mod$classification))
 # p2 <- factoextra::fviz_cluster(mod)
+# factoextra::fviz_pca_biplot(pca_viz[["Resource"]], 
+#                             habillage=as.factor(ses_var_sel[["Resource"]]$partition),
+#                             title = "Resource")
+# factoextra::fviz_pca_biplot(pca_viz[["Actors"]], 
+#                             habillage=as.factor(ses_var_sel[["Actors"]]$partition),
+#                             title = "Actors")
 factoextra::fviz_pca_biplot(pca_viz[["Resource"]], 
-                            habillage=as.factor(ses_var_sel[["Resource"]]$partition),
+                            habillage=as.factor(ses_clust_mod[["Resource"]]@bestResult@partition),
                             title = "Resource")
 factoextra::fviz_pca_biplot(pca_viz[["Actors"]], 
-                            habillage=as.factor(ses_var_sel[["Actors"]]$partition),
+                            habillage=as.factor(ses_clust_mod[["Actors"]]@bestResult@partition),
                             title = "Actors")
 
 # map of clusters in all counties, all years
 clust_dat <- mapply(function(df, mod, system_name) {
   left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
     st_as_sf() %>%
-    cbind(., mod$partition) %>%
-    mutate(cluster = paste0(substr(system_name,1,1), mod.partition)) %>%
-    select(-mod.partition)
-}, df = ses_data_list_sc, mod = ses_var_sel, system_name=names(ses_data_list_sc))
+    cbind(., mod@bestResult@partition) %>%
+    mutate(cluster = paste0(substr(system_name,1,1), mod.bestResult.partition)) %>%
+    select(-mod.bestResult.partition)
+}, df = ses_data_list_sc, mod = ses_clust_mod, system_name=names(ses_data_list_sc))
 ggplot(clust_dat[["Actors"]], aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year))
@@ -238,7 +255,7 @@ whiskers <- lapply(clust_dat_pv, function(df) {
     select(-c(upper_whisker, lower_whisker, mean, sd))
 })
 # viz with actual data
-left_join(clust_dat_pv[["Actors"]], whiskers[["Actors"]]) %>%
+left_join(clust_dat_pv[["Resource"]], whiskers[["Resource"]]) %>%
   ggplot() +
   geom_boxplot(aes(x = input_data_value, y = input_data_name,
                    fill = mean_sd_zero),
@@ -248,10 +265,10 @@ left_join(clust_dat_pv[["Actors"]], whiskers[["Actors"]]) %>%
 # model output
 # stdev for each cluster
 st_dev_clust <- mapply(function(mod, ses_system, input_data) {
-  list_of_stdevs <- lapply(mod$parameters@variance, 
+  list_of_stdevs <- lapply(mod@bestResult@parameters@variance, 
                            FUN = function(x) {
                              stdevs <- sqrt(diag(x))
-                             names(stdevs) <- colnames(input_data[mod$S+2])
+                             names(stdevs) <- colnames(input_data[-c(1:2)])
                              return(stdevs)
                              })
   stdevs <- data.frame(bind_rows(list_of_stdevs),
@@ -260,17 +277,17 @@ st_dev_clust <- mapply(function(mod, ses_system, input_data) {
                  names_to = "input_data_name",
                  values_to = "stdev")
   return(stdevs)
-}, mod = ses_var_sel, ses_system = names(ses_var_sel), input_data = ses_data_list_sc, SIMPLIFY = FALSE)
+}, mod = ses_clust_mod, ses_system = names(ses_var_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
 
 # join with mean
-mod_outs <- as.data.frame(ses_var_sel[["Actors"]]$parameters@mean)
-colnames(mod_outs) <- colnames(ses_data_list_sc[["Actors"]][ses_var_sel[["Actors"]]$S+2])
+mod_outs <- as.data.frame(ses_clust_mod[["Resource"]]@bestResult@parameters@mean)
+colnames(mod_outs) <- colnames(ses_data_sel[["Resource"]][-c(1:2)])
 mod_outs %>%
-  mutate(cluster = paste0("A", 1:nrow(mod_outs))) %>%
+  mutate(cluster = paste0("R", 1:nrow(mod_outs))) %>%
   pivot_longer(cols = !cluster,
                names_to = "input_data_name",
                values_to = "mean") %>%
-  left_join(st_dev_clust[["Actors"]]) %>%
+  left_join(st_dev_clust[["Resource"]]) %>%
   filter(., (mean+stdev>0 & mean-stdev>0) | (mean+stdev<0 & mean-stdev<0)) %>%
   ggplot(aes(x = mean, y = input_data_name)) +
   geom_point() +
@@ -305,6 +322,6 @@ system_barcodes <- lapply(clust_dat, function(df) {
     rowwise() %>%
     mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
 })
-table(system_barcodes[["Actors"]]$barcode)
-ggplot(system_barcodes[["Actors"]], aes(fill=barcode)) +
+table(system_barcodes[["Resource"]]$barcode)
+ggplot(system_barcodes[["Resource"]], aes(fill=barcode)) +
   geom_sf()
