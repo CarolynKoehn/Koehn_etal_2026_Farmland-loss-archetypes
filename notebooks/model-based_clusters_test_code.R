@@ -149,6 +149,8 @@ ggplot(barcodes, aes(fill=barcode)) +
 ################################
 # SES clusters
 
+set.seed(419)
+
 # county data
 aoi <- tigris::counties("ID") %>%
   select(c("GEOID", "NAME"))
@@ -169,9 +171,12 @@ ses_data_list_sc <- lapply(ses_data_list, function(df) {
                   ~ (.x - mean(.x)) / (max(.x) - min(.x))))
 })
 
+#####################
+# Methods for Rmixmod
+
 ses_var_sel <- lapply(ses_data_list_sc, function(df) {
   SelvarClustLasso(x = df[,-c(1:2)],
-                   nbcluster = 1:15,
+                   nbcluster = 1:5,
                    lambda = seq(20, 100, by=10),
                    rho = 1:5,
                    criterion = "BIC",
@@ -192,30 +197,14 @@ ses_clust_mod <- lapply(ses_data_sel, function(df) {
                 models = mixmodGaussianModel(family = "all"),
                 criterion = "BIC",
                 strategy = new("Strategy", initMethod = "smallEM", 
-                               nbIterationInInit=20, nbTry = 5,
+                               nbIterationInInit=50, nbTry = 20,
                                algo = c("EM", "SEM")))
 })
-
-# ses_Mclust <- lapply(ses_data_sel, function(df) {
-#   Mclust(df[,-c(1:2)], G=1:15)
-# })
-# 
-# ses_mclustICL <- lapply(ses_data_sel, function(df) {
-#   mclustICL(df[,-c(1:2)], G=1:15)
-# })
 
 # visualize cluster structure and principal components
 pca_viz <- lapply(ses_data_sel, function(df) {
   prcomp(df[,-c(1:2)])
 })
-# p1 <- factoextra::fviz_pca_biplot(pca, habillage=as.factor(mod$classification))
-# p2 <- factoextra::fviz_cluster(mod)
-# factoextra::fviz_pca_biplot(pca_viz[["Resource"]], 
-#                             habillage=as.factor(ses_var_sel[["Resource"]]$partition),
-#                             title = "Resource")
-# factoextra::fviz_pca_biplot(pca_viz[["Actors"]], 
-#                             habillage=as.factor(ses_var_sel[["Actors"]]$partition),
-#                             title = "Actors")
 factoextra::fviz_pca_biplot(pca_viz[["Resource"]], 
                             habillage=as.factor(ses_clust_mod[["Resource"]]@bestResult@partition),
                             title = "Resource")
@@ -324,4 +313,147 @@ system_barcodes <- lapply(clust_dat, function(df) {
 })
 table(system_barcodes[["Resource"]]$barcode)
 ggplot(system_barcodes[["Resource"]], aes(fill=barcode)) +
+  geom_sf()
+
+#################
+# Methods for Mclust
+
+ses_var_sel <- lapply(ses_data_list_sc, function(df) {
+  clustvarsel(data = df[,-c(1:2)],
+              G = 1:5,
+              search = "greedy",
+              direction = "backward")
+})
+
+ses_data_sel <- mapply(function(df, varsel) {
+  df[,c(1:2, (varsel$subset+2))]
+}, df=ses_data_list_sc, varsel=ses_var_sel,
+SIMPLIFY = FALSE)
+
+ses_Mclust <- lapply(ses_data_sel, function(df) {
+  Mclust(df[,-c(1:2)], G=1:15)
+})
+
+ses_mclustICL <- lapply(ses_data_sel, function(df) {
+  mclustICL(df[,-c(1:2)], G=1:15)
+})
+
+plot(ses_Mclust[["Resource"]], "BIC")
+plot(ses_Mclust[["Actors"]], "BIC")
+plot(ses_mclustICL[["Resource"]])
+plot(ses_mclustICL[["Actors"]])
+
+ses_clust_mod[["Resource"]] <- Mclust(ses_data_sel[["Resource"]][,-c(1:2)], 
+                                      G=6, modelNames = "VVI")
+ses_clust_mod[["Actors"]] <- Mclust(ses_data_sel[["Actors"]][,-c(1:2)], 
+                                      G=4, modelNames = "VVE")
+
+# visualize cluster structure and principal components
+pca_viz <- lapply(ses_data_sel, function(df) {
+  prcomp(df[,-c(1:2)])
+})
+factoextra::fviz_pca_biplot(pca_viz[["Resource"]],
+                            habillage=as.factor(ses_clust_mod[["Resource"]]$classification),
+                            title = "Resource")
+factoextra::fviz_pca_biplot(pca_viz[["Actors"]],
+                            habillage=as.factor(ses_clust_mod[["Actors"]]$classification),
+                            title = "Actors")
+
+# map of clusters in all counties, all years
+clust_dat <- mapply(function(df, mod, system_name) {
+  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
+    st_as_sf() %>%
+    cbind(., mod$classification) %>%
+    mutate(cluster = paste0(substr(system_name,1,1), mod.classification)) %>%
+    select(-mod.classification)
+}, df = ses_data_list_sc, mod = ses_clust_mod, system_name=names(ses_data_list_sc))
+ggplot(clust_dat[["Resource"]], aes(fill = cluster)) +
+  geom_sf() +
+  facet_wrap(vars(year))
+
+# visualize data difference between clusters
+clust_dat_pv <- lapply(clust_dat, function(df) {
+  df %>%
+    pivot_longer(cols = !c(county, year, cluster, geometry),
+                 names_to = "input_data_name",
+                 values_to = "input_data_value")
+})
+whiskers <- lapply(clust_dat_pv, function(df) {
+  df %>%
+    st_drop_geometry() %>%
+    group_by(cluster, input_data_name) %>%
+    summarise(upper_whisker = min(max(input_data_value), quantile(input_data_value, 0.75) + 1.5 * IQR(input_data_value)),
+              lower_whisker = max(min(input_data_value), quantile(input_data_value, 0.25) - 1.5 * IQR(input_data_value)),
+              mean = mean(input_data_value),
+              sd = sd(input_data_value)) %>%
+    mutate(touches_zero = ifelse((upper_whisker>0 & lower_whisker>0) | (upper_whisker<0 & lower_whisker<0), FALSE, TRUE),
+           mean_sd_zero = ifelse((mean+sd>0 & mean-sd>0) | (mean+sd<0 & mean-sd<0), FALSE, TRUE)) %>%
+    select(-c(upper_whisker, lower_whisker, mean, sd))
+})
+# viz with actual data
+left_join(clust_dat_pv[["Actors"]], whiskers[["Actors"]]) %>%
+  ggplot() +
+  geom_boxplot(aes(x = input_data_value, y = input_data_name,
+                   fill = mean_sd_zero),
+               outliers = FALSE) +
+  facet_wrap(facets = "cluster")
+
+# model output
+# stdev for each cluster
+st_dev_clust <- mapply(function(mod, ses_system, input_data) {
+  as.data.frame(apply(mod$parameters$variance$sigma, 
+                      MARGIN = 3,
+                      FUN = diag)) %>%
+    mutate(across(.cols = everything(), .fns = sqrt)) %>%
+    mutate(input_data_name = rownames(.)) %>%
+    pivot_longer(cols = !input_data_name,
+                 names_to = "cluster",
+                 values_to = "stdev") %>%
+    mutate(cluster = str_replace(cluster, "V", substr(ses_system,1,1)))
+}, mod = ses_clust_mod, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
+
+# join with mean
+as.data.frame(ses_clust_mod[["Actors"]]$parameters$mean) %>%
+  mutate(input_data_name = rownames(.)) %>%
+  pivot_longer(cols = !input_data_name,
+               names_to = "cluster",
+               values_to = "mean") %>%
+  mutate(cluster = str_replace(cluster, "V", substr("A",1,1))) %>%
+  left_join(st_dev_clust[["Actors"]]) %>%
+  filter(., (mean+stdev>0 & mean-stdev>0) | (mean+stdev<0 & mean-stdev<0)) %>%
+  ggplot(aes(x = mean, y = input_data_name)) +
+  geom_point() +
+  geom_errorbar(aes(xmin = mean-stdev, xmax = mean+stdev)) +
+  facet_wrap(vars(cluster))
+
+barcodes <- bind_rows(clust_dat) %>%
+  select(county, year, cluster) %>%
+  group_by(county, geometry, year) %>%
+  mutate(yearcode = paste0(cluster, collapse = "")) %>%
+  select(-cluster) %>%
+  unique() %>%
+  pivot_wider(id_cols = c(county, geometry),
+              names_from = year,
+              values_from = yearcode) %>%
+  select(county, `1990`, `2000`, `2010`, `2020`, geometry) %>%
+  rowwise() %>%
+  mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
+
+table(barcodes$barcode)
+
+ggplot(barcodes, aes(fill=barcode)) +
+  geom_sf()
+
+system_barcodes <- lapply(clust_dat, function(df) {
+  df %>%
+    select(county, year, cluster) %>%
+    pivot_wider(id_cols = c(county, geometry),
+                names_from = year,
+                values_from = cluster) %>%
+    select(county, `1990`, `2000`, `2010`, `2020`, geometry) %>%
+    rowwise() %>%
+    mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
+})
+table(system_barcodes[["Actors"]]$barcode)
+ggplot(system_barcodes[["Actors"]], aes(fill=barcode)) +
   geom_sf()
