@@ -330,18 +330,22 @@ ses_data_sel <- mapply(function(df, varsel) {
 }, df=ses_data_list_sc, varsel=ses_var_sel,
 SIMPLIFY = FALSE)
 
-ses_Mclust <- lapply(ses_data_sel, function(df) {
-  Mclust(df[,-c(1:2)], G=1:15)
+ses_mclustBIC <- lapply(ses_data_sel, function(df) {
+  mclustBIC(df[,-c(1:2)], G=1:15)
 })
 
 ses_mclustICL <- lapply(ses_data_sel, function(df) {
   mclustICL(df[,-c(1:2)], G=1:15)
 })
 
-plot(ses_Mclust[["Resource"]], "BIC")
-plot(ses_Mclust[["Actors"]], "BIC")
+plot(ses_mclustBIC[["Resource"]])
+plot(ses_mclustBIC[["Actors"]])
 plot(ses_mclustICL[["Resource"]])
 plot(ses_mclustICL[["Actors"]])
+
+summary(ses_mclustBIC[["Resource"]])
+
+ses_clust_mod <- list()
 
 ses_clust_mod[["Resource"]] <- Mclust(ses_data_sel[["Resource"]][,-c(1:2)], 
                                       G=6, modelNames = "VVI")
@@ -391,7 +395,7 @@ whiskers <- lapply(clust_dat_pv, function(df) {
     select(-c(upper_whisker, lower_whisker, mean, sd))
 })
 # viz with actual data
-left_join(clust_dat_pv[["Actors"]], whiskers[["Actors"]]) %>%
+left_join(clust_dat_pv[["Resource"]], whiskers[["Resource"]]) %>%
   ggplot() +
   geom_boxplot(aes(x = input_data_value, y = input_data_name,
                    fill = mean_sd_zero),
@@ -400,30 +404,39 @@ left_join(clust_dat_pv[["Actors"]], whiskers[["Actors"]]) %>%
 
 # model output
 # stdev for each cluster
-st_dev_clust <- mapply(function(mod, ses_system, input_data) {
-  as.data.frame(apply(mod$parameters$variance$sigma, 
-                      MARGIN = 3,
-                      FUN = diag)) %>%
-    mutate(across(.cols = everything(), .fns = sqrt)) %>%
-    mutate(input_data_name = rownames(.)) %>%
-    pivot_longer(cols = !input_data_name,
-                 names_to = "cluster",
-                 values_to = "stdev") %>%
-    mutate(cluster = str_replace(cluster, "V", substr(ses_system,1,1)))
+# st_dev_clust <- mapply(function(mod, ses_system, input_data) {
+#   as.data.frame(apply(mod$parameters$variance$sigma, 
+#                       MARGIN = 3,
+#                       FUN = diag)) %>%
+#     mutate(across(.cols = everything(), .fns = sqrt)) %>%
+#     mutate(input_data_name = rownames(.)) %>%
+#     pivot_longer(cols = !input_data_name,
+#                  names_to = "cluster",
+#                  values_to = "stdev") %>%
+#     mutate(cluster = str_replace(cluster, "V", substr(ses_system,1,1)))
+# }, mod = ses_clust_mod, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
+ci_clust <- mapply(function(mod, ses_system, input_data) {
+  bootmod <- MclustBootstrap(mod, nboot = 999, type = "bs")
+  
+  t(as.data.frame(summary(bootmod, "ci")$mean)) %>%
+    as.data.frame() %>%
+    mutate(cluster = paste0(str_sub(ses_system, 1,1), str_sub(rownames(.), -1, -1)),
+           input_data_name = str_sub(rownames(.), 1, -3))
 }, mod = ses_clust_mod, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
 
 # join with mean
-as.data.frame(ses_clust_mod[["Actors"]]$parameters$mean) %>%
+as.data.frame(ses_clust_mod[["Resource"]]$parameters$mean) %>%
   mutate(input_data_name = rownames(.)) %>%
   pivot_longer(cols = !input_data_name,
                names_to = "cluster",
                values_to = "mean") %>%
-  mutate(cluster = str_replace(cluster, "V", substr("A",1,1))) %>%
-  left_join(st_dev_clust[["Actors"]]) %>%
-  filter(., (mean+stdev>0 & mean-stdev>0) | (mean+stdev<0 & mean-stdev<0)) %>%
+  mutate(cluster = str_replace(cluster, "V", substr("R",1,1))) %>%
+  left_join(ci_clust[["Resource"]]) %>%
+  #filter(., (mean+stdev>0 & mean-stdev>0) | (mean+stdev<0 & mean-stdev<0)) %>%
+  filter(!(`2.5%`<0 & `97.5%`>0)) %>%
   ggplot(aes(x = mean, y = input_data_name)) +
   geom_point() +
-  geom_errorbar(aes(xmin = mean-stdev, xmax = mean+stdev)) +
+  geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`)) +
   facet_wrap(vars(cluster))
 
 barcodes <- bind_rows(clust_dat) %>%
@@ -454,6 +467,6 @@ system_barcodes <- lapply(clust_dat, function(df) {
     rowwise() %>%
     mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
 })
-table(system_barcodes[["Actors"]]$barcode)
-ggplot(system_barcodes[["Actors"]], aes(fill=barcode)) +
+table(system_barcodes[["Resource"]]$barcode)
+ggplot(system_barcodes[["Resource"]], aes(fill=barcode)) +
   geom_sf()
