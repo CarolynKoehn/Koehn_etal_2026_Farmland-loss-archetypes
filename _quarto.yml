@@ -4,6 +4,8 @@ project:
 manuscript: 
   article: chap2_manuscript.qmd
 
+notebook-links: false
+
 execute:
   echo: false
   freeze: auto

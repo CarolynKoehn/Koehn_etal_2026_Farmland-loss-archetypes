@@ -1,14 +1,24 @@
 ---
-title: A data-driven approach to identifying archetypes of farmland loss to inform policy and protection efforts
+title: "Data-driven archetypes of farmland change: Preliminary results"
 author: Carolyn Koehn
 abstract: |
-  Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period. The processes leading to this conversion are variable and often highly localized. Uncertainty regarding the causal process of agricultural lands loss limits local efforts to address or mitigate the loss through agricultural lands protection. A better understanding of the different processes of agricultural lands loss and the associated factors can inform the development of effective, diverse toolboxes of agricultural lands protection to apply in different localities. In this chapter, I will use a multi-dimensional cluster analysis to identify archetypes of change over time in counties where agricultural lands are at risk of conversion. I will draw on data from the US Census, the American Community Survey, the US Census of Agriculture, land cover classifications from American Farmland Trust [AFT], and nature’s contributions to people models from chapter 1 to calculate descriptive metrics for 26 counties in southern Idaho that fall within the Snake River Plain ecoregion. Identifying and understanding patterns and associated indicators of working lands loss will allow for more informed and effective working lands protection and development planning. Our workflow for identifying archetypes of agricultural land loss uses publicly available data and can be used in other threatened regions to describe and address processes of land use change.
+  Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period. The processes leading to this conversion are variable and often highly localized. Uncertainty regarding the causal process of agricultural lands loss limits local efforts to address or mitigate the loss through agricultural lands protection. A better understanding of the different processes of agricultural lands loss and the associated factors can inform the development of effective, diverse toolboxes of agricultural lands protection to apply in different localities. In this chapter, I will use a multi-dimensional cluster analysis to identify archetypes of change over time in counties where agricultural lands are at risk of conversion. I will draw on publicly-availabile data to calculate descriptive metrics for counties in southern Idaho's Snake River Plain. Identifying and understanding patterns and associated indicators of working lands loss will allow for more informed and effective working lands protection and development planning. Our workflow for identifying archetypes of agricultural land loss uses publicly available data and can be used in other threatened regions to describe and address processes of land use change.
 date: last-modified
 bibliography: chap2.bib
 number-sections: true
 ---
 
-Archetypes of pathways to agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. Our research questions are:
+# Context
+
+Approximately 1.5 million km2 of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period (Radwan et al., 2021). The pathway to conversion is often attributed to urban or suburban sprawl (Chen et al., 2020; Eitel, 2003; van Vliet et al., 2017), and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center (Xie et al., 2023; Chen et al., 2020; Haney and Cohen, 2015; Meiyappan et al., 2014). However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see Ju et al., 2018 and Jiang et al., 2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales (Zhu et al., 2022).
+
+The Snake River Plain of Idaho is a perfect place to study this phenomenon because it is experiencing different drivers of agricultural land conversion across its counties (though I am tempted to expand this to the West, as the same logic applies). We have observed pressures due to urban/suburban sprawl, amenity migration, and agricultural industrialization. The purpose of this archetype analysis is to characterize the pathways to and outcomes of farmland loss as described by public data. These archetypes will aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities.
+
+I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework to identify a broad and relevant set of data indicators to include in the cluster analysis. I will also note possible data sources and available years, as I hope to create a clusters across both space and time (I hope to assign an archetype to each county about every 5 years to see if they change through time). I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
+
+In this analysis, I create archetypes for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total).
+
+Archetypes of pathways to agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. The research questions from my proposal are:
 
 1. Are there identifiable archetypes of agricultural lands loss in the western U.S.?
 2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
@@ -16,18 +26,229 @@ Archetypes of pathways to agricultural lands loss can aid in identifying where d
 
 # Methods
 
-Planning archetypes through time:
+```{r}
+#| label: setup
 
-- Land in farms and farm size can go back to 1959 or 1925 (with definition of farm changed)
-- 1997:     employment (CBP), ag (CofAg), land use (NLCD) - can't use if we want to include change from last time point
-- 2001-02:  employment (CBP), ag (CofAg), land use (NLCD), spatial farmland patterns (AFT)
-- 2007-09:  employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS)
-- 2012:     employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), land value (Nolte)
-- 2016-17:   employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS), spatial farmland patterns (AFT), NCP (various)
-- 2022:     employment (CBP), ag (CofAg), land use (NLCD), social/migration (ACS)
+# load libraries
 
-# References {.unnumbered}
+library(mclust)
+library(clustvarsel)
+library(tidyverse, quietly = TRUE)
+library(sf)
+```
+
+
+## Data Selection
+
+In this analysis, I selected data that was available for these counties from 1990-2020. I linked data sources I knew to second-tier variables in Ostrom's social-ecological systems framework. For the full framework, including variables without data sources that I knew of and data sources I excluded because they do not inlude all analysis years, see the attached file `SES_data_outline.docx`.
+
+These are the data used in this preliminary analysis:
+
+::: {#tbl-datasel-R}
+
+| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
+|--|---|---|---|
+| RS1 -- Sector | Agriculture, Natural Amenities, Urban / Residential | | |
+| RS3 -- Size of Resource System | Agriculture  | Percent land in farms | Census of Agriculture |
+| | | Percent cropland | National Land Cover Database (NLCD) |
+| | Natural Amenities | Percent forestland | NLCD |
+| | | Percent shrubland | NLCD |
+| | Urban / Residential | Percent developed land | NLCD |
+| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | Census of Agriculture |
+| | Urban / Residential | Number houses per unit area | US Census |
+| RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | Census of Agriculture |
+| | | Percent change of land cover in cropland (5 year period) | NLCD |
+| | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD |
+| | | Percent change of land cover in shrubland (5 year period) | NLCD |
+| | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD |
+| RU4 -- Economic Value | Agriculture | Percent farms with net loss | Census of Agriculture |
+| RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres).[^1] | Census of Agriculture |
+
+Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units.
+
+:::
+
+::: {#tbl-datasel-A}
+
+| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
+|--|--|---|---|
+| A1 -- Number of Relevant Actors | All | Population per unit area | US Census |
+| | | Percent population change (10 year period) | US Census |
+| A2 -- Socioeconomic Attributes | All | Percent employed in different industries.$^1$ | County Business Patterns |
+| | | Age of population (weighted average) | [NCI SEER](https://seer.cancer.gov/popdata/download.html) |
+| | | Unemployment rate | Bureau of Labor Statistics |
+| | | Percent population with high school, Bachelors degree | USDA Economic Research Service (ERS) |
+| | Agriculture | Percent farms full- or part-owned, or tenant operated.$^1$ | Census of Agriculture |
+| | | Percent farms with net loss | Census of Agriculture |
+| A4 -- Location | All | Percent population in "urban" areas[^2] | US Census |
+
+Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors.
+
+:::
+
+[^1]: Principal components used to reduce dimensions.
+[^2]: Urban as defined by US Census.
+
+```{r}
+#| label: "load data"
+
+# county data
+aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+  select(c("GEOID", "NAME")) %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+
+# data retrieved from above sources
+# see notebooks/data_retrieval.qmd for all methods
+ru_data <- read.csv("data/RU_data.csv")
+rs_data <- read.csv("data/RS_data.csv")
+resource <- left_join(ru_data, rs_data) %>%
+  filter(county %in% aoi$NAME)
+actors <- read.csv("data/Actor_data.csv") %>%
+  filter(county %in% aoi$NAME)
+
+ses_data_list <- list(Resource = resource,
+                      Actors = actors)
+```
+
+I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data [CITE].
+
+```{r}
+#| label: "scale data"
+
+ses_data_list_sc <- lapply(ses_data_list, function(df) {
+  df %>%
+    na.omit() %>%
+    ungroup() %>%
+    mutate(across(!c(county, year),
+                  ~ (.x - mean(.x)) / (max(.x) - min(.x))))
+})
+```
+
+
+## Clustering
+
+### Algorithmic Variable Selection
+
+Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected.
+
+I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal.
+
+I tested for a range of 1-10 possible clusters. 
+<!-- It's recommended that the maximum number of clusters be set to the next highest integer from $n^{0.3}$ [CITE]. $104^{0.3} = 4.028$, so 5 is selected as the maximum. -->
+
+```{r}
+#| label: "variable selection"
+
+ses_var_sel <- lapply(ses_data_list_sc, function(df) {
+  clustvarsel(data = df[,-c(1:2)],
+              G = 1:10,
+              search = "greedy",
+              direction = "backward",
+              fit = FALSE)
+})
+
+ses_data_sel <- mapply(function(df, varsel) {
+  df[,c(1:2, (varsel$subset+2))]
+}, df=ses_data_list_sc, varsel=ses_var_sel,
+SIMPLIFY = FALSE)
+```
+
+Variable selection results for the Resource clusters:
+
+```{r}
+#| echo: false
+
+print(ses_var_sel[["Resource"]])
+```
+
+Variable selection results for the Actors clusters:
+
+```{r}
+#| echo: false
+
+print(ses_var_sel[["Actors"]])
+```
+
+### Gaussian Model-Based Clustering
+
+TODO: Bootstrap variable selection and model selection, remove BIC/ICL plots or fix legend
+
+To select a model, which includes selecting the number of groups and the shape, I used two different criteria (BIC and ICL) to test 14 different model shapes and 1-15 numbers of groups. We'd prefer to select $\leq$5 groups.
+
+```{r}
+#| label: "model selection"
+
+ses_mclustBIC <- lapply(ses_data_sel, function(df) {
+  mclustBIC(df[,-c(1:2)], G=1:10)
+})
+
+ses_mclustICL <- lapply(ses_data_sel, function(df) {
+  mclustICL(df[,-c(1:2)], G=1:10)
+})
+```
+
+Results for the Resource clusters:
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(ses_mclustBIC[["Resource"]])
+plot(ses_mclustICL[["Resource"]])
+
+summary(ses_mclustBIC[["Resource"]])
+summary(ses_mclustICL[["Resource"]])
+```
+
+These indices suggest that 7 clusters with model shape VVI [define] is the best fit for the resource data.
+
+Results for the Actors clusters:
+
+```{r}
+par(mfrow=c(1,2))
+
+plot(ses_mclustBIC[["Actors"]])
+plot(ses_mclustICL[["Actors"]])
+
+summary(ses_mclustBIC[["Actors"]])
+summary(ses_mclustICL[["Actors"]])
+```
+
+These indices suggest that 4 clusters with model shape VVI [define] is the best fit for the actors data.
+
+```{r}
+#| label: "run cluster models"
+
+ses_clust_mod <- list()
+
+ses_clust_mod[["Resource"]] <- Mclust(ses_data_sel[["Resource"]][,-c(1:2)], 
+                                      G=7, modelNames = "VVI")
+ses_clust_mod[["Actors"]] <- Mclust(ses_data_sel[["Actors"]][,-c(1:2)], 
+                                      G=4, modelNames = "VVE")
+```
+
+To get a sense for how the data are clustering, we can view their groups on a principal components graph.
+
+```{r}
+
+```
+
+
+# Preliminary Results
+
+## Cluster Descriptions
+
+## Spatial and Temporal Patterns of Clusters
+
+## Outcomes of Archetypal Pathways
+
+### NCP
+
+### Farmland Loss
+
+
+
+<!-- # References {.unnumbered}
 
 :::{#refs}
 
-:::
+::: -->
