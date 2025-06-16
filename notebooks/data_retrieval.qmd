@@ -85,9 +85,7 @@ rs_data <- land_in_farms %>%
   right_join(rs_data, by=c("county", "year"))
 ```
 
-### Natural Amenities
-
-#### Percent forest and shrubland
+#### Percent cropland
 
 NLCD data were downloaded from https://www.mrlc.gov/viewer/
 
@@ -135,6 +133,22 @@ land_cover_percents <- bind_rows(land_cover_counts, .id="year") %>%
   select(county, year, land_cover, cover_percent) %>%
   mutate(year = as.numeric(year))
 ```
+
+```{r}
+#| label: "percent cropland"
+
+cropland <- land_cover_percents %>%
+  filter(land_cover %in% c("Pasture/Hay", "Cultivated Crops")) %>%
+  group_by(county, year) %>%
+  summarise(percent_cropland = sum(cover_percent))
+
+rs_data <- left_join(rs_data, cropland, by=c("county", "year"))
+```
+
+
+### Natural Amenities
+
+#### Percent forest and shrubland
 
 ```{r}
 #| label: "forest and shrubland"
