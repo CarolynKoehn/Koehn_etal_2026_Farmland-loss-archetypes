@@ -129,113 +129,189 @@ ses_data_list_sc <- lapply(ses_data_list, function(df) {
 
 ### Algorithmic Variable Selection
 
-Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected.
+Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected. To account for this, I ran the variable selection algorithm 20 times and used the list of variables most frequently selected between the 20 runs.
 
 I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal.
 
-I tested for a range of 1-10 possible clusters. 
+I tested for a range of 1-9 possible clusters. 
 <!-- It's recommended that the maximum number of clusters be set to the next highest integer from $n^{0.3}$ [CITE]. $104^{0.3} = 4.028$, so 5 is selected as the maximum. -->
+
+```{r}
+#| label: "variable selection bootstrap"
+#| eval: false
+
+ses_var_sel <- mapply(function(df, ses_system) {
+  selected_vars <- data.frame(run = 1:20)
+  selected_vars[,colnames(df)[-c(1:2)]] <- NA
+  
+  for (i in 1:20) {
+    varsel <- clustvarsel(data = df[,-c(1:2)],
+              G = 1:9,
+              search = "greedy",
+              direction = "backward",
+              fit = FALSE)
+    newrow <- (colnames(df)[-c(1:2)] %in% names(varsel$subset))
+    selected_vars[i,2:ncol(selected_vars)] <- newrow
+  }
+  write.csv(selected_vars,
+            paste0("data/bootstrap/", ses_system, "_var_sel.csv"),
+            row.names = FALSE)
+}, df = ses_data_list_sc, ses_system = names(ses_data_list_sc))
+```
 
 ```{r}
 #| label: "variable selection"
 
-ses_var_sel <- lapply(ses_data_list_sc, function(df) {
-  clustvarsel(data = df[,-c(1:2)],
-              G = 1:10,
-              search = "greedy",
-              direction = "backward",
-              fit = FALSE)
-})
-
-ses_data_sel <- mapply(function(df, varsel) {
-  df[,c(1:2, (varsel$subset+2))]
-}, df=ses_data_list_sc, varsel=ses_var_sel,
+ses_data_sel <- mapply(function(df, ses_system) {
+  selected_vars <- read.csv(paste0("data/bootstrap/", ses_system, "_var_sel.csv"))
+  if(nrow(unique(selected_vars[,-1])) == 1) {
+    varsel <- unique(selected_vars[,-1])
+  } else { stop("Multiple variable selection possibilities") }
+  
+  df[,c(TRUE, TRUE, as.logical(varsel))]
+}, df=ses_data_list_sc, ses_system = names(ses_data_list_sc),
 SIMPLIFY = FALSE)
 ```
 
-Variable selection results for the Resource clusters:
+From the Resource clusters, the following variable was removed: percent developed land.
 
 ```{r}
-#| echo: false
+#| include: false
 
-print(ses_var_sel[["Resource"]])
+print(colnames(ses_data_list_sc[["Resource"]])[!(colnames(ses_data_list_sc[["Resource"]]) %in% colnames(ses_data_sel[["Resource"]]))])
 ```
 
-Variable selection results for the Actors clusters:
+From the Actors clusters, the following variables were removed: the first and third principal components of the employment industries PCA (the second PC was retained), average age, percent of residents with a high school level education, and the farm tenure principal components.
 
 ```{r}
-#| echo: false
+#| include: false
 
-print(ses_var_sel[["Actors"]])
+print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actors"]]) %in% colnames(ses_data_sel[["Actors"]]))])
 ```
 
 ### Gaussian Model-Based Clustering
 
-TODO: Bootstrap variable selection and model selection, remove BIC/ICL plots or fix legend
+To select a model, which includes selecting the number of groups and the shape, I used two different criteria (BIC and ICL) to test 14 different model shapes and 1-10 numbers of groups. We'd prefer to select $\leq$5 groups (next integer after $n^{0.3}$, CITE).
 
-To select a model, which includes selecting the number of groups and the shape, I used two different criteria (BIC and ICL) to test 14 different model shapes and 1-15 numbers of groups. We'd prefer to select $\leq$5 groups.
+Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
 ```{r}
 #| label: "model selection"
 
 ses_mclustBIC <- lapply(ses_data_sel, function(df) {
-  mclustBIC(df[,-c(1:2)], G=1:10)
+  BIC <- NULL
+  LL <- NULL
+  for(j in 1:200) {
+    rBIC <- mclustBIC(df[,-c(1:2)], G=1:10, verbose=FALSE,
+                    initalization = list(hcPairs=hcRandomPairs(df[,-c(1:2)])))
+    rModel <- mclustModel(df[,-c(1:2)], BICvalues = rBIC)
+    LL <- c(LL, rModel$loglik)
+    BIC <- mclustBICupdate(BIC, rBIC)
+  }
+  list(mod=Mclust(df[,-c(1:2)], x = BIC), LL=LL)
 })
-
-ses_mclustICL <- lapply(ses_data_sel, function(df) {
-  mclustICL(df[,-c(1:2)], G=1:10)
-})
 ```
 
-Results for the Resource clusters:
+<!-- for hist code, see https://centerstat.org/wp-content/uploads/2021/05/CAMM-mixture-modeling-demo-R-2021.pdf page 5-19 -->
 
-```{r}
-par(mfrow=c(1,2))
+`r ses_mclustBIC[["Resource"]]$mod$G` clusters is the best fit for the resource data. `r ses_mclustBIC[["Actors"]]$mod$G` clusters is the best fit for the resource data.
 
-plot(ses_mclustBIC[["Resource"]])
-plot(ses_mclustICL[["Resource"]])
-
-summary(ses_mclustBIC[["Resource"]])
-summary(ses_mclustICL[["Resource"]])
-```
-
-These indices suggest that 7 clusters with model shape VVI [define] is the best fit for the resource data.
-
-Results for the Actors clusters:
-
-```{r}
-par(mfrow=c(1,2))
-
-plot(ses_mclustBIC[["Actors"]])
-plot(ses_mclustICL[["Actors"]])
-
-summary(ses_mclustBIC[["Actors"]])
-summary(ses_mclustICL[["Actors"]])
-```
-
-These indices suggest that 4 clusters with model shape VVI [define] is the best fit for the actors data.
-
-```{r}
-#| label: "run cluster models"
-
-ses_clust_mod <- list()
-
-ses_clust_mod[["Resource"]] <- Mclust(ses_data_sel[["Resource"]][,-c(1:2)], 
-                                      G=7, modelNames = "VVI")
-ses_clust_mod[["Actors"]] <- Mclust(ses_data_sel[["Actors"]][,-c(1:2)], 
-                                      G=4, modelNames = "VVE")
-```
+The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima.
 
 To get a sense for how the data are clustering, we can view their groups on a principal components graph.
 
 ```{r}
+pca_viz <- lapply(ses_data_sel, function(df) {
+  prcomp(df[,-c(1:2)])
+})
 
+factoextra::fviz_pca_biplot(
+  pca_viz[["Resource"]],
+  habillage=as.factor(ses_mclustBIC[["Resource"]]$mod$classification),
+  title = "Resource",
+  geom = "point", repel = TRUE,
+  addEllipses = TRUE)
+factoextra::fviz_pca_biplot(
+  pca_viz[["Actors"]],
+  habillage=as.factor(ses_mclustBIC[["Actors"]]$mod$classification),
+  title = "Actors",
+  geom = "point", repel = TRUE,
+  addEllipses = TRUE)
 ```
-
 
 # Preliminary Results
 
 ## Cluster Descriptions
+
+### Resource Clusters
+
+```{r}
+#| label: "get CIs"
+#| include: false
+
+ci_clust <- mapply(function(mod, ses_system, input_data) {
+  bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "bs")
+  
+  t(as.data.frame(summary(bootmod, "ci")$mean)) %>%
+    as.data.frame() %>%
+    mutate(cluster = paste0(str_sub(ses_system, 1,1), str_sub(rownames(.), -1, -1)),
+           input_data_name = str_sub(rownames(.), 1, -3))
+}, mod = ses_mclustBIC, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
+```
+
+```{r}
+#| label: fig-R-CIs
+#| message: false
+
+# join with mean
+as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
+  mutate(input_data_name = rownames(.)) %>%
+  pivot_longer(cols = !input_data_name,
+               names_to = "cluster",
+               values_to = "mean") %>%
+  mutate(cluster = str_replace(cluster, "V", substr("R",1,1))) %>%
+  left_join(ci_clust[["Resource"]]) %>%
+  mutate(sig = !(`2.5%`<0 & `97.5%`>0)) %>%
+  ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
+  geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
+  geom_point(show.legend = FALSE) +
+  geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
+  facet_wrap(vars(cluster)) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
+  scale_y_discrete(limits = c("farm_size_pc2", "perc_farms_w_net_loss", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "farms_per_acre", "percent_developed", "percent_shrubland", "percent_forest", "land_in_farms"),
+                   labels = c("Farm Size PC2", "Farms with Net Loss", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Farm Density", "Developed Land", "Shrubland", "Forest", "Land in Farms")) +
+  labs(x = "Cluster mean's deviation from average", y = "Variable") +
+  theme_classic()
+```
+
+
+
+### Actors Clusters
+
+```{r}
+#| label: fig-A-CIs
+#| message: false
+
+# join with mean
+as.data.frame(ses_mclustBIC[["Actors"]]$mod$parameters$mean) %>%
+  mutate(input_data_name = rownames(.)) %>%
+  pivot_longer(cols = !input_data_name,
+               names_to = "cluster",
+               values_to = "mean") %>%
+  mutate(cluster = str_replace(cluster, "V", substr("A",1,1))) %>%
+  left_join(ci_clust[["Actors"]]) %>%
+  mutate(sig = !(`2.5%`<0 & `97.5%`>0)) %>%
+  ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
+  geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
+  geom_point(show.legend = FALSE) +
+  geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
+  facet_wrap(vars(cluster)) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
+  # scale_y_discrete(limits = c(),
+  #                  labels = c()) +
+  labs(x = "Cluster mean's deviation from average", y = "Variable") +
+  theme_classic()
+```
 
 ## Spatial and Temporal Patterns of Clusters
 
