@@ -191,7 +191,7 @@ print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actor
 
 ### Gaussian Model-Based Clustering
 
-To select a model, which includes selecting the number of groups and the shape, I used two different criteria (BIC and ICL) to test 14 different model shapes and 1-10 numbers of groups. We'd prefer to select $\leq$5 groups (next integer after $n^{0.3}$, CITE).
+To select a model, which includes selecting the number of groups and the shape, I used two different criteria (BIC and ICL) to test 14 different model shapes and 1-10 numbers of groups. We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE).
 
 Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
@@ -262,6 +262,9 @@ ci_clust <- mapply(function(mod, ses_system, input_data) {
 ```{r}
 #| label: fig-R-CIs
 #| message: false
+#| fig-cap: "Characteristics of each Resource cluster. The means for each variable in each cluster are estimated by the 8-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-height: 7
+#| fig-width: 6.5
 
 # join with mean
 as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
@@ -278,19 +281,340 @@ as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
-  scale_y_discrete(limits = c("farm_size_pc2", "perc_farms_w_net_loss", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "farms_per_acre", "percent_developed", "percent_shrubland", "percent_forest", "land_in_farms"),
-                   labels = c("Farm Size PC2", "Farms with Net Loss", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Farm Density", "Developed Land", "Shrubland", "Forest", "Land in Farms")) +
-  labs(x = "Cluster mean's deviation from average", y = "Variable") +
+  scale_y_discrete(limits = c("farm_size_pc2", "farm_size_pc1", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "farms_per_acre", "perc_farms_w_net_loss", "percent_shrubland", "percent_forest", "percent_cropland", "land_in_farms"),
+                   labels = c("Farm Size (PC2)", "Farm Size (PC1)", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Farm Density", "Farms with Net Loss (%)", "Shrubland", "Forest", "Cropland", "Land in Farms")) +
+  labs(x = "Mean", y = "Variable") +
   theme_classic()
 ```
 
+```{r}
+#| label: "label county data"
 
+clust_dat <- mapply(function(df, mod, system_name) {
+  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
+    st_as_sf() %>%
+    cbind(., mod$mod$classification) %>%
+    mutate(cluster = paste0(substr(system_name,1,1), mod.mod.classification)) %>%
+    select(-mod.mod.classification)
+}, df = ses_data_list, mod = ses_mclustBIC, system_name=names(ses_data_list))
+```
+
+\newpage
+#### Cluster R1: Growing urban center and suburbs push out large farms
+
+```{r}
+r1 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R1")
+
+r1_means <- r1 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R1, I report its significantly different variables and their mean values from the raw data:
+
+- Lower than average cropland cover (13.9%) and land in farms (26.4%)
+- Lower than average shrubland and forest cover (17.4% and 0.351%, respectively)
+- More farms with net losses (71.3%)
+- Higher than average farm units per acre (0.00184 farms per acre)
+- A higher than average density of housing units (0.206 units per acre)
+- Higher developed area gain (+1.12% in previous 5-year period) and cropland loss (-1.07%)
+- Slightly lower forest gain than average (+0.000922%)
+- A lower value of farm size principal component 1 translates to a higher amount of smaller farms (1-50 acres)
+
+Cluster R1 only consists of Ada County, in all years of this analysis (1990-2020). In R1, urban and suburban growth compete with large farms. Small farms can cater to the urban population (see cluster A?) through farmer's markets, but larger farms are pushed out. Developed land increases (Ada county grows from 10% to 18% developed land from 1990 to 2020), while cropland decreases equivalently (18% to 10%). Forests and shrublands are not lost, and in fact have very small gains, because of demand for recreation. 
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(1990)) %>%
+  mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("thistle3", "white", "white", "white", "white", "white", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R2: Agriculture persists where it's possible
+
+```{r}
+r2 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R2")
+
+r2_means <- r2 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R2, I report its significantly different variables and their mean values from the raw data:
+
+- Lower than average cropland cover (7.37%) and land in farms (22.6%)
+- Higher forest cover on average (19.6%). Some counties in R2 have as low as 0% forest and others are as high as 52%, so this is not a uniting characteristic.
+- Lower than average housing and farm density (0.00361 and 0.000261 units per acre, respectively)
+- Lower than average cropland loss (-0.157%) and lower developed land gain (+0.0565%)
+- A higher value of farm size principal component 1 translates to higher amounts of medium to large farms (180-2000+ acres)
+
+Cluster R2 consists of Adams, Blaine, Camas, Clark, Elmore, Fremont, Lincoln, and Washington counties across all the study years (1990-2020), In 2010, Owyhee county joins this group. Agriculture is well established where it can be (larger farms, yet low cropland cover and land in farms) and wild or grazing lands (forest and shrubland) persist where cropland conversion would be unprofitable. These counties also include small developed areas that are growing slowly.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(1990, 2010)) %>%
+  mutate(year = ifelse(year==1990, "1990-2000", "2010-2020")) %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "thistle3", "white", "white", "white", "white", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R3: Agricultural area accomodating increasing residential use
+
+```{r}
+r3 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R3")
+
+r3_means <- r3 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R3, I report its significantly different variables and their mean values from the raw data:
+
+- Higher than average land in farms (75.6%) and cropland (67.2%)
+- Lower than average forest and shrubland (0.0117% and 1.78%, respectively)
+- High amount of farms with net loss (67%)
+- Higher housing and farm density (0.176 and 0.00609 units per acre, respectively)
+- Higher gain of farms (+0.0856% increase in farms)
+- Higher cropland loss (-1.8%)
+- Higher than average developed land gain (+1.63%)
+- Minimally lower than average forest loss (-0.00131%), minimally higher than average shrubland gain (+0.193%)
+- Lower scores for both farm size PCs 1 and 2 translates to a higher amount of very small farms (1-10 acres)
+
+Cluster R3 consists of only Canyon County in 2000-2020. Canyon County has a large agricultural economy, with lots of cropland and land in farms, many small farms, and less wild lands. In recent years, it has been losing cropland and gaining developed land, with its higher housing density indicating that it is a desirable place to live as well as farm.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(2000)) %>%
+  mutate(year = "2000-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "thistle3", "white", "white", "white", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R4: Agriculture declines in a mixed landscape
+
+```{r}
+r4 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R4")
+
+r4_means <- r4 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R4, I report its significantly different variables and their mean values from the raw data:
+
+- Higher than average land in farms (52.%) and cropland (29.7%)
+- Higher than average forestland (19.6%); Canyon County in 1990 at <1% is the exception
+- Higher farm density (0.00146 farms per acre)
+- Higher cropland loss (-1.11%)
+- A lower value of farm size principal component 1 translates to a higher amount of smaller farms (1-50 acres)
+
+Cluster R4 consists of Bannock, Bonneville, Gem, Madison, and Teton counties for 1990-2020, as well as Canyon County in 1990. R4 has both high agriculture and forest use, but cropland declines while all other land covers (forest, shrub, developed) increase. In this mixed use landscape, only agriculture (many of which are small farms) seems to decline.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(1990, 2000)) %>%
+  mutate(year = ifelse(year == 1990, "1990", "2000-2020")) %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "white", "thistle3", "white", "white", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R5: Little change in rural agriculture and shrublands
+
+```{r}
+r5 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R5")
+
+r5_means <- r5 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R5, I report its significantly different variables and their mean values from the raw data:
+
+- Higher than average land in farms (54.6%) and cropland (24.5%)
+- Lower than average forestland (4.65%) but higher than average shrubland (48.8%)
+- Lower than average housing and farm density (0.00643 and 0.000554 units per acre, respectively)
+- Lower than average developed land gain (+0.0905%)
+- A lower value of farm size principal component 2 indicates a tendency toward very small or very large farms, but few medium farms.
+
+Cluster R5 consists of Bingham, Cassia, and Power counties for 1990-2020. Between low housing and farm density and high farmland and shrubland, these counties are a rural mixture of agriculture and shrublands. Almost all land use changes are near the study area average (shrubland: -0.2%, forestland: 0.04%, cropland: -1.16%). Developed land is growing more slowly than average.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(2020)) %>%
+  mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "white", "white", "thistle3", "white", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R5: Little change in rural agriculture and shrublands
+
+```{r}
+r6 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R6")
+
+r6_means <- r6 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R6, I report its significantly different variables and their mean values from the raw data:
+
+- Much lower than average land in farms (10.4%) and cropland (4.52%)
+- Low forestland (6.43%) and high shrubland (76%)
+- Low farms with net losses (39.4%)
+- Lower than average housing and farm density (0.000870 and 0.000125 units per acre, respectively)
+- Lower than average cropland loss (-0.0826%) and developed land gain (+0.0256%)
+- A higher value for farm size PCs 1 and 2 translates to a tendency towards medium sized farms (50-500 acres)
+
+Cluster R6 consists of Butte County, and Owyhee County in 1990-2000. This cluster is similar to R2, with lower farmland, forestland, and developed land, and higher shrubland. Here, however, medium size farms are more common, and they're more likely to make a profit.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(2000, 2020)) %>%
+  mutate(year = ifelse(year==2000, "1990-2000", "2010-2020")) %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "white", "white", "white", "thistle3", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R7: Stable mix of crops, shrublands, and development
+
+```{r}
+r7 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R7")
+
+r7_means <- r7 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R7, I report its significantly different variables and their mean values from the raw data:
+
+- Higher than average cropland (30.9%). Land in farms is about average (40.5%). IN this cluster, most land in farms is used for cropland.
+- Lower than average forestland (0.268%), higher than average shrubland (46.5%)
+- Lower than average housing density (0.0169 housing units per acre)
+- Lower than average cropland loss (-0.207%)
+- Lower than average forest gain (+0.012%)
+- Lower than average developed land gain (+0.176%)
+
+Cluster R7 consists of Jefferson and Twin Falls counties for 1990-2020. They have lots of croplands and shrublands, as well as some developed lands like the city of Twin Falls (on average, developed lands cover 4.05% of these counties). Unlike other clusters, all land covers in this group are quite stable, with very little change preceding each analyzed year.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(2000)) %>%
+  mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "white", "white", "white", "white", "thistle3", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster R8: Concentration of agriculture
+
+```{r}
+r8 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R8")
+
+r8_means <- r8 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Resource cluster R8, I report its significantly different variables and their mean values from the raw data:
+
+- Higher than average land in farms (52%) and cropland (37.1%)
+- Lower than average forestland (0.00278%) and shrubland (18.1%)
+- Higher than average farm density (0.00164 farms per acre) but lower than average housing density (0.0196 housing units per acre)
+- Lower than average loss of farms (8.87% decline)
+- Lower than average cropland loss (-0.174%), and lower than average forest gain (0.00278%)
+- A lower value of farm size principal component 1 translates to a higher amount of smaller farms (1-50 acres)
+
+Cluster R8 consists of Gooding, Jerome, Minidoka, and Payette counties for 1990-2020. There is a concetration of agriculture here, with higher land in farms, cropland, and farm density, and lower housing density and forest and shrubland cover. While on average every county is losing farms, these counties are losing farms at a slower rate.
+
+```{r}
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(2000)) %>%
+  mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "white", "white", "white", "white", "white", "thistle3")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
 
 ### Actors Clusters
+
+Although this analysis identifies 8 resource archetypes in the study area, it only identified 4 actors archetypes.
 
 ```{r}
 #| label: fig-A-CIs
 #| message: false
+#| fig-cap: "Characteristics of each Actors cluster. The means for each variable in each cluster are estimated by the 4-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-height: 5
+#| fig-width: 6.5
 
 # join with mean
 as.data.frame(ses_mclustBIC[["Actors"]]$mod$parameters$mean) %>%
@@ -307,15 +631,166 @@ as.data.frame(ses_mclustBIC[["Actors"]]$mod$parameters$mean) %>%
   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
-  # scale_y_discrete(limits = c(),
-  #                  labels = c()) +
-  labs(x = "Cluster mean's deviation from average", y = "Variable") +
+  scale_y_discrete(limits = c("pop_urban", "perc_farms_w_net_loss", "Bachelors", "unemployment_rate", "emply_pc2", "perc_pop_change", "pop_per_acre"),
+                   labels = c("Urban Population (%)", "Farms with Net Loss (%)", "Residents with Bachelors", "Unemployment Rate", "Industry Employment (PC2)", "Population Loss/Gain", "Population Density")) +
+  labs(x = "Mean", y = "Variable") +
   theme_classic()
 ```
 
-## Spatial and Temporal Patterns of Clusters
+\newpage
+#### Cluster A1: More urbanites
 
-## Outcomes of Archetypal Pathways
+```{r}
+a1 <- clust_dat[["Actors"]] %>%
+  filter(cluster == "A1")
+
+a1_means <- a1 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Actors cluster A1, I report its significantly different variables and their mean values from the raw data:
+
+- Higher than average population density (0.194 persons per acre) and higher population gain (+28.4%)
+- Higher than average percentage of residents with at least a Bachelors degree (29.5%)
+- Higher than average amount of farms with a net loss (59.7%)
+- Higher than average percentage of the population living in an urban area (58.3%)
+- The average PCA results indicate that in A1 many people are employed in services. construction and finance/insurance/real estate are also more likely. People tend not to be employed in manufacturing and wholesale trade.
+
+Cluster A1 consists of Ada, Blaine, and Canyon counties in 1990-2020, Bannock and Bonneville counties in 1990-2010, Teton and Madison counties in 2000-2020, and Elmore County in 2000. In these counties and years, the number of actors in the system is increasing quickly. Most of the population is living in urban areas, and many have graduated college. The farming actors are at a financial disadvantage, as on average 60% of their farms are operating at a net loss.
+
+```{r}
+clust_dat[["Actors"]] %>%
+  # filter(year %in% c(2000)) %>%
+  # mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("darkseagreen3", "white", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster A2: Manufacturing provides additional rural employment
+
+```{r}
+a2 <- clust_dat[["Actors"]] %>%
+  filter(cluster == "A2")
+
+a2_means <- a2 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Actors cluster A2, I report its significantly different variables and their mean values from the raw data:
+
+- A higher value of industry employment PC2 translates to a high percentage of people employed in manufacturing, and to a lesser degree, in services and in transportation and public utilities.
+- Lower unemployment rate (4.91%)
+- Higher percentage of people with a Bachelors degree (24.6%)
+- More farms with net losses (64.2%)
+- Lower urban population (13.9%)
+
+Cluster A2 consists of 8 counties in 2020: Bannock, Bingham, Bonneville, Elmore, Gem, Jefferson, Payette, and Twin Falls. Many here are employed in manufacturing, or support manufacturing in the services and transportation sectors. With many farms operating at a net loss, manufacturing can offer off-farm employment. A majority of the actors in these counties are living in rural areas, few are unemployed, and many have college degrees.
+
+```{r}
+clust_dat[["Actors"]] %>%
+  filter(year %in% c(2020)) %>%
+  # mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "darkseagreen3", "white", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster A3: Slow growing population in urban areas
+
+```{r}
+a3 <- clust_dat[["Actors"]] %>%
+  filter(cluster == "A3")
+
+a3_means <- a3 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Actors cluster A3, I report its significantly different variables and their mean values from the raw data:
+
+- Lower population density (0.0286 persons per acre) and lower population growth (+8.15%)
+- Less residents have a Bachelors degree (14.1%)
+- Less farms operate at a net loss (47.8%)
+- Higher percent of population living in urban areas (42.1%)
+- A higher value of industry employment PC2 translates to a high percentage of people employed in manufacturing, and to a lesser degree, in services and in transportation and public utilities. This value is not as high as in A2, so manufacturing is not as large of an industry. Here, PC1 is lower than in A2, indicating that the services industry in A3 employs less people. The mean PC values for PCs 1 and 2 also indicate that A3 employs a slightly higher percentage of people in agriculture.
+
+Cluster A3 consists of Cassia, Fremont, Gooding, Jerome, Minidoka, Power, and Washington counties for 1990-2020. For 1990-2010, but not 2020, Bingham, Gem, Jefferson, Payette, and Twin Falls counties are in this cluster (these all transition to A2 in 2020). Owyhee County is in A3 for 2000-2020. A few counties also briefly are in A3: Clark and Lincoln counties in 2020, Madison and Teton counties in 1990, and Elmore County in 1990 and 2010 (Elmore also transitions to A2 in 2020).
+
+The defining characteristic of this archetype seems to be slow population growth and low population density where more of the population lives in urban areas (compared to A4, where population growth is also slow but the population is more rural). 
+
+```{r}
+clust_dat[["Actors"]] %>%
+  # filter(year %in% c(2020)) %>%
+  # mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "darkseagreen3", "white")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+\newpage
+#### Cluster A4: Slow growing population in rural areas
+
+```{r}
+a4 <- clust_dat[["Actors"]] %>%
+  filter(cluster == "A4")
+
+a4_means <- a4 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE))
+```
+
+To characterize Actors cluster A4, I report its significantly different variables and their mean values from the raw data:
+
+- Low population density (0.0027 persons per acre) and low population growth (+5.93%)
+- Lower percentage of residents with Bachelors degree (15.6%)
+- Very low urban population (0.745%)
+- A low value for employment industries PC2 indicates low employment in manufacturing, services, and wholesale trade. The averaged PCA results for A4 suggest higher employment in agriculture and construction.
+
+Cluster A4 consists of Adams, Butte, and Camas counties in 1990-2020, as well as Clark and Lincoln counties in 1990-2010, and Owyhee County in 1990. The low population density and low urban population suggest that this archetype is very rural, and the population here grows more slowly.
+
+```{r}
+clust_dat[["Actors"]] %>%
+  # filter(year %in% c(2020)) %>%
+  # mutate(year = "1990-2020") %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf(show.legend = FALSE) +
+  scale_fill_manual(values = c("white", "white", "white", "darkseagreen3")) +
+  facet_wrap(vars(year)) +
+  theme_void()
+```
+
+## Pairing Resource and Actor Archetypes
+
+## Cluster Transitions
+
+## Outcomes of Archetypes
 
 ### NCP
 
