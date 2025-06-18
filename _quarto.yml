@@ -13,6 +13,9 @@ execute:
 format:
   pdf:
     keep-tex: true
+    include-in-header: 
+      text: |
+        \usepackage[format=plain]{caption}
 
 
 

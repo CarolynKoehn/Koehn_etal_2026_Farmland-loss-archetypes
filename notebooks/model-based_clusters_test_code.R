@@ -467,6 +467,6 @@ system_barcodes <- lapply(clust_dat, function(df) {
     rowwise() %>%
     mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
 })
-table(system_barcodes[["Resource"]]$barcode)
-ggplot(system_barcodes[["Resource"]], aes(fill=barcode)) +
+table(system_barcodes[["Actors"]]$barcode)
+ggplot(system_barcodes[["Actors"]], aes(fill=barcode)) +
   geom_sf()

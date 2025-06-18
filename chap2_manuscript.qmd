@@ -35,6 +35,7 @@ library(mclust)
 library(clustvarsel)
 library(tidyverse, quietly = TRUE)
 library(sf)
+library(terra)
 ```
 
 
@@ -283,7 +284,7 @@ as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
   scale_y_discrete(limits = c("farm_size_pc2", "farm_size_pc1", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "farms_per_acre", "perc_farms_w_net_loss", "percent_shrubland", "percent_forest", "percent_cropland", "land_in_farms"),
                    labels = c("Farm Size (PC2)", "Farm Size (PC1)", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Farm Density", "Farms with Net Loss (%)", "Shrubland", "Forest", "Cropland", "Land in Farms")) +
-  labs(x = "Mean", y = "Variable") +
+  labs(x = "Cluster mean (scaled values)", y = "Variable") +
   theme_classic()
 ```
 
@@ -326,7 +327,7 @@ To characterize Resource cluster R1, I report its significantly different variab
 - Slightly lower forest gain than average (+0.000922%)
 - A lower value of farm size principal component 1 translates to a higher amount of smaller farms (1-50 acres)
 
-Cluster R1 only consists of Ada County, in all years of this analysis (1990-2020). In R1, urban and suburban growth compete with large farms. Small farms can cater to the urban population (see cluster A?) through farmer's markets, but larger farms are pushed out. Developed land increases (Ada county grows from 10% to 18% developed land from 1990 to 2020), while cropland decreases equivalently (18% to 10%). Forests and shrublands are not lost, and in fact have very small gains, because of demand for recreation. 
+Cluster R1 only consists of Ada County, in all years of this analysis (1990-2020). In R1, urban and suburban growth compete with large farms. Small farms can cater to the urban population (see cluster A1) through farmer's markets, but larger farms are pushed out. Developed land increases (Ada county grows from 10% to 18% developed land from 1990 to 2020), while cropland decreases equivalently (18% to 10%). Forests and shrublands are not lost, and in fact have very small gains, because of demand for recreation. 
 
 ```{r}
 clust_dat[["Resource"]] %>%
@@ -340,7 +341,7 @@ clust_dat[["Resource"]] %>%
 ```
 
 \newpage
-#### Cluster R2: Agriculture persists where it's possible
+#### Cluster R2: Mid- to large-sized agriculture persists where it's possible
 
 ```{r}
 r2 <- clust_dat[["Resource"]] %>%
@@ -377,7 +378,7 @@ clust_dat[["Resource"]] %>%
 ```
 
 \newpage
-#### Cluster R3: Agricultural area accomodating increasing residential use
+#### Cluster R3: Agricultural area accommodating increasing residential use
 
 ```{r}
 r3 <- clust_dat[["Resource"]] %>%
@@ -492,7 +493,7 @@ clust_dat[["Resource"]] %>%
 ```
 
 \newpage
-#### Cluster R5: Little change in rural agriculture and shrublands
+#### Cluster R6: Mid-sized agriculture succeeds where it's possible
 
 ```{r}
 r6 <- clust_dat[["Resource"]] %>%
@@ -633,7 +634,7 @@ as.data.frame(ses_mclustBIC[["Actors"]]$mod$parameters$mean) %>%
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
   scale_y_discrete(limits = c("pop_urban", "perc_farms_w_net_loss", "Bachelors", "unemployment_rate", "emply_pc2", "perc_pop_change", "pop_per_acre"),
                    labels = c("Urban Population (%)", "Farms with Net Loss (%)", "Residents with Bachelors", "Unemployment Rate", "Industry Employment (PC2)", "Population Loss/Gain", "Population Density")) +
-  labs(x = "Mean", y = "Variable") +
+  labs(x = "Cluster mean (scaled values)", y = "Variable") +
   theme_classic()
 ```
 
@@ -788,11 +789,145 @@ clust_dat[["Actors"]] %>%
 
 ## Pairing Resource and Actor Archetypes
 
+```{r}
+#| label: fig-RA-assoc
+#| fig-cap: "Actors clusters present in each Resource cluster."
+
+county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county", "year", "cluster")]),
+                          st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
+                          by = c("county", "year"),
+                         suffix = c(".R", ".A"))
+
+barcodes <- bind_rows(clust_dat) %>%
+  select(county, year, cluster) %>%
+  group_by(county, geometry, year) %>%
+  mutate(yearcode = paste0(cluster, collapse = "")) %>%
+  select(-cluster) %>%
+  unique() %>%
+  pivot_wider(id_cols = c(county, geometry),
+              names_from = year,
+              values_from = yearcode) %>%
+  select(county, `1990`, `2000`, `2010`, `2020`, geometry) %>%
+  rowwise() %>%
+  mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
+
+# table(c(barcodes$`1990`, barcodes$`2000`, barcodes$`2010`, barcodes$`2020`))
+
+ggplot(county_clusts, aes(x=cluster.A)) +
+  geom_bar() +
+  facet_wrap(vars(cluster.R)) +
+  labs(x = "Actors Cluster", y="Count") +
+  theme_bw()
+```
+
+Cluster R1 (growing urban center and suburbs push out large farms) is only associated with cluster A1 (more urbanites). R1 was only Ada County for the entire 40 year period of the study. Developed land expansion and cropland loss is paired with fast population growth in urban areas. A1 actors tend to be more highly educated and employed in the service industry, which may give them both the means and motivation to support the smaller farms in R1 through farmer's markets and CSAs.
+
+Cluster R2 (mid- to large-sized agriculture persists where it's possible) is associated with all Actors clusters to some degree, but mostly with A3 (slow growing population in urban areas) and A4 (slow growing population in rural areas). In many R2 counties, limited opportunities in the resource system seem to limit population growth.
+
+The counties with R2-A1 (more urbanites) pairings are Blaine County, and Elmore County in 2020. These places have attracted wealthy migrants looking to move to rural areas with amenities. In R2, agriculture is only possible in some areas, while wild lands persist in other areas, perhaps creating this desirable rural ideal that leads to R2-A1. However, R2 has lower developed land expansion and cropland loss than other resource clusters, even though cluster A1 suggests a rapidly growing population. I could focus on one or both of these counties as short case studies in the discussion.
+
+Cluster R3 (agricultural area accommodating increasing residential use) is associated with cluster A1 (more urbanites). This is Canyon County in 2000-2020, a county that has a lot of agriculture that is trying to accommodate the high population growth characteristic of A1. So far, this has been through cropland loss to accommodate developed land gain.
+
+Cluster R4 (agriculture declines in a mixed landscape) is associated with Actors clusters A1 (more urbanites), A2 (manufacturing provides additional rural employment), and A3 (slow growing population in urban areas), but mostly with A1. In these counties, urban areas (A1, A3) and/or manufacturing (A2) seems to be competing with agricultural land use, and as a result cropland has been declining even as the number of farms and the share of county land in those farms remains higher than the study area average. 
+
+Cluster R5 (little change in rural agriculture and shrublands) is most associated with A3 (slow growing population in urban areas). Slow population growth in small urban areas has resulted in little land use change. Bingham County in 2020 is R5-A2 (manufacturing provides additional rural employment); in this case, growth of manufacturing did not lead to immediate, higher than average land use change.
+
+Cluster R6 (mid-sized agriculture succeeds where it's possible) is associated mostly with A4 (slow growing population in rural areas). Agriculture is not a prominent part of the landscape, but it succeeds where it can with less farms (on average) experiencing net losses. Slow population growth in rural areas leads to low cropland loss and developed land gain.
+
+Cluster R7 (stable mix of crops, shrublands, and development) is most associated with A3 (slow growing population in urban areas). Both R7 counties (Jefferson and Twin Falls) transitioned to A2 (manufacturing provides additional rural employment) in 2020. Like Bingham County in R5, in these counties growth of manufacturing did not lead to immediate, higher than average land use change.
+
+Cluster R8 (concentration of agriculture) is mostly associated with A3 (slow growing population in urban areas). Payette County transitions to A2 (manufacturing provides additional rural employment) in 2020. 
+
 ## Cluster Transitions
+
+Only two counties switched Resource clusters between 1990 and 2020. 
+
+Canyon County was in cluster R4 (agriculture declines in a mixed landscape) in 1990, and transitioned to R3 (agricultural area accommodating increasing residential use). R3 only contains Canyon County, suggesting that Canyon County was similar to other counties (Bannock, Bonneville, Gem, Madison, and Teton) in 1990, but became a more unique system in 2000. Canyon County is unique in its proximity to Ada County and the capital city, Boise. While the other counties in R4 are dealing with population growth and agricultural decline, Canyon County is near a large urbanizing area. I see R3 as a mix of R4 and R1 (Ada County) characteristics, so Canyon County is transitioning to be more like its urbanizing neighbor and less like the other counties and their pattern of agricultural decline.
+
+The other Resource transition was from R6 (mid-sized agriculture succeeds where it's possible) in 1990-2000 to R2 (mid- to large-sized agriculture persists where it's possible) in 2010-2020 in Owyhee County. These clusters are similar to each other. The main difference seems to be that farms tend to be larger and less likely to turn a profit in R2. Before the transition from R6 to R2, Owyhee transitioned from A4 (slow growing population in rural areas) in 1990 to A3 (slow growing population in urban areas)in 2000-2020. The transition from a more rural population to a more urban population may be a contributing factor to this Resource transition. I hypothesize that proximity to Ada County is also driving this transition, so it is less likely to occur in the other R6 county, Butte.  
+
+Actors transitions are more common than Resource transitions.
+
+The transition from A4 to A3 that occurred in Owyhee County also occurred in Lincoln and Clark counties in 2020. If Actors cluster shifts indicate a later Resource shift, such as what occurred in Owyhee County, these might be counties to watch in 2025. We could hypothesize that they will transition from their current Resource cluster R2 (mid- to large-sized agriculture persists where it's possible) to a Resource system where agriculture continues to decline (such as R4).
+
+Another common shift was from a number of Actors clusters (A1 and A3) to A2 (manufacturing provides additional rural employment) in 2020. This occurred in a number of Resource clusters (R2, R4, R5, R7, and R8). Since this shift is so recent, it is difficult to assess the outcome of this shift, especially since it is impacting many different types of resource systems.
+
+Finally, a transition that occurred in Elmore, Madison, and Teton counties in 2000 was a shift from A3 to A1. This indicates that population growth in their urban areas sped up, and the number of residents with Bachelors degrees increased. While Madison and Teton counties stayed in A1 for the remainder of the study period, Elmore County shifted back to A3 in 2010 and then to A2 in 2020. In Madison and Teton counties, the influx of new urban-area dwellers persisted, whereas in Elmore County, the characteristics of its actors have shifted over the years.
 
 ## Outcomes of Archetypes
 
 ### NCP
+
+```{r}
+#| label: "get NCP data"
+
+# get list of file paths
+NCP_data_files <- list.files("data/NCP_data", pattern = ".tif",
+                             full.names = TRUE,
+                             recursive = TRUE)
+
+# read data files into list
+NCP_data <- lapply(NCP_data_files, function(x) rast(x))
+names(NCP_data) <- NCP_data_files %>%
+  str_remove("../data/NCP_data/") %>%
+  str_remove(".tif")
+
+# check that all are aligned
+# careful with this step - it may apply spatial functions that can warp data
+template <- NCP_data[[1]]
+aligned_rasts <- lapply(NCP_data, function(x) {
+  if(crs(x) != crs(template)) {x <- project(x, template)}
+  if(sum(res(x) != res(template)) > 0) {x <- resample(x, template)}
+  if(sum(origin(x) != origin(template)) > 0) {x <- resample(x, template)}
+  if(sum(ext(x) != ext(template)) > 0) {x <- resample(x, template)}
+  
+  return(x)
+})
+
+NCP_data <- rast(aligned_rasts)
+names(NCP_data) <- names(aligned_rasts)
+```
+
+```{r}
+#| label: "summarise NCP by county"
+
+#max_min_NCP_layers <-
+
+NCP_sc <- scale(NCP_data,
+                center = TRUE,
+                scale = c()) #If scale is a numeric vector (recycled to nlyr(x)), each layer of x is divided by the corresponding value. Get max-min for each layer in a vector
+
+NCP_by_county_mean <- exact_extract(x = NCP_data,
+                               y = barcodes,
+                               fun = "mean",
+                               append_cols = c("county", "barcode"))
+NCP_by_county_sd <- exact_extract(x = NCP_data,
+                               y = barcodes,
+                               fun = "stdev",
+                               append_cols = c("county", "barcode"))
+
+
+
+# NCP_pca <- prcomp(NCP_sc[,-c(1:2)])
+```
+
+```{r}
+#| label: "county NCP calcs"
+
+r1_ncp <- filter(NCP_sc, county == "Ada")
+```
+
+| Resource Cluster | C Pool Protection | Climate Adaptation | Food and Feed | Habitat | Water Quality | Recreation |
+|------------------|-------------------|--------------------|---------------|---------|---------------|------------|
+| R1 |                   |                    |               |         |               |            |
+| R2 |                   |                    |               |         |               |            |
+| R2->R3 |                   |                    |               |         |               |            |
+| R4 |                   |                    |               |         |               |            |
+| R5 |                   |                    |               |         |               |            |
+| R6 |                   |                    |               |         |               |            |
+| R6->R2 |                   |                    |               |         |               |            |
+| R7 |                   |                    |               |         |               |            |
+| R8 |                   |                    |               |         |               |            |
 
 ### Farmland Loss
 
