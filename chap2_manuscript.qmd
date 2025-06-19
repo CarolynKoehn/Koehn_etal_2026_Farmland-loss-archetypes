@@ -10,19 +10,26 @@ number-sections: true
 
 # Context
 
-Approximately 1.5 million km2 of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period (Radwan et al., 2021). The pathway to conversion is often attributed to urban or suburban sprawl (Chen et al., 2020; Eitel, 2003; van Vliet et al., 2017), and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center (Xie et al., 2023; Chen et al., 2020; Haney and Cohen, 2015; Meiyappan et al., 2014). However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see Ju et al., 2018 and Jiang et al., 2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales (Zhu et al., 2022).
+Approximately 1.5 million km2 of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales [@zhu2022].
 
 The Snake River Plain of Idaho is a perfect place to study this phenomenon because it is experiencing different drivers of agricultural land conversion across its counties (though I am tempted to expand this to the West, as the same logic applies). We have observed pressures due to urban/suburban sprawl, amenity migration, and agricultural industrialization. The purpose of this archetype analysis is to characterize the pathways to and outcomes of farmland loss as described by public data. These archetypes will aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities.
 
-I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework to identify a broad and relevant set of data indicators to include in the cluster analysis. I will also note possible data sources and available years, as I hope to create a clusters across both space and time (I hope to assign an archetype to each county about every 5 years to see if they change through time). I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
+I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
 
 In this analysis, I create archetypes for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total).
 
-Archetypes of pathways to agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. The research questions from my proposal are:
+Archetypes of agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. The research questions from my proposal are:
 
 1. Are there identifiable archetypes of agricultural lands loss in the western U.S.?
 2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
 3. Which of nature’s contributions to people are associated with and most threatened by different archetypes of land use change?
+
+As I worked through this preliminary analysis, the questions I answer here are slighly different:
+
+1. Are there identifiable archetypes of social-ecological systems (specifically, the resouce systems and actors) in Idaho's Snake River Plain?
+2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
+3. Are there counties that have shifted archetypes through time, and what are their characteristics?
+4. What are the outcomes of different resource system archetypes paths through time, as measured by nature's contributions to people?
 
 # Methods
 
@@ -36,12 +43,13 @@ library(clustvarsel)
 library(tidyverse, quietly = TRUE)
 library(sf)
 library(terra)
+library(exactextractr)
 ```
 
 
 ## Data Selection
 
-In this analysis, I selected data that was available for these counties from 1990-2020. I linked data sources I knew to second-tier variables in Ostrom's social-ecological systems framework. For the full framework, including variables without data sources that I knew of and data sources I excluded because they do not inlude all analysis years, see the attached file `SES_data_outline.docx`.
+In this analysis, I selected data that was available for these counties from 1990-2020. I linked data sources I knew to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009]. For the full framework, including variables without data sources that I knew of and data sources I excluded because they do not inlude all analysis years, see the attached file `SES_data_outline.docx`.
 
 These are the data used in this preliminary analysis:
 
@@ -111,7 +119,7 @@ ses_data_list <- list(Resource = resource,
                       Actors = actors)
 ```
 
-I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data [CITE].
+I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data [@hennig2016].
 
 ```{r}
 #| label: "scale data"
@@ -192,7 +200,7 @@ print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actor
 
 ### Gaussian Model-Based Clustering
 
-To select a model, which includes selecting the number of groups and the shape, I used two different criteria (BIC and ICL) to test 14 different model shapes and 1-10 numbers of groups. We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE).
+To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-9 possible clusters. <!-- We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE). -->
 
 Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
@@ -215,7 +223,7 @@ ses_mclustBIC <- lapply(ses_data_sel, function(df) {
 
 <!-- for hist code, see https://centerstat.org/wp-content/uploads/2021/05/CAMM-mixture-modeling-demo-R-2021.pdf page 5-19 -->
 
-`r ses_mclustBIC[["Resource"]]$mod$G` clusters is the best fit for the resource data. `r ses_mclustBIC[["Actors"]]$mod$G` clusters is the best fit for the resource data.
+`r ses_mclustBIC[["Resource"]]$mod$G` clusters was the best fit for the resource data. `r ses_mclustBIC[["Actors"]]$mod$G` clusters was the best fit for the resource data.
 
 The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima.
 
@@ -243,6 +251,8 @@ factoextra::fviz_pca_biplot(
 # Preliminary Results
 
 ## Cluster Descriptions
+
+Each cluster corresponds to an archetype. For an archetype analysis, not only do you assign each cluser a name, but you also tell a unifying narrative of the units in that cluster. I've done my best to describe the defining attributes of each cluster and tell a short unifying narrative about each one. This section addresses questions 1-2.
 
 ### Resource Clusters
 
@@ -606,6 +616,7 @@ clust_dat[["Resource"]] %>%
   theme_void()
 ```
 
+\newpage
 ### Actors Clusters
 
 Although this analysis identifies 8 resource archetypes in the study area, it only identified 4 actors archetypes.
@@ -738,7 +749,7 @@ To characterize Actors cluster A3, I report its significantly different variable
 
 Cluster A3 consists of Cassia, Fremont, Gooding, Jerome, Minidoka, Power, and Washington counties for 1990-2020. For 1990-2010, but not 2020, Bingham, Gem, Jefferson, Payette, and Twin Falls counties are in this cluster (these all transition to A2 in 2020). Owyhee County is in A3 for 2000-2020. A few counties also briefly are in A3: Clark and Lincoln counties in 2020, Madison and Teton counties in 1990, and Elmore County in 1990 and 2010 (Elmore also transitions to A2 in 2020).
 
-The defining characteristic of this archetype seems to be slow population growth and low population density where more of the population lives in urban areas (compared to A4, where population growth is also slow but the population is more rural). 
+The defining characteristic of this archetype seems to be slow population growth and low population density, but do contain an urban area where some of the population live (compared to A4, where population growth is also slow but the population is much more rural). 
 
 ```{r}
 clust_dat[["Actors"]] %>%
@@ -788,6 +799,8 @@ clust_dat[["Actors"]] %>%
 ```
 
 ## Pairing Resource and Actor Archetypes
+
+Each county in each analysis year has both a Resource archetype and an Actors archetype. Here, I try to link the two and describe overarching patterns of which resource systems and actor types are associated with each other. This section addresses question 2.
 
 ```{r}
 #| label: fig-RA-assoc
@@ -840,6 +853,8 @@ Cluster R8 (concentration of agriculture) is mostly associated with A3 (slow gro
 
 ## Cluster Transitions
 
+This section answers question 3.
+
 Only two counties switched Resource clusters between 1990 and 2020. 
 
 Canyon County was in cluster R4 (agriculture declines in a mixed landscape) in 1990, and transitioned to R3 (agricultural area accommodating increasing residential use). R3 only contains Canyon County, suggesting that Canyon County was similar to other counties (Bannock, Bonneville, Gem, Madison, and Teton) in 1990, but became a more unique system in 2000. Canyon County is unique in its proximity to Ada County and the capital city, Boise. While the other counties in R4 are dealing with population growth and agricultural decline, Canyon County is near a large urbanizing area. I see R3 as a mix of R4 and R1 (Ada County) characteristics, so Canyon County is transitioning to be more like its urbanizing neighbor and less like the other counties and their pattern of agricultural decline.
@@ -854,12 +869,13 @@ Another common shift was from a number of Actors clusters (A1 and A3) to A2 (man
 
 Finally, a transition that occurred in Elmore, Madison, and Teton counties in 2000 was a shift from A3 to A1. This indicates that population growth in their urban areas sped up, and the number of residents with Bachelors degrees increased. While Madison and Teton counties stayed in A1 for the remainder of the study period, Elmore County shifted back to A3 in 2010 and then to A2 in 2020. In Madison and Teton counties, the influx of new urban-area dwellers persisted, whereas in Elmore County, the characteristics of its actors have shifted over the years.
 
-## Outcomes of Archetypes
+## NCP Outcomes of Archetypes
 
-### NCP
+I only have NCP data for 2016-2020, so NCP must be analyzed as an outcome of the 40 years of archetypes. This section answers question 4.
 
 ```{r}
 #| label: "get NCP data"
+#| include: false
 
 # get list of file paths
 NCP_data_files <- list.files("data/NCP_data", pattern = ".tif",
@@ -890,18 +906,19 @@ names(NCP_data) <- names(aligned_rasts)
 
 ```{r}
 #| label: "summarise NCP by county"
+#| include: false
 
-#max_min_NCP_layers <-
+max_min_NCP_layers <- as.numeric(lapply(NCP_data, FUN = function(x) {max(values(x), na.rm=T)})) - as.numeric(lapply(NCP_data, FUN = function(x) {min(values(x), na.rm=T)}))
 
 NCP_sc <- scale(NCP_data,
                 center = TRUE,
-                scale = c()) #If scale is a numeric vector (recycled to nlyr(x)), each layer of x is divided by the corresponding value. Get max-min for each layer in a vector
+                scale = max_min_NCP_layers) #If scale is a numeric vector (recycled to nlyr(x)), each layer of x is divided by the corresponding value.
 
-NCP_by_county_mean <- exact_extract(x = NCP_data,
+NCP_by_county_mean <- exact_extract(x = NCP_sc,
                                y = barcodes,
                                fun = "mean",
                                append_cols = c("county", "barcode"))
-NCP_by_county_sd <- exact_extract(x = NCP_data,
+NCP_by_county_sd <- exact_extract(x = NCP_sc,
                                y = barcodes,
                                fun = "stdev",
                                append_cols = c("county", "barcode"))
@@ -912,29 +929,72 @@ NCP_by_county_sd <- exact_extract(x = NCP_data,
 ```
 
 ```{r}
-#| label: "county NCP calcs"
+#| label: "cluster NCP calcs"
+#| include: false
 
-r1_ncp <- filter(NCP_sc, county == "Ada")
+NCP_cats <- data.frame(NCP = names(NCP_data),
+                       NCP_cat = c(rep("Climate Adaptation", 2),
+                                   rep("C Stock Protection", 3),
+                                   rep("Food and Feed", 4),
+                                   rep("Habitat", 8),
+                                   rep("Recreation", 2),
+                                   rep("Water Quality", 2)))
+
+NCP_means <- NCP_by_county_mean %>%
+  pivot_longer(cols = !c("county", "barcode"),
+               names_to = "NCP",
+               values_to = "mean") %>%
+  mutate(NCP = str_remove(NCP, "mean.")) %>%
+  left_join(NCP_cats) %>%
+  mutate(NCP = str_remove(NCP, regex("^data/NCP_data/[:print:]*/")))
+
+NCP_stdev <- NCP_by_county_sd %>%
+  pivot_longer(cols = !c("county", "barcode"),
+               names_to = "NCP",
+               values_to = "stdev") %>%
+  mutate(NCP = str_remove(NCP, "stdev.")) %>%
+  left_join(NCP_cats) %>%
+  mutate(NCP = str_remove(NCP, regex("^data/NCP_data/[:print:]*/")))
+
+NCP_means_sd <- left_join(NCP_means, NCP_stdev) %>%
+  mutate(barcode.R = str_remove_all(barcode, regex("A[:digit:]{1}")),
+         barcode.A = str_remove_all(barcode, regex("R[:digit:]{1}")))
+```
+```{r}
+#| label: "fig-NCP-Rclusters"
+#| fig-cap: "The range of mean 2016-2020 NCP values for each county in each Resource cluster pathway. Values are scaled so that 0 represents the mean of each NCP across the study area, so values below 0 are below average and above 0 are above average. I separated the 21 NCP layers I used in chapter 1 into the 6 NCP categories used in chapter 1, so even clusters with one county (e.g. R1 = Ada County) have multiple means in each category from multiple NCP layers."
+#| fig-width: 8
+
+
+ggplot(NCP_means_sd, aes(x=mean, y=barcode.R)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_boxplot() +
+  facet_wrap(vars(NCP_cat)) +
+  scale_y_discrete(
+    limits = rev(unique(NCP_means_sd$barcode.R)[order(unique(NCP_means_sd$barcode.R))]),
+    labels = rev(c("R1", "R2", "R4 -> R3", "R4", "R5", "R6 -> R2", "R6", "R7", "R8"))) +
+  labs(x = "Cluster mean (scaled values)", y = "Resource Cluster") +
+  theme_bw()
 ```
 
-| Resource Cluster | C Pool Protection | Climate Adaptation | Food and Feed | Habitat | Water Quality | Recreation |
-|------------------|-------------------|--------------------|---------------|---------|---------------|------------|
-| R1 |                   |                    |               |         |               |            |
-| R2 |                   |                    |               |         |               |            |
-| R2->R3 |                   |                    |               |         |               |            |
-| R4 |                   |                    |               |         |               |            |
-| R5 |                   |                    |               |         |               |            |
-| R6 |                   |                    |               |         |               |            |
-| R6->R2 |                   |                    |               |         |               |            |
-| R7 |                   |                    |               |         |               |            |
-| R8 |                   |                    |               |         |               |            |
+_C Stock Protection:_ Clusters R2 and R4 provide above average C stock protection. Canyon County's transition from R4 to R3 may have come at the cost of losing C stocks.
 
-### Farmland Loss
+_Climate Adaptation:_ Clusters R1-R4 are areas with more ability to adapt to climate change. These are the only clusters with A1 Actor clusters (more educated urbanites). This result points to issues of environmental justice, where more educated (so I'm assuming, more wealthy) actors are also the most well positioned to adapt to climate change. I should try to find long term data on average income to justify this assertion.
+
+_Food and Feed:_ Resource clusters with potential for more croplands (R3, R7, R8) provide above average food and feed NCP. The spread of food NCP contributions in R4 (agriculture declines in a mixed landscape) is quite broad, indicating that declining agriculture can have mixed food NCP results.
+
+_Habitat:_ The Resource clusters where agriculture is limited by rugged conditions (R2, R6) generally provide higher than average habitat NCP. More agricultural (R3, R7, R8) and urban (R1) clusters generally provide less habitat on average, but they have a wide range, indicating that they provide different types of habitat NCP to different levels.
+
+_Recreation:_ Most Resource clusters provide recreation NCP near the average for the study area. Very agricultural clusters (R3, R8) tend to provide below average recreation.
+
+_Water Quality:_ Most Resource clusters are near average here.
+
+### Other outcomes?
 
 
-
-<!-- # References {.unnumbered}
+\newpage
+# References {.unnumbered}
 
 :::{#refs}
 
-::: -->
+:::
