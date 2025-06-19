@@ -60,6 +60,10 @@ params <- list(agg_level_desc = "county",
                domain_desc = "total")
 
 land_in_farms <- nassqs(params)
+# save a backup copy
+# write.csv(land_in_farms,
+#           "../data/API_data_download_backup/land_in_farms.csv",
+#           row.names = FALSE)
 
 land_in_farms_1992 <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
   filter(Year == 1992) %>%
@@ -205,6 +209,10 @@ params <- list(agg_level_desc = "county",
                domain_desc = "total")
 
 num_farms <- nassqs(params)
+# save a backup copy
+# write.csv(num_farms,
+#           "../data/API_data_download_backup/num_farms.csv",
+#           row.names = FALSE)
 
 num_farms_1992 <- read.csv("../data/Farm_size_1925-1992.csv") %>%
   filter(Year == 1992 & Size == "all farms") %>%
@@ -256,6 +264,17 @@ houses2020 <- get_decennial(geography = "county",
                         variables = "H1_001N",
                         year = 2020) %>%
   mutate(NAME = str_remove(NAME, " County, Idaho"))
+# save a backup copy
+# write.csv(houses2000,
+#           "../data/API_data_download_backup/houses2000.csv",
+#           row.names = FALSE)
+# write.csv(houses2010,
+#           "../data/API_data_download_backup/houses2010.csv",
+#           row.names = FALSE)
+# write.csv(houses2020,
+#           "../data/API_data_download_backup/houses2020.csv",
+#           row.names = FALSE)
+
 
 county_areas <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
   filter(Year >= 1990) %>%
@@ -323,6 +342,10 @@ params <- list(agg_level_desc = "county",
                domain_desc = "total")
 
 num_farms_change <- nassqs(params)
+# save a backup copy
+# write.csv(num_farms_change,
+#           "../data/API_data_download_backup/num_farms_change.csv",
+#           row.names = FALSE)
 
 farm_change <- num_farms_change %>%
   pivot_wider(id_cols = c(county_name, year),
@@ -447,6 +470,10 @@ params <- list(agg_level_desc = "county",
                domain_desc = "total")
 
 farms_w_loss <- nassqs(params)
+# save a backup copy
+# write.csv(farms_w_loss,
+#           "../data/API_data_download_backup/farms_w_loss.csv",
+#           row.names = FALSE)
 
 farms_w_loss_1992 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
   left_join(read.csv("../data/Farm_size_1925-1992.csv")) %>%
@@ -590,6 +617,10 @@ params <- list(state_alpha = "ID",
                domain_desc = "area operated")
 # retrieve
 farm_sizes <- nassqs(params)
+# save a backup copy
+# write.csv(farm_sizes,
+#           "../data/API_data_download_backup/farm_sizes.csv",
+#           row.names = FALSE)
 
 # clean
 farm_sizes2 <- farm_sizes %>%
@@ -699,6 +730,16 @@ pop2020 <- get_decennial(geography = "county",
                         variables = "P1_001N",
                         year = 2020) %>%
   mutate(NAME = str_remove(NAME, " County, Idaho"))
+# save a backup copy
+# write.csv(pop2000,
+#           "../data/API_data_download_backup/pop2000.csv",
+#           row.names = FALSE)
+# write.csv(pop2010,
+#           "../data/API_data_download_backup/pop2010.csv",
+#           row.names = FALSE)
+# write.csv(pop2020,
+#           "../data/API_data_download_backup/pop2020.csv",
+#           row.names = FALSE)
 
 county_areas <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
   filter(Year >= 1990) %>%
@@ -1059,6 +1100,20 @@ employment2020 <- getCensus(name = "cbp",
                   region = "county:*",
                   regionin = "state:16")
 
+# save a backup copy
+# write.csv(employment1990,
+#           "../data/API_data_download_backup/employment1990.csv",
+#           row.names = FALSE)
+# write.csv(employment2000,
+#           "../data/API_data_download_backup/employment2000.csv",
+#           row.names = FALSE)
+# write.csv(employment2010,
+#           "../data/API_data_download_backup/employment2010.csv",
+#           row.names = FALSE)
+# write.csv(employment2020,
+#           "../data/API_data_download_backup/employment2020.csv",
+#           row.names = FALSE)
+
 employment_codes <- tibble(sector = c("Total",
                                       "Agriculture, Forestry, Fishing and Hunting",
                                       "Mining, Quarrying, and Oil and Gas Extraction",
@@ -1275,6 +1330,11 @@ params <- list(agg_level_desc = "county",
                domain_desc = "tenure")
 # retrieve and clean
 farm_own <- nassqs(params)
+# save a backup copy
+# write.csv(farm_own,
+#           "../data/API_data_download_backup/farm_own.csv",
+#           row.names = FALSE)
+
 farm_own_perc <- farm_own %>%
   select(county_name, year, Value, domaincat_desc) %>%
   pivot_wider(id_cols = county_name:year,
@@ -1399,6 +1459,16 @@ urb_rur2020 <- get_decennial(geography = "county",
   pivot_wider(id_cols = NAME,
               names_from = variable,
               values_from = value)
+# save a backup copy
+# write.csv(urb_rur2000,
+#           "../data/API_data_download_backup/urb_rur2000.csv",
+#           row.names = FALSE)
+# write.csv(urb_rur2010,
+#           "../data/API_data_download_backup/urb_rur2010.csv",
+#           row.names = FALSE)
+# write.csv(urb_rur2020,
+#           "../data/API_data_download_backup/urb_rur2020.csv",
+#           row.names = FALSE)
 
 urb_rur <- data.frame(county = c(urb_rur1990$County,
                                  urb_rur2000$NAME,

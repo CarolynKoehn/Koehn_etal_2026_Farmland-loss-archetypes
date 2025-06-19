@@ -12,3 +12,4 @@
 .Renviron
 
 *NLCD_LndCov_1985-2020.zip
+data/API_data_download_backup/*
