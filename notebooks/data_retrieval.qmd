@@ -24,7 +24,8 @@ census_api_key(Sys.getenv('CENSUS_API_KEY'))
 
 # county data
 county_shapes <- tigris::counties("ID") %>%
-  select(c("GEOID", "NAME"))
+  select(c("GEOID", "NAME")) %>%
+  mutate(tot_area = st_area(.))
 
 # names and GEOIDs
 GEOID_names <- st_drop_geometry(county_shapes$NAME)
@@ -172,6 +173,53 @@ shrubland <- land_cover_percents %>%
 rs_data <- left_join(rs_data, shrubland, by=c("county", "year"))
 ```
 
+#### Percent federal lands
+
+Land management data were retrieved from PAD-US via the `FedData` package.
+
+```{r}
+#| label: "percent federal land"
+
+padus_m <- get_padus(template = county_shapes,
+                   label = "Idaho",
+                   layer = "Manager_Name")
+
+pad_fed_clip <- padus_m[[1]] %>%
+  filter((Mang_Type == "FED" | Own_Type == "FED") & Category != "Easement")
+# remove non-polygons
+pad_fed_clip <- pad_fed_clip[list(st_geometry_type(pad_fed_clip))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
+
+pad_fed_years <- vector("list", length=4)
+names(pad_fed_years) <- seq(1990, 2020, 10)
+
+pad_fed_years <- mapply(function(list, year) {
+  county_polys <- pad_fed_clip %>% 
+    filter(Date_Est <= year | is.na(Date_Est)) %>%
+    st_intersection(., st_transform(county_shapes, st_crs(.))) %>%
+    st_make_valid()
+  county_polys <- county_polys[list(st_geometry_type(county_polys))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
+    
+  county_polys <- county_polys %>%
+    group_by(NAME) %>%
+    dplyr::summarise() %>%
+    st_make_valid()
+}, list = pad_fed_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
+
+fed_by_county_years <- lapply(pad_fed_years, function(df) {
+  df %>%
+    mutate(fed_area = st_area(.)) %>%
+    st_drop_geometry() %>%
+    left_join(st_drop_geometry(county_shapes)) %>%
+    mutate(perc_fed = units::drop_units(fed_area / tot_area * 100))
+})
+
+# clean and join
+rs_data <- bind_rows(fed_by_county_years, .id="year") %>%
+  rename("county" = "NAME") %>%
+  select("county", "year", "perc_fed") %>%
+  mutate(year = as.integer(year)) %>%
+  right_join(rs_data, by=c("county", "year"))
+```
 
 ### Residential
 
@@ -243,7 +291,9 @@ rs_data <- num_farms %>%
 
 #### Percent land in recreation areas
 
-The following land designations were considered recreation lands in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, and National Recreation Area.
+The Protected Areas Database "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters." ([source](https://www.usgs.gov/programs/gap-analysis-project/pad-us-data-manual)). PAD-US data are downloaded here using the `FedData` R package.
+
+The following land designations were considered recreation lands in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Additional local designation terms related to recreation were added as well, as some state parks were misclassified as `LP` (local parks) in the `Des_Tp` (designation type) column.
 
 More information on this dataset can be found at: https://usgs.maps.arcgis.com/home/item.html?id=80c7a138989c4cf8937c4502371d6e99
 
@@ -255,55 +305,40 @@ padus <- get_padus(template = county_shapes,
                    layer = "Protection_Mechanism_Category")
 
 pad_rec <- padus[[1]] %>%
-  filter(Des_Tp %in% c("REC", "NM", "NP", "SREC", "SP", "NRA"))
-
-pad_rec_clip <- pad_rec %>%
-  st_transform("epsg:5070") %>%
-  st_intersection(., county_shapes)
-
-#template
-ext_template <- rast(vect(county_shapes))
-res(ext_template) <- 10
+  filter(Des_Tp %in% c("REC", "NM", "NP", "SREC", "SP", "NRA", "NT") |
+           Loc_Ds %in% c("State Park", "Recreation Reservoir", "National Recreation Trail", "Recreation Area", "National Recreation Area", "National Monument", "SREC", "REC", "SP", "National Park", "Designated - Recreational"))
 
 pad_rec_years <- vector("list", length=4)
 names(pad_rec_years) <- seq(1990, 2020, 10)
 
 pad_rec_years <- mapply(function(list, year) {
-  pad_rec_clip %>% filter(Date_Est <= year | is.na(Date_Est))
+  county_polys <- pad_rec %>% 
+    filter(Date_Est <= year | is.na(Date_Est)) %>%
+    st_intersection(., st_transform(county_shapes, st_crs(.))) %>%
+    st_make_valid()
+  county_polys <- county_polys[list(st_geometry_type(county_polys))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
+    
+  county_polys <- county_polys %>%
+    group_by(NAME) %>%
+    dplyr::summarise() %>%
+    st_make_valid()
 }, list = pad_rec_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
 
-pad_rec_r <- lapply(pad_rec_years, function(df) {
-  rasterize(vect(df),
-            ext_template, field = 1)
+rec_by_county_years <- lapply(pad_rec_years, function(df) {
+  df %>%
+    mutate(rec_area = st_area(.)) %>%
+    st_drop_geometry() %>%
+    left_join(st_drop_geometry(county_shapes)) %>%
+    mutate(perc_rec = units::drop_units(rec_area / tot_area * 100))
 })
 
-pad_rec_r <- rast(pad_rec_r)
-  
-sum_cover <- function(x){
-  all_props <- list(x %>%
-         group_by(value) %>%
-         summarize(total_area = sum(coverage_area)) %>%
-         mutate(proportion = total_area/sum(total_area)))
-  
-  return(subset(all_props[[1]], value == 1)$proportion * 100)
-  
-}
-
-#extract the area of each raster cell covered by the plot and summarize
-x <- exact_extract(pad_rec_r, aoi, 
-                   coverage_area = TRUE, summarize_df = TRUE, fun = sum_cover,
-                   stack_apply = TRUE, include_cols = "NAME")
-
 # clean and join
-rs_data <- x %>%
-  pivot_longer(!NAME,
-               names_to = year,
-               values_to = Perc_rec_land) %>%
-  mutate(year = as.numeric(str_sub(year, -4, -1))) %>%
+rs_data <- bind_rows(rec_by_county_years, .id="year") %>%
   rename("county" = "NAME") %>%
+  select("county", "year", "perc_rec") %>%
+  mutate(year = as.integer(year)) %>%
   right_join(rs_data, by=c("county", "year"))
 ```
-
 
 ### Residential
 
@@ -607,6 +642,59 @@ ru_data <- num_farms %>%
   select(c(county, year, farms_per_acre)) %>%
   mutate(year = (year-2)) %>%
   rbind(num_farms_1992) %>%
+  right_join(ru_data, by=c("county", "year"))
+```
+
+### Natural Amenities
+
+#### Percent land in recreation areas
+
+The Protected Areas Database "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters." ([source](https://www.usgs.gov/programs/gap-analysis-project/pad-us-data-manual)). PAD-US data are downloaded here using the `FedData` R package.
+
+The following land designations were considered recreation lands in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Additional local designation terms related to recreation were added as well, as some state parks were misclassified as `LP` (local parks) in the `Des_Tp` (designation type) column.
+
+More information on this dataset can be found at: https://usgs.maps.arcgis.com/home/item.html?id=80c7a138989c4cf8937c4502371d6e99
+
+```{r}
+#| label: "percent recreation lands - RU"
+
+padus <- get_padus(template = county_shapes,
+                   label = "Idaho",
+                   layer = "Protection_Mechanism_Category")
+
+pad_rec <- padus[[1]] %>%
+  filter(Des_Tp %in% c("REC", "NM", "NP", "SREC", "SP", "NRA", "NT") |
+           Loc_Ds %in% c("State Park", "Recreation Reservoir", "National Recreation Trail", "Recreation Area", "National Recreation Area", "National Monument", "SREC", "REC", "SP", "National Park", "Designated - Recreational"))
+
+pad_rec_years <- vector("list", length=4)
+names(pad_rec_years) <- seq(1990, 2020, 10)
+
+pad_rec_years <- mapply(function(list, year) {
+  county_polys <- pad_rec %>% 
+    filter(Date_Est <= year | is.na(Date_Est)) %>%
+    st_intersection(., st_transform(county_shapes, st_crs(.))) %>%
+    st_make_valid()
+  county_polys <- county_polys[list(st_geometry_type(county_polys))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
+    
+  county_polys <- county_polys %>%
+    group_by(NAME) %>%
+    dplyr::summarise() %>%
+    st_make_valid()
+}, list = pad_rec_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
+
+rec_by_county_years <- lapply(pad_rec_years, function(df) {
+  df %>%
+    mutate(rec_area = st_area(.)) %>%
+    st_drop_geometry() %>%
+    left_join(st_drop_geometry(county_shapes)) %>%
+    mutate(perc_rec = units::drop_units(rec_area / tot_area * 100))
+})
+
+# clean and join
+ru_data <- bind_rows(rec_by_county_years, .id="year") %>%
+  rename("county" = "NAME") %>%
+  select("county", "year", "perc_rec") %>%
+  mutate(year = as.integer(year)) %>%
   right_join(ru_data, by=c("county", "year"))
 ```
 

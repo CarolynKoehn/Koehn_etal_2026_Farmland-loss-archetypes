@@ -8,9 +8,10 @@ nps <- st_read("R:/Common/CarolynKoehn/Data_raw/Parks and Recreation/NPS_-_Land_
 nps_id <- subset(nps, STATE == "ID")
 
 idaho <- tigris::states() %>%
-  filter(STUSPS == "ID")
+  filter(STUSPS == "ID") %>%
+  st_transform("epsg:5070")
 
-pad_id <- st_read("R:/Common/CarolynKoehn/Data_raw/PAD-US 3.0/PADUS3_0_State_ID_SHP/PADUS3_0Combined_StateID.shp") %>%
+pad_id <- st_read("R:/CarolynKoehn/Data_raw/PAD-US 3.0/PADUS3_0_State_ID_SHP/PADUS3_0Combined_StateID.shp") %>%
   st_transform("epsg:5070") %>%
   st_make_valid()
 
@@ -22,10 +23,10 @@ aoi <- st_read("R:/Common/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_S
 
 pad_rec_clip <- pad_rec %>%
   st_transform("epsg:5070") %>%
-  st_intersection(., aoi)
+  st_intersection(., idaho)
 
 #template
-ext_template <- rast(vect(aoi))
+ext_template <- rast(vect(idaho))
 res(ext_template) <- 10
 
 pad_rec_years <- vector("list", length=4)
@@ -36,7 +37,7 @@ pad_rec_years <- mapply(function(list, year) {
 }, list = pad_rec_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
 
 pad_rec_r <- lapply(pad_rec_years, function(df) {
-  rasterize(vect(df),
+  rasterize(df,
             ext_template, field = 1)
 })
 

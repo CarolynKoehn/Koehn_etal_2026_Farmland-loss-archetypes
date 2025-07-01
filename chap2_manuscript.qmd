@@ -62,8 +62,10 @@ These are the data used in this preliminary analysis:
 | | | Percent cropland | National Land Cover Database (NLCD) |
 | | Natural Amenities | Percent forestland | NLCD |
 | | | Percent shrubland | NLCD |
+| | | Percent federally managed land | PAD-US |
 | | Urban / Residential | Percent developed land | NLCD |
 | RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | Census of Agriculture |
+| | Natural Amenities | Percent land in recreation areas | Protected Areas Database |
 | | Urban / Residential | Number houses per unit area | US Census |
 | RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | Census of Agriculture |
 | | | Percent change of land cover in cropland (5 year period) | NLCD |
