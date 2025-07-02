@@ -337,7 +337,9 @@ rs_data <- bind_rows(rec_by_county_years, .id="year") %>%
   rename("county" = "NAME") %>%
   select("county", "year", "perc_rec") %>%
   mutate(year = as.integer(year)) %>%
-  right_join(rs_data, by=c("county", "year"))
+  right_join(rs_data, by=c("county", "year")) %>%
+  # convert NAs to 0% rec land
+  mutate(perc_rec = ifelse(is.na(perc_rec), 0, perc_rec))
 ```
 
 ### Residential
@@ -695,7 +697,9 @@ ru_data <- bind_rows(rec_by_county_years, .id="year") %>%
   rename("county" = "NAME") %>%
   select("county", "year", "perc_rec") %>%
   mutate(year = as.integer(year)) %>%
-  right_join(ru_data, by=c("county", "year"))
+  right_join(ru_data, by=c("county", "year")) %>%
+  # convert NAs to 0% rec land
+  mutate(perc_rec = ifelse(is.na(perc_rec), 0, perc_rec))
 ```
 
 ### Residential

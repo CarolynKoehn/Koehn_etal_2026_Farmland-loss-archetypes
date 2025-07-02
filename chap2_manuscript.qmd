@@ -117,6 +117,14 @@ resource <- left_join(ru_data, rs_data) %>%
 actors <- read.csv("data/Actor_data.csv") %>%
   filter(county %in% aoi$NAME)
 
+# try combos of including/removing fed land+rec land; shrub+forest
+# resource <- resource %>%
+#   rowwise %>%
+#   mutate(shrub_forest_change = sum(shrub_change, forest_change)) %>%
+#   select(-c(percent_forest, percent_shrubland, shrub_change, forest_change)) %>%
+#   ungroup()
+
+
 ses_data_list <- list(Resource = resource,
                       Actors = actors)
 ```
@@ -184,7 +192,7 @@ ses_data_sel <- mapply(function(df, ses_system) {
 SIMPLIFY = FALSE)
 ```
 
-From the Resource clusters, the following variable was removed: percent developed land.
+From the Resource clusters, the following variable was removed: percent developed land, percent farms with net loss, shrub/forestland change, farm size principal component 1.
 
 ```{r}
 #| include: false
@@ -294,8 +302,8 @@ as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
-  scale_y_discrete(limits = c("farm_size_pc2", "farm_size_pc1", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "farms_per_acre", "perc_farms_w_net_loss", "percent_shrubland", "percent_forest", "percent_cropland", "land_in_farms"),
-                   labels = c("Farm Size (PC2)", "Farm Size (PC1)", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Farm Density", "Farms with Net Loss (%)", "Shrubland", "Forest", "Cropland", "Land in Farms")) +
+  scale_y_discrete(limits = c("farm_size_pc1", "developed_change", "shrub_forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "perc_rec", "farms_per_acre", "perc_farms_w_net_loss", "perc_fed", "land_in_farms"),
+                   labels = c("Farm Size (PC1)", "Developed Land Loss/Gain", "Shrub/Forestland Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Recreation Land", "Farm Density", "Farms with Net Loss (%)", "Federal Land", "Land in Farms")) +
   labs(x = "Cluster mean (scaled values)", y = "Variable") +
   theme_classic()
 ```
