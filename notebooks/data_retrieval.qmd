@@ -417,21 +417,35 @@ pad_ski_years <- vector("list", length=4)
 names(pad_ski_years) <- seq(1990, 2020, 10)
 
 pad_ski_years <- mapply(function(list, year) {
-  apply(st_intersects(counties_buff,
-                      subset(ski_areas, (Date_Est <= year | is.na(Date_Est))),
-                      sparse = FALSE),
-                   MARGIN = 1,
-                   FUN = sum) %>%
-    cbind(county_shapes$NAME) %>%
-    as.data.frame() %>%
-    rename("county" = "V2",
-           "ski_areas_100km" = ".") %>%
-    mutate(ski_areas_100km = as.integer(ski_areas_100km))
+  # apply(st_intersects(counties_buff,
+  #                     subset(ski_areas, (Date_Est <= year | is.na(Date_Est))),
+  #                     sparse = FALSE),
+  #                  MARGIN = 1,
+  #                  FUN = sum) %>%
+  #   cbind(county_shapes$NAME) %>%
+  #   as.data.frame() %>%
+  #   rename("county" = "V2",
+  #          "ski_areas_100km" = ".") %>%
+  #   mutate(ski_areas_100km = as.integer(ski_areas_100km))
+  
+  ski_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(ski_areas)),
+                          ski_areas)
+  ski_distance <- st_distance(st_transform(county_shapes, st_crs(ski_areas)),
+                           ski_areas[ski_nn,],
+                           by_element = TRUE) %>%
+  units::set_units("km") %>%
+  cbind(county_shapes$NAME) %>%
+  as.data.frame() %>%
+  rename("county" = "V2",
+         "dist_to_ski" = ".") %>%
+  mutate(dist_to_ski = as.numeric(dist_to_ski))
+  
+  return(ski_distance)
 }, list = pad_ski_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
 
 # clean and join
 rs_data <- bind_rows(pad_ski_years, .id="year") %>%
-  select("county", "year", "ski_areas_100km") %>%
+  select("county", "year", "dist_to_ski") %>%
   mutate(year = as.integer(year)) %>%
   right_join(rs_data, by=c("county", "year"))
 ```
@@ -870,21 +884,35 @@ pad_ski_years <- vector("list", length=4)
 names(pad_ski_years) <- seq(1990, 2020, 10)
 
 pad_ski_years <- mapply(function(list, year) {
-  apply(st_intersects(counties_buff,
-                      subset(ski_areas, (Date_Est <= year | is.na(Date_Est))),
-                      sparse = FALSE),
-                   MARGIN = 1,
-                   FUN = sum) %>%
-    cbind(county_shapes$NAME) %>%
-    as.data.frame() %>%
-    rename("county" = "V2",
-           "ski_areas_100km" = ".") %>%
-    mutate(ski_areas_100km = as.integer(ski_areas_100km))
+  # apply(st_intersects(counties_buff,
+  #                     subset(ski_areas, (Date_Est <= year | is.na(Date_Est))),
+  #                     sparse = FALSE),
+  #                  MARGIN = 1,
+  #                  FUN = sum) %>%
+  #   cbind(county_shapes$NAME) %>%
+  #   as.data.frame() %>%
+  #   rename("county" = "V2",
+  #          "ski_areas_100km" = ".") %>%
+  #   mutate(ski_areas_100km = as.integer(ski_areas_100km))
+  
+  ski_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(ski_areas)),
+                          ski_areas)
+  ski_distance <- st_distance(st_transform(county_shapes, st_crs(ski_areas)),
+                           ski_areas[ski_nn,],
+                           by_element = TRUE) %>%
+  units::set_units("km") %>%
+  cbind(county_shapes$NAME) %>%
+  as.data.frame() %>%
+  rename("county" = "V2",
+         "dist_to_ski" = ".") %>%
+  mutate(dist_to_ski = as.numeric(dist_to_ski))
+  
+  return(ski_distance)
 }, list = pad_ski_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
 
 # clean and join
 ru_data <- bind_rows(pad_ski_years, .id="year") %>%
-  select("county", "year", "ski_areas_100km") %>%
+  select("county", "year", "dist_to_ski") %>%
   mutate(year = as.integer(year)) %>%
   right_join(ru_data, by=c("county", "year"))
 ```
