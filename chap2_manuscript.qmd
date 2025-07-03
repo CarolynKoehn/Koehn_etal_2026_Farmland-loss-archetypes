@@ -66,6 +66,8 @@ These are the data used in this preliminary analysis:
 | | Urban / Residential | Percent developed land | NLCD |
 | RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | Census of Agriculture |
 | | Natural Amenities | Percent land in recreation areas | Protected Areas Database |
+| | Natural Amenities | Distance to nearest national park | Protected Areas Database |
+| | Natural Amenities | Ski areas within 100km | Protected Areas Database |
 | | Urban / Residential | Number houses per unit area | US Census |
 | RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | Census of Agriculture |
 | | | Percent change of land cover in cropland (5 year period) | NLCD |
@@ -210,7 +212,7 @@ print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actor
 
 ### Gaussian Model-Based Clustering
 
-To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-9 possible clusters. <!-- We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE). -->
+To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-9 possible clusters. <!-- We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE (mclust book?, rmixmod manual?)). -->
 
 Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
@@ -302,8 +304,8 @@ as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
-  scale_y_discrete(limits = c("farm_size_pc1", "developed_change", "shrub_forest_change", "cropland_change", "perc_farms_change", "housing_units_per_acre", "perc_rec", "farms_per_acre", "perc_farms_w_net_loss", "perc_fed", "land_in_farms"),
-                   labels = c("Farm Size (PC1)", "Developed Land Loss/Gain", "Shrub/Forestland Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Housing Density", "Recreation Land", "Farm Density", "Farms with Net Loss (%)", "Federal Land", "Land in Farms")) +
+  scale_y_discrete(limits = c("farm_size_pc2", "farm_size_pc1", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "perc_farms_w_net_loss", "housing_units_per_acre", "dist_to_NP", "dist_to_ski", "perc_rec", "farms_per_acre", "percent_developed", "percent_shrubland", "percent_forest", "percent_cropland"),
+                   labels = c("Farm Size (PC2)", "Farm Size (PC1)", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Farms with Net Loss (%)", "Housing Density", "Distance to National Park", "Distance to Ski Area", "Recreation Land", "Farm Density", "Developed Land", "Shrubland", "Forest", "Cropland")) +
   labs(x = "Cluster mean (scaled values)", y = "Variable") +
   theme_classic()
 ```
@@ -388,8 +390,8 @@ Cluster R2 consists of Adams, Blaine, Camas, Clark, Elmore, Fremont, Lincoln, an
 
 ```{r}
 clust_dat[["Resource"]] %>%
-  filter(year %in% c(1990, 2010)) %>%
-  mutate(year = ifelse(year==1990, "1990-2000", "2010-2020")) %>%
+  filter(year %in% c(1990)) %>%
+  mutate(year = "1990-2020") %>%
   ggplot(aes(fill = cluster)) +
   geom_sf(show.legend = FALSE) +
   scale_fill_manual(values = c("white", "thistle3", "white", "white", "white", "white", "white", "white")) +
@@ -430,7 +432,7 @@ Cluster R3 consists of only Canyon County in 2000-2020. Canyon County has a larg
 ```{r}
 clust_dat[["Resource"]] %>%
   filter(year %in% c(2000)) %>%
-  mutate(year = "2000-2020") %>%
+  mutate(year = "1990-2020") %>%
   ggplot(aes(fill = cluster)) +
   geom_sf(show.legend = FALSE) +
   scale_fill_manual(values = c("white", "white", "thistle3", "white", "white", "white", "white", "white")) +
@@ -466,8 +468,8 @@ Cluster R4 consists of Bannock, Bonneville, Gem, Madison, and Teton counties for
 
 ```{r}
 clust_dat[["Resource"]] %>%
-  filter(year %in% c(1990, 2000)) %>%
-  mutate(year = ifelse(year == 1990, "1990", "2000-2020")) %>%
+  filter(year %in% c(1990)) %>%
+  mutate(year = "1990-2020") %>%
   ggplot(aes(fill = cluster)) +
   geom_sf(show.legend = FALSE) +
   scale_fill_manual(values = c("white", "white", "white", "thistle3", "white", "white", "white", "white")) +
@@ -541,8 +543,8 @@ Cluster R6 consists of Butte County, and Owyhee County in 1990-2000. This cluste
 
 ```{r}
 clust_dat[["Resource"]] %>%
-  filter(year %in% c(2000, 2020)) %>%
-  mutate(year = ifelse(year==2000, "1990-2000", "2010-2020")) %>%
+  filter(year %in% c(2000)) %>%
+  mutate(year = "1990-2020") %>%
   ggplot(aes(fill = cluster)) +
   geom_sf(show.legend = FALSE) +
   scale_fill_manual(values = c("white", "white", "white", "white", "white", "thistle3", "white", "white")) +
