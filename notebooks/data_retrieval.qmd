@@ -289,22 +289,24 @@ rs_data <- num_farms %>%
 
 ### Natural Amenities
 
-#### Percent land in recreation areas
+#### Recreation Units
 
-The Protected Areas Database "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters." ([source](https://www.usgs.gov/programs/gap-analysis-project/pad-us-data-manual)). PAD-US data are downloaded here using the `FedData` R package.
+The Protected Areas Database "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters." ([source](https://www.usgs.gov/programs/gap-analysis-project/pad-us-data-manual)). PAD-US 4.1 data were downloaded from https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download
 
-The following land designations were considered recreation lands in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Additional local designation terms related to recreation were added as well, as some state parks were misclassified as `LP` (local parks) in the `Des_Tp` (designation type) column.
+The following land designations were considered recreation lands to calculate percent recreation land in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Additional local designation terms related to recreation were added as well, as some state parks were misclassified as `LP` (local parks) in the `Des_Tp` (designation type) column.
 
-More information on this dataset can be found at: https://usgs.maps.arcgis.com/home/item.html?id=80c7a138989c4cf8937c4502371d6e99
+We also use Euclidean distance to calculate distance to national parks and ski areas within 100km.
 
 ```{r}
-#| label: "percent recreation lands"
+#| label: "percent recreation lands - RU"
 
-padus <- get_padus(template = county_shapes,
-                   label = "Idaho",
-                   layer = "Protection_Mechanism_Category")
+padus <- st_read("/vsizip/../data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
+                 layer = "PADUS4_1Combined_Proclamation_Marine_Fee_Designation_Easement") %>%
+  filter(State_Nm %in% c("ID", "WA", "OR", "WY", "UT", "NV", "MT")) %>%
+  filter(st_is_valid(.))
 
-pad_rec <- padus[[1]] %>%
+pad_rec <- padus %>%
+  st_filter(st_transform(county_shapes, st_crs(.))) %>%
   filter(Des_Tp %in% c("REC", "NM", "NP", "SREC", "SP", "NRA", "NT") |
            Loc_Ds %in% c("State Park", "Recreation Reservoir", "National Recreation Trail", "Recreation Area", "National Recreation Area", "National Monument", "SREC", "REC", "SP", "National Park", "Designated - Recreational"))
 
@@ -340,6 +342,98 @@ rs_data <- bind_rows(rec_by_county_years, .id="year") %>%
   right_join(rs_data, by=c("county", "year")) %>%
   # convert NAs to 0% rec land
   mutate(perc_rec = ifelse(is.na(perc_rec), 0, perc_rec))
+```
+
+```{r}
+
+pad_ski_np <- padus %>%
+  filter(str_detect(Unit_Nm, "Ski ") | Des_Tp == "NP")
+
+# national parks within 100km
+np_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(pad_ski_np)),
+                          subset(pad_ski_np, Loc_Ds == "National Park"))
+np_distance <- st_distance(st_transform(county_shapes, st_crs(pad_ski_np)),
+                           subset(pad_ski_np, Loc_Ds == "National Park")[np_nn,],
+                           by_element = TRUE) %>%
+  units::set_units("km") %>%
+  cbind(county_shapes$NAME) %>%
+  as.data.frame() %>%
+  rename("county" = "V2",
+         "dist_to_NP" = ".") %>%
+  mutate(dist_to_NP = as.numeric(dist_to_NP))
+
+# join
+rs_data <- left_join(rs_data, np_distance, by = "county")
+```
+
+```{r}
+# ski areas within 100km
+counties_buff <- st_buffer(county_shapes, units::set_units(100, "km")) %>%
+  st_transform(st_crs(pad_ski_np))
+
+# manual date correction - when people started using the ski area
+ski_areas <- subset(pad_ski_np, str_detect(Unit_Nm, "Ski")) %>%
+  st_filter(counties_buff) %>%
+  # https://skilookout.com/history-of-lookout
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Lookout Pass"), 1941, Date_Est)) %>%
+  # https://www.montanaliving.com/blogs/people/ski-visionaries-of-montana-discovery-basin
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Discovery Basin"), 1984, Date_Est)) %>%
+  # https://losttrail.com/about-lost-trail/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Lost Trail"), 1967, Date_Est)) %>%
+  # https://southwestmt.com/specialfeatures/this-is-montana/ski-areas/maverick-mountain/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Maverick Mountain"), 1946, Date_Est)) %>%
+  # https://visitmt.com/listing/turner-mountain
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Turner Mountain"), 1960, Date_Est)) %>%
+  # https://fremontcountyhistoricalsociety.org/article/bear-gulch-ski-basin
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Bear Basin"), 1939, Date_Est)) %>%
+  # https://fromboise.com/posts/the-history-of-bogus-basin
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Bogus Basin"), 1942, Date_Est)) %>%
+  # https://brundage.com/media/history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Brundage Mountain"), 1961, Date_Est)) %>%
+  # https://www.grandtarghee.com/plan-your-trip/discover/about-targhee/history-of-targhee
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Grand Targhee"), 1966, Date_Est)) %>%
+  # https://www.jacksonhole.com/history
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Jackson Hole"), 1964, Date_Est)) %>%
+  # https://rexburgfun.com/kelly-canyon-ski-resort/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Kelly Canyon"), 1957, Date_Est)) %>%
+  # https://mccallskiheritagefoundation.org/mccall-ski-history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Little Ski Hill"), 1937, Date_Est)) %>%
+  # "Ski resort set for big season". Spokane Daily Chronicle. (Washington). Associated Press. November 23, 1951. p. 8.
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Magic Mountain"), 1951, Date_Est)) %>%
+  # https://www.idahostatejournal.com/news/local/tales-from-the-rock-local-riders-and-employees-recount-memories-as-pebble-creek-celebrates-75/article_ee54f6e0-d11e-11ee-bd6c-5b2de0909f20.html
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Pebble Creek"), 1949, Date_Est)) %>%
+  # https://www.kivitv.com/news/outdoors/pomerelle-mountain-resort-features-a-unique-mix-of-elevation-history-and-family-vibes
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Pomerelle"), 1940, Date_Est)) %>%
+  # https://snowkingmountain.com/discover-snow-king/snow-king-mountain-resort-history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Snow King"), 1946, Date_Est)) %>%
+  # https://www.snowbasin.com/about/history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Snowbasin"), 1940, Date_Est)) %>%
+  # https://soldiermountain.com/about/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Soldier Mountain"), 1947, Date_Est)) %>%
+  # https://visitsunvalley.com/about-sun-valley/history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Sun Valley"), 1936, Date_Est))
+
+pad_ski_years <- vector("list", length=4)
+names(pad_ski_years) <- seq(1990, 2020, 10)
+
+pad_ski_years <- mapply(function(list, year) {
+  apply(st_intersects(counties_buff,
+                      subset(ski_areas, (Date_Est <= year | is.na(Date_Est))),
+                      sparse = FALSE),
+                   MARGIN = 1,
+                   FUN = sum) %>%
+    cbind(county_shapes$NAME) %>%
+    as.data.frame() %>%
+    rename("county" = "V2",
+           "ski_areas_100km" = ".") %>%
+    mutate(ski_areas_100km = as.integer(ski_areas_100km))
+}, list = pad_ski_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
+
+# clean and join
+rs_data <- bind_rows(pad_ski_years, .id="year") %>%
+  select("county", "year", "ski_areas_100km") %>%
+  mutate(year = as.integer(year)) %>%
+  right_join(rs_data, by=c("county", "year"))
 ```
 
 ### Residential
@@ -649,24 +743,29 @@ ru_data <- num_farms %>%
 
 ### Natural Amenities
 
-#### Percent land in recreation areas
+#### Recreation Units
 
-The Protected Areas Database "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters." ([source](https://www.usgs.gov/programs/gap-analysis-project/pad-us-data-manual)). PAD-US data are downloaded here using the `FedData` R package.
+The Protected Areas Database "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters." ([source](https://www.usgs.gov/programs/gap-analysis-project/pad-us-data-manual)). PAD-US 4.1 data were downloaded from https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download
 
-The following land designations were considered recreation lands in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Additional local designation terms related to recreation were added as well, as some state parks were misclassified as `LP` (local parks) in the `Des_Tp` (designation type) column.
+The following land designations were considered recreation lands to calculate percent recreation land in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Additional local designation terms related to recreation were added as well, as some state parks were misclassified as `LP` (local parks) in the `Des_Tp` (designation type) column.
 
-More information on this dataset can be found at: https://usgs.maps.arcgis.com/home/item.html?id=80c7a138989c4cf8937c4502371d6e99
+We also use Euclidean distance to calculate distance to national parks and ski areas within 100km.
 
 ```{r}
 #| label: "percent recreation lands - RU"
 
-padus <- get_padus(template = county_shapes,
-                   label = "Idaho",
-                   layer = "Protection_Mechanism_Category")
+padus <- st_read("/vsizip/../data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
+                 layer = "PADUS4_1Combined_Proclamation_Marine_Fee_Designation_Easement") %>%
+  filter(State_Nm %in% c("ID", "WA", "OR", "WY", "UT", "NV", "MT")) %>%
+  filter(st_is_valid(.))
 
-pad_rec <- padus[[1]] %>%
+pad_rec <- padus %>%
+  st_filter(st_transform(county_shapes, st_crs(.))) %>%
   filter(Des_Tp %in% c("REC", "NM", "NP", "SREC", "SP", "NRA", "NT") |
            Loc_Ds %in% c("State Park", "Recreation Reservoir", "National Recreation Trail", "Recreation Area", "National Recreation Area", "National Monument", "SREC", "REC", "SP", "National Park", "Designated - Recreational"))
+
+pad_ski_np <- padus %>%
+  filter(str_detect(Unit_Nm, "Ski ") | Des_Tp == "NP")
 
 pad_rec_years <- vector("list", length=4)
 names(pad_rec_years) <- seq(1990, 2020, 10)
@@ -700,6 +799,94 @@ ru_data <- bind_rows(rec_by_county_years, .id="year") %>%
   right_join(ru_data, by=c("county", "year")) %>%
   # convert NAs to 0% rec land
   mutate(perc_rec = ifelse(is.na(perc_rec), 0, perc_rec))
+```
+
+```{r}
+# national parks within 100km
+np_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(pad_ski_np)),
+                          subset(pad_ski_np, Loc_Ds == "National Park"))
+np_distance <- st_distance(st_transform(county_shapes, st_crs(pad_ski_np)),
+                           subset(pad_ski_np, Loc_Ds == "National Park")[np_nn,],
+                           by_element = TRUE) %>%
+  units::set_units("km") %>%
+  cbind(county_shapes$NAME) %>%
+  as.data.frame() %>%
+  rename("county" = "V2",
+         "dist_to_NP" = ".") %>%
+  mutate(dist_to_NP = as.numeric(dist_to_NP))
+
+# join
+ru_data <- left_join(ru_data, np_distance, by = "county")
+```
+
+```{r}
+# ski areas within 100km
+counties_buff <- st_buffer(county_shapes, units::set_units(100, "km")) %>%
+  st_transform(st_crs(pad_ski_np))
+
+# manual date correction - when people started using the ski area
+ski_areas <- subset(pad_ski_np, str_detect(Unit_Nm, "Ski")) %>%
+  st_filter(counties_buff) %>%
+  # https://skilookout.com/history-of-lookout
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Lookout Pass"), 1941, Date_Est)) %>%
+  # https://www.montanaliving.com/blogs/people/ski-visionaries-of-montana-discovery-basin
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Discovery Basin"), 1984, Date_Est)) %>%
+  # https://losttrail.com/about-lost-trail/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Lost Trail"), 1967, Date_Est)) %>%
+  # https://southwestmt.com/specialfeatures/this-is-montana/ski-areas/maverick-mountain/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Maverick Mountain"), 1946, Date_Est)) %>%
+  # https://visitmt.com/listing/turner-mountain
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Turner Mountain"), 1960, Date_Est)) %>%
+  # https://fremontcountyhistoricalsociety.org/article/bear-gulch-ski-basin
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Bear Basin"), 1939, Date_Est)) %>%
+  # https://fromboise.com/posts/the-history-of-bogus-basin
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Bogus Basin"), 1942, Date_Est)) %>%
+  # https://brundage.com/media/history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Brundage Mountain"), 1961, Date_Est)) %>%
+  # https://www.grandtarghee.com/plan-your-trip/discover/about-targhee/history-of-targhee
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Grand Targhee"), 1966, Date_Est)) %>%
+  # https://www.jacksonhole.com/history
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Jackson Hole"), 1964, Date_Est)) %>%
+  # https://rexburgfun.com/kelly-canyon-ski-resort/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Kelly Canyon"), 1957, Date_Est)) %>%
+  # https://mccallskiheritagefoundation.org/mccall-ski-history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Little Ski Hill"), 1937, Date_Est)) %>%
+  # "Ski resort set for big season". Spokane Daily Chronicle. (Washington). Associated Press. November 23, 1951. p. 8.
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Magic Mountain"), 1951, Date_Est)) %>%
+  # https://www.idahostatejournal.com/news/local/tales-from-the-rock-local-riders-and-employees-recount-memories-as-pebble-creek-celebrates-75/article_ee54f6e0-d11e-11ee-bd6c-5b2de0909f20.html
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Pebble Creek"), 1949, Date_Est)) %>%
+  # https://www.kivitv.com/news/outdoors/pomerelle-mountain-resort-features-a-unique-mix-of-elevation-history-and-family-vibes
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Pomerelle"), 1940, Date_Est)) %>%
+  # https://snowkingmountain.com/discover-snow-king/snow-king-mountain-resort-history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Snow King"), 1946, Date_Est)) %>%
+  # https://www.snowbasin.com/about/history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Snowbasin"), 1940, Date_Est)) %>%
+  # https://soldiermountain.com/about/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Soldier Mountain"), 1947, Date_Est)) %>%
+  # https://visitsunvalley.com/about-sun-valley/history/
+  mutate(Date_Est = ifelse(str_detect(Unit_Nm, "Sun Valley"), 1936, Date_Est))
+
+pad_ski_years <- vector("list", length=4)
+names(pad_ski_years) <- seq(1990, 2020, 10)
+
+pad_ski_years <- mapply(function(list, year) {
+  apply(st_intersects(counties_buff,
+                      subset(ski_areas, (Date_Est <= year | is.na(Date_Est))),
+                      sparse = FALSE),
+                   MARGIN = 1,
+                   FUN = sum) %>%
+    cbind(county_shapes$NAME) %>%
+    as.data.frame() %>%
+    rename("county" = "V2",
+           "ski_areas_100km" = ".") %>%
+    mutate(ski_areas_100km = as.integer(ski_areas_100km))
+}, list = pad_ski_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
+
+# clean and join
+ru_data <- bind_rows(pad_ski_years, .id="year") %>%
+  select("county", "year", "ski_areas_100km") %>%
+  mutate(year = as.integer(year)) %>%
+  right_join(ru_data, by=c("county", "year"))
 ```
 
 ### Residential
