@@ -61,3 +61,51 @@ x <- exact_extract(pad_rec_r, aoi,
 
 #add plot names to the elements of the output list
 rownames(x) <- aoi$NAME
+
+
+######################
+library(tidyverse)
+library(tidycensus)
+library(rnassqs)
+library(terra)
+library(sf)
+library(FedData)
+library(exactextractr)
+library(censusapi)
+
+# set API keys
+readRenviron("../.Renviron")
+nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
+census_api_key(Sys.getenv('CENSUS_API_KEY'))
+
+# county data
+county_shapes <- tigris::counties("ID") %>%
+  select(c("GEOID", "NAME")) %>%
+  mutate(tot_area = st_area(.))
+
+# names and GEOIDs
+GEOID_names <- st_drop_geometry(county_shapes$NAME)
+names(GEOID_names) <- st_drop_geometry(county_shapes$GEOID)
+
+
+# travel time to
+# doesn't work right now
+id_roads <- tigris::roads(state=16,
+                           county=substr(county_shapes$GEOID, 3, 5),
+                           year=2020)
+wy_roads <- tigris::roads(state = "WY",
+                          county = "Park", "Teton",
+                          year = 2020)
+mo_roads <- tigris::roads(state = "MT",
+                          county = "Beaverhead", "Madison", "Gallatin",
+                          year = 2020)
+
+all_roads_car <- rbind(id_roads, wy_roads, mo_roads) %>%
+  filter(MTFCC %in% c("S1100", "S1200", "S1400", "S1630")) %>%
+  mutate(road_cat = factor(MTFCC, 
+                        levels = c("S1100", "S1200", "S1400"),
+                        labels = c("Interstate", "Highway", "Road")),
+         speed = ifelse(road_cat == "Interstate", 80,
+                        ifelse(road_cat == "Highway", 60, 25)))
+
+roads.r <- rasterize(all_roads_car, ext_template, field="speed", fun="max")

@@ -298,7 +298,7 @@ The following land designations were considered recreation lands to calculate pe
 We also use Euclidean distance to calculate distance to national parks and ski areas within 100km.
 
 ```{r}
-#| label: "percent recreation lands - RU"
+#| label: "percent recreation lands"
 
 padus <- st_read("/vsizip/../data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
                  layer = "PADUS4_1Combined_Proclamation_Marine_Fee_Designation_Easement") %>%
@@ -347,13 +347,44 @@ rs_data <- bind_rows(rec_by_county_years, .id="year") %>%
 ```{r}
 
 pad_ski_np <- padus %>%
-  filter(str_detect(Unit_Nm, "Ski ") | Des_Tp == "NP")
+  filter(str_detect(Unit_Nm, "Ski ") | Des_Tp == "NP" | str_detect(Unit_Nm, "National Park"))
 
-# national parks within 100km
+# ps_roads <- tigris::primary_secondary_roads(state="ID") %>%
+#   rbind(tigris::primary_secondary_roads(state="WY"),
+#         tigris::primary_secondary_roads(state="MO"))
+# id_roads <- tigris::roads(state=16, 
+#                            county=substr(county_shapes$GEOID, 3, 5),
+#                            year=2020)
+# wy_roads <- tigris::roads(state = "WY",
+#                           county = "Park", "Teton",
+#                           year = 2020)
+# mo_roads <- tigris::roads(state = "MT",
+#                           county = "Beaverhead", "Madison", "Gallatin",
+#                           year = 2020)
+# 
+# # filter to roads used for distance travel
+# # codes from https://www2.census.gov/geo/pdfs/reference/mtfccs2020.pdf
+# all_roads_car <- rbind(id_roads, wy_roads, mo_roads) %>%
+#   filter(MTFCC %in% c("S1100", "S1200", "S1400", "S1630"))
+# 
+# test <- st_intersection(
+#   st_cast(subset(county_shapes, NAME == "Teton"), "MULTILINESTRING", group_or_split = FALSE), 
+#   ps_roads)
+# test2 <- st_nearest_feature(st_transform(test, st_crs(pad_ski_np)), subset(pad_ski_np, !str_detect(Unit_Nm, "Ski ")))
+# test3 <- st_intersection(
+#   st_transform(st_cast(subset(pad_ski_np, !str_detect(Unit_Nm, "Ski "))[unique(test2),], 
+#                        "MULTILINESTRING", group_or_split = FALSE),
+#           st_crs(all_roads_car)), 
+#   all_roads_car)
+# 
+# county_nodes <- st_intersection(st_cast(county_shapes, "MULTILINESTRING", group_or_split = FALSE), 
+#                                 id_ps_roads)
+
+# (driving) distance to nearest national park
 np_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(pad_ski_np)),
-                          subset(pad_ski_np, Loc_Ds == "National Park"))
+                          subset(pad_ski_np, !str_detect(Unit_Nm, "Ski ")))
 np_distance <- st_distance(st_transform(county_shapes, st_crs(pad_ski_np)),
-                           subset(pad_ski_np, Loc_Ds == "National Park")[np_nn,],
+                           subset(pad_ski_np, !str_detect(Unit_Nm, "Ski "))[np_nn,],
                            by_element = TRUE) %>%
   units::set_units("km") %>%
   cbind(county_shapes$NAME) %>%
@@ -510,6 +541,54 @@ housing_units <- data.frame(county = c(houses1990$County,
 # join
 rs_data <- left_join(rs_data, housing_units)
 ```
+
+### Access to highway
+
+```{r}
+#| label: "access to highway"
+
+ps_roads <- tigris::primary_secondary_roads(state="ID")
+
+ps_roads_buff <- st_buffer(ps_roads, units::set_units(10, "km"))
+
+# subtract land in federal from all land by highways
+road_areas <- data.frame(county = GEOID_names,
+                         tot_road_area = NA,
+                         fed_road_area = NA)
+
+for(c in GEOID_names) {
+  roads_by_county <- st_intersection(ps_roads_buff, 
+                                     st_transform(subset(county_shapes, NAME == c),
+                                                  st_crs(ps_roads_buff)))
+  roads_by_county_fed <- st_intersection(ps_roads_buff, 
+                                         st_transform(subset(pad_fed_years[["2020"]], 
+                                                             NAME == c),
+                                                      st_crs(ps_roads_buff)))
+  
+  combined_all <- roads_by_county %>%
+    st_make_valid() %>%
+    st_union(.) %>%
+    st_make_valid()
+  combined_fed <- roads_by_county_fed %>%
+    st_make_valid() %>%
+    st_union(.) %>%
+    st_make_valid()
+  
+  road_areas[which(road_areas$county == c), "tot_road_area"] <-
+    sum(units::set_units(st_area(combined_all), "km^2"))
+  road_areas[which(road_areas$county == c), "fed_road_area"] <-
+    sum(units::set_units(st_area(combined_fed), "km^2"))
+}
+
+road_areas <- road_areas %>%
+  full_join(st_drop_geometry(county_shapes), by = c("county" = "NAME")) %>%
+  mutate(non_fed_land_near_highway_km2 = tot_road_area - fed_road_area,
+         perc_non_fed_road_area_km2 = units::drop_units(non_fed_land_near_highway_km2 / units::set_units(tot_area, "km^2") * 100))
+
+rs_data <- rs_data %>%
+  left_join(road_areas[,c("county", "perc_non_fed_road_area_km2")])
+```
+
 
 ```{r}
 #| label: "save RS data"
@@ -779,7 +858,7 @@ pad_rec <- padus %>%
            Loc_Ds %in% c("State Park", "Recreation Reservoir", "National Recreation Trail", "Recreation Area", "National Recreation Area", "National Monument", "SREC", "REC", "SP", "National Park", "Designated - Recreational"))
 
 pad_ski_np <- padus %>%
-  filter(str_detect(Unit_Nm, "Ski ") | Des_Tp == "NP")
+  filter(str_detect(Unit_Nm, "Ski ") | Des_Tp == "NP" | str_detect(Unit_Nm, "National Park"))
 
 pad_rec_years <- vector("list", length=4)
 names(pad_rec_years) <- seq(1990, 2020, 10)
@@ -818,9 +897,9 @@ ru_data <- bind_rows(rec_by_county_years, .id="year") %>%
 ```{r}
 # national parks within 100km
 np_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(pad_ski_np)),
-                          subset(pad_ski_np, Loc_Ds == "National Park"))
+                          subset(pad_ski_np, !str_detect(Unit_Nm, "Ski ")))
 np_distance <- st_distance(st_transform(county_shapes, st_crs(pad_ski_np)),
-                           subset(pad_ski_np, Loc_Ds == "National Park")[np_nn,],
+                           subset(pad_ski_np, !str_detect(Unit_Nm, "Ski "))[np_nn,],
                            by_element = TRUE) %>%
   units::set_units("km") %>%
   cbind(county_shapes$NAME) %>%
