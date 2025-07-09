@@ -16,6 +16,7 @@ format:
     include-in-header: 
       text: |
         \usepackage[format=plain]{caption}
+  docx: default
 
 
 
