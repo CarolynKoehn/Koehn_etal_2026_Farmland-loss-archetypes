@@ -2,7 +2,7 @@
 title: "Data-driven archetypes of farmland change: Preliminary results"
 author: Carolyn Koehn
 abstract: |
-  Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period. The processes leading to this conversion are variable and often highly localized. Uncertainty regarding the causal process of agricultural lands loss limits local efforts to address or mitigate the loss through agricultural lands protection. A better understanding of the different processes of agricultural lands loss and the associated factors can inform the development of effective, diverse toolboxes of agricultural lands protection to apply in different localities. In this chapter, I will use a multi-dimensional cluster analysis to identify archetypes of change over time in counties where agricultural lands are at risk of conversion. I will draw on publicly-availabile data to calculate descriptive metrics for counties in southern Idaho's Snake River Plain. Identifying and understanding patterns and associated indicators of working lands loss will allow for more informed and effective working lands protection and development planning. Our workflow for identifying archetypes of agricultural land loss uses publicly available data and can be used in other threatened regions to describe and address processes of land use change.
+  Approximately 1.5 million km$^2$ of global land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period. The processes leading to this conversion are variable and often highly localized. Uncertainty regarding the causal process of agricultural lands loss limits local efforts to address or mitigate the loss through agricultural lands protection. A better understanding of the different processes of agricultural lands loss and the associated factors can inform the development of effective, diverse toolboxes of agricultural lands protection to apply in different localities. In this chapter, I will use a multi-dimensional cluster analysis to identify archetypes of change over time in counties where agricultural lands are at risk of conversion. I will draw on publicly-availabile data to calculate descriptive metrics for counties in southern Idaho's Snake River Plain. Identifying and understanding patterns and associated indicators of working lands loss will allow for more informed and effective working lands protection and development planning. Our workflow for identifying archetypes of agricultural land loss uses publicly available data and can be used in other threatened regions to describe and address processes of land use change.
 date: last-modified
 bibliography: chap2.bib
 number-sections: true
@@ -1115,3 +1115,27 @@ I need to think more about the NCP results and if they belong in this chapter. I
 :::{#refs}
 
 :::
+
+```{r}
+#| label: "spare code"
+#| eval: false
+
+clust_dat[["Resource"]] %>%
+  filter(year %in% c(2020)) %>%
+  mutate(year = "1990-2020") %>%
+  mutate(cluster = factor(cluster, 
+                          levels = c("R1", "R2", "R3", "R4", "R5"),
+                          labels = c("Counties near\nfamous recreation areas\nrepresent the\nstudy area average\nof farmland loss,\ndeveloped land gain",
+                                     "Isolated areas\nwith some natural amenities\nexperience little\nland use change",
+                                     "Isolated areas\nin dry shrublands\nexperience little\nland use change",
+                                     "Urban growth\nthreatens farmland",
+                                     "Agricultural production areas\nwith limited recreation\nand development"))) %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf() +
+  scale_fill_manual(name = "", values = rev(viridis::turbo(5, begin=0.2))) +
+  theme_void() +
+  theme(legend.position="bottom",
+        legend.spacing.x = unit(0, 'cm'))+
+  guides(fill = guide_legend(label.position = "bottom"))
+```
+
