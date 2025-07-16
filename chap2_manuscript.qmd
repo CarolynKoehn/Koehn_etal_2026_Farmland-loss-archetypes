@@ -1137,5 +1137,21 @@ clust_dat[["Resource"]] %>%
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'))+
   guides(fill = guide_legend(label.position = "bottom"))
+
+clust_dat[["Actors"]] %>%
+    mutate(cluster = factor(cluster, 
+                          levels = c("A1", "A2", "A3", "A4"),
+                          labels = c("More urbanites",
+                                     "Manufacturing provides\nadditional rural\nemployment",
+                                     'Slow growing population\nin "urban" areas',
+                                     'Slow growing population\nin "rural" areas'))) %>%
+  ggplot(aes(fill = cluster)) +
+  geom_sf() +
+  scale_fill_discrete(name="") +
+  facet_wrap(vars(year)) +
+  theme_void() +
+  theme(legend.position="bottom",
+        legend.spacing.x = unit(0, 'cm'))+
+  guides(fill = guide_legend(label.position = "bottom"))
 ```
 
