@@ -217,6 +217,40 @@ rs_data <- fed_by_county %>%
   right_join(rs_data, by=c("county"))
 ```
 
+#### Lake area
+
+Data from the Hydrosheds HydroLAKES product were downloaded from https://www.hydrosheds.org/products/hydrolakes
+
+```{r}
+#| label: "percent open water"
+
+us_lakes <- st_read("/vsizip/../data/HydroLAKES_polys_v10_shp.zip/HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp") %>%
+  filter(Country == "United States of America")
+
+lakes_area <- us_lakes %>%
+  filter(Pour_lat > 41 & Pour_lat < 50 &
+           Pour_long > -118 & Pour_long < -110) %>%
+  st_make_valid(.) %>%
+  st_intersection(st_transform(county_shapes, st_crs(.))) %>%
+  group_by(NAME) %>%
+  dplyr::summarise() %>%
+  mutate(lake_area = st_area(.))
+  
+
+rs_data <- lakes_area %>%
+  mutate(lake_area_km2 = units::drop_units(units::set_units(lake_area, "km2"))) %>%
+  st_drop_geometry(.) %>%
+  select(-lake_area) %>%
+  rename("county" = "NAME") %>%
+  right_join(rs_data, by=c("county"))
+```
+
+#### Miles of river
+
+Indicator of river recreation
+
+
+
 ### Residential
 
 ```{r}
