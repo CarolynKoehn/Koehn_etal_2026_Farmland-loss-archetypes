@@ -639,6 +639,140 @@ rs_data <- rs_data %>%
   left_join(road_areas[,c("county", "perc_non_fed_road_area_km2")])
 ```
 
+#### Healthcare workers
+
+County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
+
+```{r}
+#| label: "healthcare"
+
+healthcare1990 <- rbind(
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "8010"), # 8010  Offices and clinics of medical doctors
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "8060") # 8060  Hospitals
+) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 1990) %>%
+  group_by(GEOID, year) %>%
+  summarise(heath_workers = sum(EMP))
+
+healthcare2000 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = "621111"), # 621111  Offices of physicians (exc mental health) 
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = 622) # 622///  Hospitals
+) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 2000) %>%
+  group_by(GEOID, year) %>%
+  summarise(heath_workers = sum(EMP))
+
+healthcare2010 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = "621111"),
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = 622)
+) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 2010) %>%
+  group_by(GEOID, year) %>%
+  summarise(heath_workers = sum(EMP))
+
+healthcare2020 <- getCensus(name = "cbp", 
+                            vintage=2020,
+                  vars = c("EMP", "NAICS2017"),
+                  region = "county:*",
+                  regionin = "state:16") %>%
+  filter(NAICS2017 %in% c("621111", "622")) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 2020) %>%
+  group_by(GEOID, year) %>%
+  summarise(heath_workers = sum(EMP))
+
+# save a backup copy
+# write.csv(healthcare1990,
+#           "../data/API_data_download_backup/healthcare1990.csv",
+#           row.names = FALSE)
+# write.csv(healthcare2000,
+#           "../data/API_data_download_backup/healthcare2000.csv",
+#           row.names = FALSE)
+# write.csv(healthcare2010,
+#           "../data/API_data_download_backup/healthcare2010.csv",
+#           row.names = FALSE)
+# write.csv(healthcare2020,
+#           "../data/API_data_download_backup/healthcare2020.csv",
+#           row.names = FALSE)
+
+healthworkers <- do.call(rbind, list(healthcare1990, healthcare2000, healthcare2010, healthcare2020)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names))
+
+# get population (more info in actors section)
+pop1990 <- read.csv("../data/cencounts.csv") %>%
+  select(pop1990, name) %>%
+  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  mutate(name = str_remove(name, "ID "),
+         name = str_remove(name, " County"))
+pop2000 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2000) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2010 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2010) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2020 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P1_001N",
+                        year = 2020) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+
+pop <- data.frame(county = c(pop1990$name,
+                                  pop2000$NAME,
+                                  pop2010$NAME,
+                                  pop2020$NAME),
+                            year = rep(seq(1990, 2020, 10), each = nrow(pop1990)),
+                            pop = c(pop1990$pop1990,
+                                    pop2000$value,
+                                    pop2010$value,
+                                    pop2020$value))
+
+health_pop <- left_join(pop, healthworkers, by = c("county", "year")) %>%
+  rowwise() %>%
+  mutate(healthworkers = ifelse(is.na(heath_workers), 0, heath_workers),
+         pop = as.integer(pop)) %>%
+  mutate(healthworkers_per_1000 = healthworkers / (pop/1000))
+
+rs_data <- health_pop %>%
+  select(county, year, healthworkers_per_1000) %>%
+  right_join(rs_data, by = c("county", "year"))
+```
 
 ```{r}
 #| label: "save RS data"
