@@ -175,50 +175,46 @@ rs_data <- left_join(rs_data, shrubland, by=c("county", "year"))
 
 #### Percent federal lands
 
-Land management data were retrieved from PAD-US via the `FedData` package.
+The API call is the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset, also available for download at https://gbp-blm-egis.hub.arcgis.com/pages/idaho. Federal lands are assumed to not be sold or acquired over the 40 year time period.
 
 ```{r}
 #| label: "percent federal land"
 
-padus_m <- get_padus(template = county_shapes,
-                   label = "Idaho",
-                   layer = "Manager_Name")
+id_lt <- st_read("https://gis.blm.gov/idarcgis/rest/services/realty/BLM_ID_Surface_Management_Agency/FeatureServer/0/query?where=1%3D1&outFields=MGMT_AGNCY,AGNCY_NAME&outSR=4326&f=json", quiet=TRUE) %>%
+  st_transform(st_crs(county_shapes)) %>%
+  st_make_valid()
 
-pad_fed_clip <- padus_m[[1]] %>%
-  filter((Mang_Type == "FED" | Own_Type == "FED") & Category != "Easement")
+id_lt$Simple_Tenure <- ifelse(id_lt$AGNCY_NAME == "PRIVATE", "Private",
+                            ifelse(id_lt$AGNCY_NAME %in% c("BIA", "IR"), "Tribal",
+                              ifelse(id_lt$AGNCY_NAME %in% c("OTHER", "HSTRCWTR"), "Other",
+                                ifelse(str_starts(id_lt$AGNCY_NAME, "STATE"), "State", "Federal"))))
+
+fed_clip <- id_lt %>%
+  filter(Simple_Tenure == "Federal")
 # remove non-polygons
-pad_fed_clip <- pad_fed_clip[list(st_geometry_type(pad_fed_clip))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
+fed_clip <- fed_clip[list(st_geometry_type(fed_clip))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
 
-pad_fed_years <- vector("list", length=4)
-names(pad_fed_years) <- seq(1990, 2020, 10)
-
-pad_fed_years <- mapply(function(list, year) {
-  county_polys <- pad_fed_clip %>% 
-    filter(Date_Est <= year | is.na(Date_Est)) %>%
-    st_intersection(., st_transform(county_shapes, st_crs(.))) %>%
-    st_make_valid()
-  county_polys <- county_polys[list(st_geometry_type(county_polys))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
+county_polys <- fed_clip %>% 
+  st_intersection(., county_shapes) %>%
+  st_make_valid()
+county_polys <- county_polys[list(st_geometry_type(county_polys))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
     
-  county_polys <- county_polys %>%
-    group_by(NAME) %>%
-    dplyr::summarise() %>%
-    st_make_valid()
-}, list = pad_fed_years, year = seq(1990, 2020, 10), SIMPLIFY = FALSE)
+county_polys <- county_polys %>%
+  group_by(NAME) %>%
+  dplyr::summarise() %>%
+  st_make_valid()
 
-fed_by_county_years <- lapply(pad_fed_years, function(df) {
-  df %>%
+fed_by_county <- county_polys %>%
     mutate(fed_area = st_area(.)) %>%
     st_drop_geometry() %>%
     left_join(st_drop_geometry(county_shapes)) %>%
     mutate(perc_fed = units::drop_units(fed_area / tot_area * 100))
-})
 
 # clean and join
-rs_data <- bind_rows(fed_by_county_years, .id="year") %>%
+rs_data <- fed_by_county %>%
   rename("county" = "NAME") %>%
-  select("county", "year", "perc_fed") %>%
-  mutate(year = as.integer(year)) %>%
-  right_join(rs_data, by=c("county", "year"))
+  select("county", "perc_fed") %>%
+  right_join(rs_data, by=c("county"))
 ```
 
 ### Residential
