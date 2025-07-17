@@ -866,45 +866,19 @@ ru_data <- left_join(ru_data, farm_change)
 ```{r}
 #| label: "percent change land in farms"
 
-params <- list(agg_level_desc = "county",
-               state_name = "Idaho",
-               year = c(1997, 2002, 2007, 2012, 2017, 2022),
-               short_desc = c("Farm operations - acres operated",
-                              "Land area, incl non-ag - acres"),
-               domain_desc = "total")
-
-land_in_farms_change <- nassqs(params)
-# save a backup copy
-# write.csv(land_in_farms_change,
-#           "../data/API_data_download_backup/land_in_farms_change.csv",
-#           row.names = FALSE)
-
-land_in_farms_1992_change <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
-  filter(Year %in% c(1987, 1992)) %>%
+land_in_farms_change <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
+  filter(Year >= 1987) %>%
   arrange(County, Year) %>%
   mutate(land_in_farms_lag = lag(Perc_land_in_farms)) %>%
-  filter(Year == 1992) %>%
-  mutate(Perc_change_land_in_farms = )
-  select(County, Year, Perc_land_in_farms) %>%
+  filter(Year %in% c(1992, 2002, 2012, 2022)) %>%
+  mutate(Perc_change_land_in_farms = Perc_land_in_farms - land_in_farms_lag) %>%
+  select(County, Year, Perc_change_land_in_farms) %>%
   rename("county" = "County",
-         "year" = "Year",
-         "land_in_farms" = "Perc_land_in_farms") %>%
+         "year" = "Year") %>%
   mutate(year = year-2)
 
 # clean and join
-rs_data <- land_in_farms %>%
-  pivot_wider(id_cols = c(county_name, year),
-              names_from = statisticcat_desc,
-              values_from = Value) %>%
-  rowwise() %>%
-  mutate(land_in_farms = `AREA OPERATED` / `AREA` * 100) %>%
-  rename("county" = "county_name") %>%
-  mutate(county = str_to_title(county),
-         year = as.numeric(year)) %>%
-  select(c(county, year, land_in_farms)) %>%
-  mutate(year = (year-2)) %>%
-  rbind(land_in_farms_1992) %>%
-  right_join(rs_data, by=c("county", "year"))
+ru_data <- left_join(ru_data, land_in_farms_change, by = c("county", "year"))
 ```
 
 #### Change in cropland
