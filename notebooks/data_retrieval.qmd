@@ -247,8 +247,28 @@ rs_data <- lakes_area %>%
 
 #### Miles of river
 
-Indicator of river recreation
+WWF Hydrosheds data 
+1. Was accessed on Google Earth Engine
+2. Filtered to rivers of order 7 and lower (defined and calculated based on the long-term average discharge using logarithmic progression: * 1 = > 100000 * 2 = 10000 - 100000 * 3 = 1000 - 10000 * 4 = 100 - 1000 * 5 = 10 - 100 * 6 = 1 - 10 * 7 = 0.1 - 1 * 8 = 0.01 - 0.1 * 9 = 0.001 - 0.01 * 10 = < 0.001)
+3. Cropped to Idaho
+4. Downloaded and imported to R here
 
+```{r}
+#| label: "miles of river"
+
+rivers <- st_read("/vsizip/../data/ID_Rivers_ORD7.zip/ID_Rivers_ORD7.shp") %>%
+  st_transform(st_crs(county_shapes)) %>%
+  st_intersection(county_shapes) %>%
+  mutate(length = st_length(.)) %>%
+  st_drop_geometry(.) %>%
+  group_by(NAME) %>%
+  summarise(rivers_km_per_km2 = 
+              sum(units::set_units(length, "km")) / mean(units::set_units(tot_area, "km2")))
+
+rs_data <- rivers %>%
+  mutate(rivers_km_per_km2 = units::drop_units(rivers_km_per_km2)) %>%
+  left_join(rs_data, ., by = c("county" = "NAME"))
+```
 
 
 ### Residential
