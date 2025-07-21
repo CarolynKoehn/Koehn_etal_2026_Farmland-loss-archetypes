@@ -1236,7 +1236,134 @@ ru_data <- agjobs_pop %>%
   right_join(ru_data, by = c("county", "year"))
 ```
 
-### RU5 -- Number of units
+### Natural Amenities
+
+#### Accomodation and Food Service Jobs
+
+County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
+
+Equivalent SIC and NAICS codes were found using the online code converting tool at https://siccode.com/naics-to-sic-conversion
+
+```{r}
+#| label: "accomodation and food service jobs"
+
+accomfood1990 <- rbind(
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "7000"), # 7000 Hotels and Other Lodging Places
+  getCensus(name = "cbp",
+            vintage = 1990,
+            vars = c("EMP", "SIC_TTL"),
+            region = "county:*",
+            regionin = "state:16",
+            sic = "5800") # 5800 Eating and drinking places
+) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 1990) %>%
+  group_by(GEOID, year) %>%
+  summarise(accom_food_workers = sum(EMP))
+
+accomfood2000 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2000,
+            vars = c("EMP", "NAICS1997"),
+            region = "county:*",
+            regionin = "state:16",
+            naics1997 = "72") # 72 Accommodation and food services
+) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 2000) %>%
+  group_by(GEOID, year) %>%
+  summarise(accom_food_workers = sum(EMP))
+
+accomfood2010 <- rbind(
+  getCensus(name = "cbp", 
+            vintage=2010,
+            vars = c("EMP", "NAICS2007"),
+            region = "county:*",
+            regionin = "state:16",
+            naics2007 = "72") # 72 Accommodation and food services
+) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 2010) %>%
+  group_by(GEOID, year) %>%
+  summarise(accom_food_workers = sum(EMP))
+
+accomfood2020 <- getCensus(name = "cbp", 
+                            vintage=2020,
+                  vars = c("EMP", "NAICS2017"),
+                  region = "county:*",
+                  regionin = "state:16") %>%
+  filter(NAICS2017 %in% c("72")) %>%
+  mutate(GEOID = paste0(state, county),
+         year = 2020) %>%
+  group_by(GEOID, year) %>%
+  summarise(accom_food_workers = sum(EMP))
+
+# save a backup copy
+# write.csv(accomfood1990,
+#           "../data/API_data_download_backup/accomfood1990.csv",
+#           row.names = FALSE)
+# write.csv(accomfood2000,
+#           "../data/API_data_download_backup/accomfood2000.csv",
+#           row.names = FALSE)
+# write.csv(accomfood2010,
+#           "../data/API_data_download_backup/accomfood2010.csv",
+#           row.names = FALSE)
+# write.csv(accomfood2020,
+#           "../data/API_data_download_backup/accomfood2020.csv",
+#           row.names = FALSE)
+
+accomfood <- do.call(rbind, list(accomfood1990, accomfood2000, accomfood2010, accomfood2020)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names))
+
+# get population (more info in actors section)
+pop1990 <- read.csv("../data/cencounts.csv") %>%
+  select(pop1990, name) %>%
+  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  mutate(name = str_remove(name, "ID "),
+         name = str_remove(name, " County"))
+pop2000 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2000) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2010 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2010) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2020 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P1_001N",
+                        year = 2020) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+
+pop <- data.frame(county = c(pop1990$name,
+                                  pop2000$NAME,
+                                  pop2010$NAME,
+                                  pop2020$NAME),
+                            year = rep(seq(1990, 2020, 10), each = nrow(pop1990)),
+                            pop = c(pop1990$pop1990,
+                                    pop2000$value,
+                                    pop2010$value,
+                                    pop2020$value))
+
+accomfood_pop <- left_join(pop, accomfood, by = c("county", "year")) %>%
+  rowwise() %>%
+  mutate(accom_food_workers = ifelse(is.na(accom_food_workers), 0, accom_food_workers),
+         pop = as.integer(pop)) %>%
+  mutate(accom_food_per_1000 = accom_food_workers / (pop/1000))
+
+ru_data <- accomfood_pop %>%
+  select(county, year, accom_food_per_1000) %>%
+  right_join(ru_data, by = c("county", "year"))
+```
+
+## RU5 -- Number of units
 
 ### Agriculture
 
