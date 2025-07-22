@@ -1363,6 +1363,71 @@ ru_data <- accomfood_pop %>%
   right_join(ru_data, by = c("county", "year"))
 ```
 
+### Urban / Residential
+
+#### Median home value
+
+Values for 2000-2020 are downloaded via API call using `tidycensus`. Values for 1990 were digitized from Table 51 of the 1990 Census of Housing Idaho (https://www2.census.gov/library/publications/decennial/1990/ch-1/ch-1-14.pdf).
+
+Consumer price indices were retrieved from the Bureau of Labor Statistics (https://download.bls.gov/pub/time.series/cu/cu.data.12.USHousing). (Time series information here: https://download.bls.gov/pub/time.series/cu/)
+
+```{r}
+#| label: "median home value"
+
+# to adjust for inflation, we need the consumer price index for each year
+cpiu_housing_dec_1990 <- 131
+cpiu_housing_dec_2000 <- 172.8
+cpiu_housing_dec_2010 <- 216.823
+cpiu_housing_dec_2020 <- 274.303
+
+homeval1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
+  select(County, Year, Median_owner_occupied_housing_unit_value) %>%
+  mutate(cpiu = cpiu_housing_dec_1990) %>%
+  rename("county" = "County",
+         "year" = "Year",
+         "med_home_val" = "Median_owner_occupied_housing_unit_value")
+
+homeval2000 <- get_decennial(geography = "county",
+                             variables = "H076001",
+                             year = 2000,
+                             state = "ID") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2000,
+         cpiu = cpiu_housing_dec_2000) %>%
+  rename("med_home_val" = "value") %>%
+  select(county, year, med_home_val, cpiu)
+  
+
+homeval2010 <- get_acs(geography = "county",
+                       variables = "B25077_001",
+                       year = 2010,
+                       state = "ID") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2010,
+         cpiu = cpiu_housing_dec_2010) %>%
+  rename("med_home_val" = "estimate") %>%
+  select(county, year, med_home_val, cpiu)
+
+homeval2020 <- get_acs(geography = "county",
+                       variables = "B25077_001",
+                       year = 2020,
+                       state = "ID") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2020,
+         cpiu = cpiu_housing_dec_2020) %>%
+  rename("med_home_val" = "estimate") %>%
+  select(county, year, med_home_val, cpiu)
+
+homevals <- rbind(homeval1990, homeval2000, homeval2010, homeval2020) %>%
+  rowwise() %>%
+  mutate(cpiu_ratio = cpiu_housing_dec_2020 / cpiu,
+         med_home_val_in_2020_USD = med_home_val * cpiu_ratio) %>%
+  select(county, year, med_home_val_in_2020_USD)
+
+ru_data <- left_join(ru_data, homevals, by = c("county", "year"))
+```
+
+
 ## RU5 -- Number of units
 
 ### Agriculture
