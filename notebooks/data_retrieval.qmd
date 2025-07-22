@@ -2322,6 +2322,71 @@ a_data <- cbind(employment_industries, employ_pca$x[,1:3]) %>%
   right_join(a_data, by=c("county", "year"))
 ```
 
+### Percent population 65+ not in labor force (retired)
+
+Data for 2000-2020 were downloaded via API call using `tidycensus`. Data from 1990 was digitized from Table 144 of the 1990 Census of Population for Idaho (https://www2.census.gov/library/publications/decennial/1990/cp-2/cp-2-14.pdf).
+
+```{r}
+#| label: "percent retired"
+
+retired1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
+  rowwise() %>%
+  mutate(perc_retired = sum(Males_65_69_not_in_labor_force,
+                            Males_70plus_not_in_labor_force,
+                            Females_65_69_not_in_labor_force,
+                            Females_70plus_not_in_labor_force) /
+           sum(Pop_urban, Pop_rural) * 100) %>%
+  rename("county" = "County",
+         "year" = "Year") %>%
+  select(county, year, perc_retired)
+
+retired2000 <- get_decennial(geography = "county",
+                             table = "PCT035",
+                             year = 2000,
+                             state = "ID") %>%
+  filter(variable %in% c("PCT035001", "PCT035079", "PCT035086", "PCT035093", "PCT035171", "PCT035178", "PCT035185")) %>%
+  pivot_wider(id_cols = c("GEOID", "NAME"),
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(perc_retired = sum(PCT035079, PCT035086, PCT035093, PCT035171, PCT035178, PCT035185) / PCT035001 * 100) %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2000) %>%
+  select(county, year, perc_retired)
+
+retired2010 <- get_acs(geography = "county",
+                       table = "B23001",
+                       year = 2010,
+                       state = "ID") %>%
+  filter(variable %in% c("B23001_001", "B23001_077", "B23001_082", "B23001_087", "B23001_163", "B23001_168", "B23001_173")) %>%
+  pivot_wider(id_cols = c("GEOID", "NAME"),
+              names_from = "variable",
+              values_from = "estimate") %>%
+  rowwise() %>%
+  mutate(perc_retired = sum(B23001_077, B23001_082, B23001_087, B23001_163, B23001_168, B23001_173) / B23001_001 * 100) %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2010) %>%
+  select(county, year, perc_retired)
+
+retired2020 <- get_acs(geography = "county",
+                       table = "B23001",
+                       year = 2020,
+                       state = "ID") %>%
+  filter(variable %in% c("B23001_001", "B23001_077", "B23001_082", "B23001_087", "B23001_163", "B23001_168", "B23001_173")) %>%
+  pivot_wider(id_cols = c("GEOID", "NAME"),
+              names_from = "variable",
+              values_from = "estimate") %>%
+  rowwise() %>%
+  mutate(perc_retired = sum(B23001_077, B23001_082, B23001_087, B23001_163, B23001_168, B23001_173) / B23001_001 * 100) %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2020) %>%
+  select(county, year, perc_retired)
+
+a_data <- rbind(retired1990, retired2000, retired2010, retired2020) %>%
+  right_join(a_data, by = c("county", "year"))
+```
+
+
 ### Average age
 
 Age data downloaded from https://seer.cancer.gov/popdata/download.html.
