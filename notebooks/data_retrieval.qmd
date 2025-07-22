@@ -2386,7 +2386,6 @@ a_data <- rbind(retired1990, retired2000, retired2010, retired2020) %>%
   right_join(a_data, by = c("county", "year"))
 ```
 
-
 ### Average age
 
 Age data downloaded from https://seer.cancer.gov/popdata/download.html.
@@ -2411,6 +2410,68 @@ age <- age_formatted %>%
 
 a_data <- left_join(a_data, age, by = c("county", "year"))
 ```
+
+### Median household income
+
+Data for 2000-2020 were downloaded via API call using `tidycensus`. Data from 1990 were digitized from Table 148 in the 1990 Census of Population Idaho (https://www2.census.gov/library/publications/decennial/1990/cp-2/cp-2-14.pdf).
+
+Consumer price indices were retrieved from the Bureau of Labor Statistics (https://download.bls.gov/pub/time.series/cu/cu.data.1.AllItems). I used the All Items CPI-U for the West region of the US. (series ID = CUUR0400SA0; Time series information here: https://download.bls.gov/pub/time.series/cu/)
+
+```{r}
+#| label: "median income"
+
+# to adjust for inflation, we need the consumer price index for each year
+cpiu_general_west_dec_1990 <- 135
+cpiu_general_west_dec_2000 <- 177.1
+cpiu_general_west_dec_2010 <- 222.081
+cpiu_general_west_dec_2020 <- 276.593
+
+medinc1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
+  rename("county" = "County",
+         "year" = "Year",
+         "med_income" = "Median_household_income") %>%
+  mutate(cpiu = cpiu_general_west_dec_1990) %>%
+  select(county, year, med_income, cpiu)
+
+medinc2000 <- get_decennial(geography = "county",
+                            variables = "P053001",
+                            year = 2000,
+                            state = "ID") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2000,
+         cpiu = cpiu_general_west_dec_2000) %>%
+  rename("med_income" = "value") %>%
+  select(county, year, med_income, cpiu)
+
+medinc2010 <- get_acs(geography = "county",
+                      variables = "B19013_001",
+                      year = 2010,
+                      state = "ID") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2010,
+         cpiu = cpiu_general_west_dec_2010) %>%
+  rename("med_income" = "estimate") %>%
+  select(county, year, med_income, cpiu)
+
+medinc2020 <- get_acs(geography = "county",
+                      variables = "B19013_001",
+                      year = 2020,
+                      state = "ID") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2020,
+         cpiu = cpiu_general_west_dec_2020) %>%
+  rename("med_income" = "estimate") %>%
+  select(county, year, med_income, cpiu)
+
+medinc <- rbind(medinc1990, medinc2000, medinc2010, medinc2020) %>%
+  rowwise() %>%
+  mutate(cpiu_ratio = cpiu_general_west_dec_2020 / cpiu,
+         med_income_in_2020_USD = med_income * cpiu_ratio) %>%
+  select(county, year, med_income_in_2020_USD)
+
+a_data <- left_join(a_data, medinc, by = c("county", "year"))
+```
+
 
 ### Employment rate
 
