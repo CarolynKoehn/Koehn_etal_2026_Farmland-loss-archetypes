@@ -2531,6 +2531,8 @@ a_data <- left_join(a_data, edu_level, by = c("county" = "Name", "year"))
 
 ### Racial Composition
 
+Data for 2000-2020 were downloaded via API call using `tidycensus`. Data for 1990 were digitized from Table 6 in the 1990 Census of Population (https://www2.census.gov/library/publications/decennial/1990/cp-2/cp-2-14.pdf).
+
 ```{r}
 #| label: "racial composition"
 
@@ -2622,6 +2624,65 @@ races_pc_results <- cbind(races_all[,c("county", "year")], races_pca$x[, "PC1"])
   rename("races_PC1" = 'races_pca$x[, "PC1"]')
 
 a_data <- left_join(a_data, races_pc_results, by = c("county", "year"))
+```
+
+### Ethnicity
+
+Data for 2000-2020 were downloaded via API call using `tidycensus`. Data for 1990 were digitized from Table 6 in the 1990 Census of Population (https://www2.census.gov/library/publications/decennial/1990/cp-2/cp-2-14.pdf).
+
+```{r}
+#| label: "ethnicity"
+
+eth1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
+  rowwise() %>%
+  mutate(perc_hispanic = Persons_Hispanic / sum(Pop_urban, Pop_rural) * 100) %>%
+  rename("county" = "County",
+         "year" = "Year") %>%
+  select(county, year, perc_hispanic)
+
+ethn2000 <- get_decennial(geography = "county",
+                          variables = c("P004001", "P004002"),
+                          year = 2000,
+                          state = "ID") %>%
+  pivot_wider(id_cols = c("GEOID", "NAME"),
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(perc_hispanic = P004002 / P004001 * 100,
+         year = 2000,
+         county = str_remove(NAME, " County, Idaho")) %>%
+  select(county, year, perc_hispanic)
+
+ethn2010 <- get_decennial(geography = "county",
+                          variables = c("P004001", "P004003"),
+                          year = 2010,
+                          state = "ID") %>%
+  pivot_wider(id_cols = c("GEOID", "NAME"),
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(perc_hispanic = P004003 / P004001 * 100,
+         year = 2010,
+         county = str_remove(NAME, " County, Idaho")) %>%
+  select(county, year, perc_hispanic)
+
+ethn2020 <- get_decennial(geography = "county",
+                          variables = c("P4_001N", "P4_003N"),
+                          year = 2020,
+                          state = "ID",
+                          sumfile = "dhc") %>%
+  pivot_wider(id_cols = c("GEOID", "NAME"),
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(perc_hispanic = P4_003N / P4_001N * 100,
+         year = 2020,
+         county = str_remove(NAME, " County, Idaho")) %>%
+  select(county, year, perc_hispanic)
+
+ethn_all <- rbind(eth1990, ethn2000, ethn2010, ethn2020)
+
+a_data <- left_join(a_data, ethn_all, by = c("county", "year"))
 ```
 
 
