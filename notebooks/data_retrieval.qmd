@@ -2472,7 +2472,6 @@ medinc <- rbind(medinc1990, medinc2000, medinc2010, medinc2020) %>%
 a_data <- left_join(a_data, medinc, by = c("county", "year"))
 ```
 
-
 ### Employment rate
 
 Raw unemployment data was downloaded from https://download.bls.gov/pub/time.series/la/ (`la.data.64.County`).
@@ -2529,6 +2528,102 @@ edu_level <- rbind(high_school, bachelors) %>%
 # join
 a_data <- left_join(a_data, edu_level, by = c("county" = "Name", "year"))
 ```
+
+### Racial Composition
+
+```{r}
+#| label: "racial composition"
+
+races1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
+  rowwise() %>%
+  mutate(across(Persons_white:Persons_other, ~.x / sum(Pop_urban, Pop_rural) * 100)) %>%
+  rename("county" = "County",
+         "year" = "Year") %>%
+  select(county, year, Persons_AmericanIndian_Eskimo_Aleut, Persons_Asian, Persons_Black, Persons_PacificIslander, Persons_other, Persons_white)
+
+races2000 <- get_decennial(geography = "county",
+                           table = "P003",
+                           year = 2000,
+                           state = "ID") %>%
+  mutate(variable = str_replace(variable, "P003001", "Total"),
+         variable = str_replace(variable, "P003003", "Persons_white"),
+         variable = str_replace(variable, "P003004", "Persons_Black"),
+         variable = str_replace(variable, "P003005", "Persons_AmericanIndian_Eskimo_Aleut"),
+         variable = str_replace(variable, "P003006", "Persons_Asian"),
+         variable = str_replace(variable, "P003007", "Persons_PacificIslander"),
+         variable = str_replace(variable, "P003008", "Persons_other"),
+         variable = str_replace(variable, "P003009", "Persons_other"),
+         county = str_remove(NAME, " County, Idaho")) %>%
+  group_by(county, variable) %>%
+  summarise(value = sum(value)) %>%
+  pivot_wider(id_cols = "county",
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(across(Persons_AmericanIndian_Eskimo_Aleut:Persons_white,
+                ~.x / Total * 100)) %>%
+  mutate(year = 2000) %>%
+  select(county, year, Persons_AmericanIndian_Eskimo_Aleut:Persons_white)
+
+races2010 <- get_decennial(geography = "county",
+                           table = "P003",
+                           year = 2010,
+                           state = "ID") %>%
+  mutate(variable = str_replace(variable, "P003001", "Total"),
+         variable = str_replace(variable, "P003002", "Persons_white"),
+         variable = str_replace(variable, "P003003", "Persons_Black"),
+         variable = str_replace(variable, "P003004", "Persons_AmericanIndian_Eskimo_Aleut"),
+         variable = str_replace(variable, "P003005", "Persons_Asian"),
+         variable = str_replace(variable, "P003006", "Persons_PacificIslander"),
+         variable = str_replace(variable, "P003007", "Persons_other"),
+         variable = str_replace(variable, "P003008", "Persons_other"),
+         county = str_remove(NAME, " County, Idaho")) %>%
+  group_by(county, variable) %>%
+  summarise(value = sum(value)) %>%
+  pivot_wider(id_cols = "county",
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(across(Persons_AmericanIndian_Eskimo_Aleut:Persons_white,
+                ~.x / Total * 100)) %>%
+  mutate(year = 2010) %>%
+  select(county, year, Persons_AmericanIndian_Eskimo_Aleut:Persons_white)
+
+races2020 <- get_decennial(geography = "county",
+                           table = "P3",
+                           year = 2020,
+                           state = "ID",
+                           sumfile = "dhc") %>%
+  mutate(variable = str_replace(variable, "P3_001N", "Total"),
+         variable = str_replace(variable, "P3_002N", "Persons_white"),
+         variable = str_replace(variable, "P3_003N", "Persons_Black"),
+         variable = str_replace(variable, "P3_004N", "Persons_AmericanIndian_Eskimo_Aleut"),
+         variable = str_replace(variable, "P3_005N", "Persons_Asian"),
+         variable = str_replace(variable, "P3_006N", "Persons_PacificIslander"),
+         variable = str_replace(variable, "P3_007N", "Persons_other"),
+         variable = str_replace(variable, "P3_008N", "Persons_other"),
+         county = str_remove(NAME, " County, Idaho")) %>%
+  group_by(county, variable) %>%
+  summarise(value = sum(value)) %>%
+  pivot_wider(id_cols = "county",
+              names_from = "variable",
+              values_from = "value") %>%
+  rowwise() %>%
+  mutate(across(Persons_AmericanIndian_Eskimo_Aleut:Persons_white,
+                ~.x / Total * 100)) %>%
+  mutate(year = 2020) %>%
+  select(county, year, Persons_AmericanIndian_Eskimo_Aleut:Persons_white)
+
+races_all <- rbind(races1990, races2000, races2010, races2020)
+
+races_pca <- prcomp(races_all[,-c(1:2)])
+
+races_pc_results <- cbind(races_all[,c("county", "year")], races_pca$x[, "PC1"]) %>%
+  rename("races_PC1" = 'races_pca$x[, "PC1"]')
+
+a_data <- left_join(a_data, races_pc_results, by = c("county", "year"))
+```
+
 
 ### Agriculture
 
