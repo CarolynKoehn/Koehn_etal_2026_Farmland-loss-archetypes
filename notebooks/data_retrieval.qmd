@@ -242,7 +242,9 @@ rs_data <- lakes_area %>%
   st_drop_geometry(.) %>%
   select(-lake_area) %>%
   rename("county" = "NAME") %>%
-  right_join(rs_data, by=c("county"))
+  right_join(rs_data, by=c("county")) %>%
+  rowwise() %>%
+  mutate(lake_area_km2 = ifelse(is.na(lake_area_km2), 0, lake_area_km2))
 ```
 
 #### Miles of river
