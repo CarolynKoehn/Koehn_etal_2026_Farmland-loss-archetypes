@@ -1022,7 +1022,6 @@ Hired labor was downloaded from the Census of Ag. Data for 1992 were digitized f
 ```{r}
 #| label: "ag jobs"
 
-# farmers
 hired1990 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
   mutate(year = as.integer(Year)-2) %>%
   select(c(County, year, Hired_workers)) %>%
@@ -1037,7 +1036,7 @@ params <- list(agg_level_desc = "county",
 
 hired <- nassqs(params)
 
-hired_clean <- farmers %>%
+hired_clean <- hired %>%
   mutate(county_name = str_to_title(county_name),
          Value = as.numeric(str_remove_all(Value, ",")),
          year = as.integer(year)-2) %>%
@@ -2790,6 +2789,38 @@ a_data <- farms_w_loss %>%
   ungroup() %>%
   right_join(a_data, by=c("county", "year"))
 ```
+
+#### Number hired ag workers
+
+```{r}
+#| label: "hired ag workers"
+
+hired1990 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  mutate(year = as.integer(Year)-2) %>%
+  select(c(County, year, Hired_workers)) %>%
+  rename("county" = "County",
+         "num_hired" = "Hired_workers")
+
+params <- list(agg_level_desc = "county",
+               state_name = "Idaho",
+               year = c(2002, 2012, 2022),
+               short_desc = c("Labor, hired - Number of workers"),
+               domain_desc = "total")
+
+hired <- nassqs(params)
+
+hired_clean <- hired %>%
+  mutate(county_name = str_to_title(county_name),
+         Value = as.numeric(str_remove_all(Value, ",")),
+         year = as.integer(year)-2) %>%
+  group_by(county_name, year) %>%
+  summarise(num_hired = sum(Value)) %>%
+  rename("county" = "county_name") %>%
+  rbind(hired1990)
+
+a_data <- left_join(a_data, hired_clean, by = c("county", "year"))
+```
+
 
 ## A4 -- Location
 
