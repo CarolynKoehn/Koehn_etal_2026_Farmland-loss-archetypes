@@ -187,7 +187,9 @@ ses_var_sel <- mapply(function(df, ses_system) {
 #| label: "variable selection"
 
 ses_data_sel <- mapply(function(df, ses_system) {
-  selected_vars <- read.csv(paste0("data/bootstrap/", ses_system, "_var_sel.csv"))
+  file.name <- list.files(full.names = TRUE, recursive = TRUE,
+                          pattern = "greedy backward")
+  selected_vars <- read.csv(file.name[str_detect(file.name, ses_system)])
   if(nrow(unique(selected_vars[,-1])) == 1) {
     varsel <- unique(selected_vars[,-1])
   } else { stop("Multiple variable selection possibilities") }
