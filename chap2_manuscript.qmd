@@ -188,7 +188,7 @@ ses_var_sel <- mapply(function(df, ses_system) {
 
 ses_data_sel <- mapply(function(df, ses_system) {
   file.name <- list.files(full.names = TRUE, recursive = TRUE,
-                          pattern = "greedy backward")
+                          pattern = "greedy backward *9")
   selected_vars <- read.csv(file.name[str_detect(file.name, ses_system)])
   if(nrow(unique(selected_vars[,-1])) == 1) {
     varsel <- unique(selected_vars[,-1])
@@ -286,6 +286,11 @@ ci_clust <- mapply(function(mod, ses_system, input_data) {
            input_data_name = str_sub(rownames(.), 1, -3),
            sig = !(`2.5%`<0 & `97.5%`>0))
 }, mod = ses_mclustBIC, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
+
+# write.csv(ci_clust[["Resource"]], "data/model results/ci_clust_resource.csv",
+#           row.names = FALSE)
+# write.csv(ci_clust[["Actors"]], "data/model results/ci_clust_actors.csv",
+#           row.names = FALSE)
 ```
 
 
@@ -304,6 +309,13 @@ clust_dat_sc <- mapply(function(df, mod, system_name) {
     select(-mod.mod.classification)
 }, df = ses_data_list_sc, mod = ses_mclustBIC, system_name=names(ses_data_list))
 
+# write.csv(st_drop_geometry(clust_dat_sc[["Resource"]]), 
+#           "data/model results/clust_dat_sc_resource.csv",
+#           row.names = FALSE)
+# write.csv(st_drop_geometry(clust_dat_sc[["Actors"]]),
+#           "data/model results/clust_dat_sc_actors.csv",
+#           row.names = FALSE)
+
 clust_dat_sc[["Resource"]] %>%
   st_drop_geometry() %>%
   pivot_longer(cols = !c(county, year, cluster),
@@ -316,8 +328,8 @@ clust_dat_sc[["Resource"]] %>%
   geom_boxplot() +
   scale_x_continuous(limits = c(-1,1)) +
   scale_y_discrete(name = "Variable",
-                   limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "perc_farms_change", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "farm_size_pc1", "farm_size_pc2")),
-                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Farm Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Farm Size (PC1)", "Farm Size (PC2)"))) +
+                   limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "", "farm_size_pc1", "farm_size_pc2")),
+                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Farm Size (PC1)", "Farm Size (PC2)"))) +
   scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
                     values = c("orchid3", "orchid3", "beige"),
                     labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
