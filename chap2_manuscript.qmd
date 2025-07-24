@@ -8,6 +8,24 @@ bibliography: chap2.bib
 number-sections: true
 ---
 
+```{r}
+#| label: "setup"
+
+# load libraries
+
+library(tidyverse, quietly = TRUE)
+library(sf)
+library(terra)
+library(patchwork)
+
+# load data
+
+aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+  select(c("GEOID", "NAME")) %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+```
+
+
 # Context
 
 Approximately 1.5 million km2 of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales [@zhu2022].
@@ -33,21 +51,6 @@ As I worked through this preliminary analysis, the questions I answer here are s
 5. What are the outcomes of different resource system archetypes, as measured by nature's contributions to people?
 
 # Methods
-
-```{r}
-#| label: setup
-
-# load libraries
-
-library(mclust)
-library(clustvarsel)
-library(tidyverse, quietly = TRUE)
-library(sf)
-library(terra)
-library(exactextractr)
-library(patchwork)
-```
-
 
 ## Data Selection
 
@@ -105,49 +108,7 @@ Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's s
 [^1]: Principal components used to reduce dimensions.
 [^2]: Urban as defined by US Census.
 
-```{r}
-#| label: "load data"
-
-# county data
-aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
-  select(c("GEOID", "NAME")) %>%
-  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
-
-# data retrieved from above sources
-# see notebooks/data_retrieval.qmd for all methods
-ru_data <- read.csv("data/RU_data.csv")
-rs_data <- read.csv("data/RS_data.csv")
-resource <- left_join(ru_data, rs_data) %>%
-  filter(county %in% aoi$NAME)
-actors <- read.csv("data/Actor_data.csv") %>%
-  filter(county %in% aoi$NAME)
-
-# try combos of including/removing fed land+rec land; shrub+forest
-# resource <- resource %>%
-#   rowwise %>%
-#   mutate(shrub_forest_change = sum(shrub_change, forest_change)) %>%
-#   select(-c(percent_forest, percent_shrubland, shrub_change, forest_change)) %>%
-#   ungroup()
-
-
-ses_data_list <- list(Resource = resource,
-                      Actors = actors)
-```
-
 I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data [@hennig2016].
-
-```{r}
-#| label: "scale data"
-
-ses_data_list_sc <- lapply(ses_data_list, function(df) {
-  df %>%
-    na.omit() %>%
-    ungroup() %>%
-    mutate(across(!c(county, year),
-                  ~ (.x - mean(.x)) / (max(.x) - min(.x))))
-})
-```
-
 
 ## Clustering
 
@@ -160,60 +121,9 @@ I chose the most conservative method. The algorithm starts with all the variable
 I tested for a range of 1-9 possible clusters. 
 <!-- It's recommended that the maximum number of clusters be set to the next highest integer from $n^{0.3}$ [CITE]. $104^{0.3} = 4.028$, so 5 is selected as the maximum. -->
 
-```{r}
-#| label: "variable selection bootstrap"
-#| eval: false
+From the Resource clusters, the following variables were removed: shrubland change, developed land change, and river length.
 
-ses_var_sel <- mapply(function(df, ses_system) {
-  selected_vars <- data.frame(run = 1:20)
-  selected_vars[,colnames(df)[-c(1:2)]] <- NA
-  
-  for (i in 1:20) {
-    varsel <- clustvarsel(data = df[,-c(1:2)],
-              G = 1:9,
-              search = "greedy",
-              direction = "backward",
-              fit = FALSE)
-    newrow <- (colnames(df)[-c(1:2)] %in% names(varsel$subset))
-    selected_vars[i,2:ncol(selected_vars)] <- newrow
-  }
-  write.csv(selected_vars,
-            paste0("data/bootstrap/", ses_system, "_var_sel.csv"),
-            row.names = FALSE)
-}, df = ses_data_list_sc, ses_system = names(ses_data_list_sc))
-```
-
-```{r}
-#| label: "variable selection"
-
-ses_data_sel <- mapply(function(df, ses_system) {
-  file.name <- list.files(full.names = TRUE, recursive = TRUE,
-                          pattern = "greedy backward *9")
-  selected_vars <- read.csv(file.name[str_detect(file.name, ses_system)])
-  if(nrow(unique(selected_vars[,-1])) == 1) {
-    varsel <- unique(selected_vars[,-1])
-  } else { stop("Multiple variable selection possibilities") }
-  
-  df[,c(TRUE, TRUE, as.logical(varsel))]
-}, df=ses_data_list_sc, ses_system = names(ses_data_list_sc),
-SIMPLIFY = FALSE)
-```
-
-From the Resource clusters, the following variables were removed: percent cropland, land in farms, and distance to a national park.
-
-```{r}
-#| include: false
-
-print(colnames(ses_data_list_sc[["Resource"]])[!(colnames(ses_data_list_sc[["Resource"]]) %in% colnames(ses_data_sel[["Resource"]]))])
-```
-
-From the Actors clusters, the following variables were removed: the first and third principal components of the employment industries PCA (the second PC was retained), average age, percent of residents with a high school level education, and the farm tenure principal components.
-
-```{r}
-#| include: false
-
-print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actors"]]) %in% colnames(ses_data_sel[["Actors"]]))])
-```
+From the Actors clusters, no variables were removed.
 
 ### Gaussian Model-Based Clustering
 
@@ -221,49 +131,9 @@ To select a model, which includes selecting the number of groups and the shape, 
 
 Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
-```{r}
-#| label: "model selection"
-
-ses_mclustBIC <- lapply(ses_data_sel, function(df) {
-  BIC <- NULL
-  LL <- NULL
-  for(j in 1:200) {
-    rBIC <- mclustBIC(df[,-c(1:2)], G=1:10, verbose=FALSE,
-                    initalization = list(hcPairs=hcRandomPairs(df[,-c(1:2)])))
-    rModel <- mclustModel(df[,-c(1:2)], BICvalues = rBIC)
-    LL <- c(LL, rModel$loglik)
-    BIC <- mclustBICupdate(BIC, rBIC)
-  }
-  list(mod=Mclust(df[,-c(1:2)], x = BIC), LL=LL)
-})
-```
-
-<!-- for hist code, see https://centerstat.org/wp-content/uploads/2021/05/CAMM-mixture-modeling-demo-R-2021.pdf page 5-19 -->
-
-`r ses_mclustBIC[["Resource"]]$mod$G` clusters was the best fit for the resource data. `r ses_mclustBIC[["Actors"]]$mod$G` clusters was the best fit for the resource data.
+6 clusters was the best fit for the resource data. 3 clusters was the best fit for the resource data.
 
 The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima.
-
-To get a sense for how the data are clustering, we can view their groups on a principal components graph.
-
-```{r}
-pca_viz <- lapply(ses_data_sel, function(df) {
-  prcomp(df[,-c(1:2)])
-})
-
-factoextra::fviz_pca_biplot(
-  pca_viz[["Resource"]],
-  habillage=as.factor(ses_mclustBIC[["Resource"]]$mod$classification),
-  title = "Resource",
-  geom = "point", repel = TRUE,
-  addEllipses = TRUE)
-factoextra::fviz_pca_biplot(
-  pca_viz[["Actors"]],
-  habillage=as.factor(ses_mclustBIC[["Actors"]]$mod$classification),
-  title = "Actors",
-  geom = "point", repel = TRUE,
-  addEllipses = TRUE)
-```
 
 # Preliminary Results
 
@@ -277,20 +147,10 @@ Each cluster corresponds to an archetype. For an archetype analysis, not only do
 #| label: "get CIs"
 #| include: false
 
-ci_clust <- mapply(function(mod, ses_system, input_data) {
-  bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "bs")
-  
-  t(as.data.frame(summary(bootmod, "ci")$mean)) %>%
-    as.data.frame() %>%
-    mutate(cluster = paste0(str_sub(ses_system, 1,1), str_sub(rownames(.), -1, -1)),
-           input_data_name = str_sub(rownames(.), 1, -3),
-           sig = !(`2.5%`<0 & `97.5%`>0))
-}, mod = ses_mclustBIC, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
+ci_clust <- list()
 
-# write.csv(ci_clust[["Resource"]], "data/model results/ci_clust_resource.csv",
-#           row.names = FALSE)
-# write.csv(ci_clust[["Actors"]], "data/model results/ci_clust_actors.csv",
-#           row.names = FALSE)
+ci_clust[["Resource"]] <- read.csv("data/model results/ci_clust_resource.csv")
+ci_clust[["Actors"]] <- read.csv("data/model results/ci_clust_actors.csv")
 ```
 
 
@@ -298,27 +158,21 @@ ci_clust <- mapply(function(mod, ses_system, input_data) {
 #| label: fig-R-CIs
 #| message: false
 #| fig-cap: "Characteristics of each Resource cluster. The means for each variable in each cluster are estimated by the 8-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
-#| fig-height: 8
+#| fig-height: 8.5
 #| fig-width: 8
 
-clust_dat_sc <- mapply(function(df, mod, system_name) {
-  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
-    st_as_sf() %>%
-    cbind(., mod$mod$classification) %>%
-    mutate(cluster = paste0(substr(system_name,1,1), mod.mod.classification)) %>%
-    select(-mod.mod.classification)
-}, df = ses_data_list_sc, mod = ses_mclustBIC, system_name=names(ses_data_list))
+clust_dat_sc <- list()
 
-# write.csv(st_drop_geometry(clust_dat_sc[["Resource"]]), 
-#           "data/model results/clust_dat_sc_resource.csv",
-#           row.names = FALSE)
-# write.csv(st_drop_geometry(clust_dat_sc[["Actors"]]),
-#           "data/model results/clust_dat_sc_actors.csv",
-#           row.names = FALSE)
+clust_dat_sc[["Resource"]] <- read.csv("data/model results/clust_dat_sc_resource.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
+clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
 
 clust_dat_sc[["Resource"]] %>%
   st_drop_geometry() %>%
-  pivot_longer(cols = !c(county, year, cluster),
+  pivot_longer(cols = !c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "value") %>%
   left_join(ci_clust[["Resource"]][,c("cluster", "input_data_name", "sig")]) %>%
@@ -326,10 +180,10 @@ clust_dat_sc[["Resource"]] %>%
   ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
   geom_boxplot() +
-  scale_x_continuous(limits = c(-1,1)) +
+  scale_x_continuous(limits = c(-1,1), name = "") +
   scale_y_discrete(name = "Variable",
-                   limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "", "farm_size_pc1", "farm_size_pc2")),
-                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Farm Size (PC1)", "Farm Size (PC2)"))) +
+                   limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2")),
+                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) +
   scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
                     values = c("orchid3", "orchid3", "beige"),
                     labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
@@ -343,9 +197,9 @@ clust_dat_sc[["Resource"]] %>%
                     name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
   facet_wrap(vars(cluster)) +
   theme_bw() +
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.85, 0.25),
-        legend.justification = "center")
+  theme(legend.position = "bottom")
+        # legend.position.inside = c(0.85, 0.25),
+        # legend.justification = "center")
   
 ##############
 # code for model output instead of raw data
@@ -374,17 +228,18 @@ clust_dat_sc[["Resource"]] %>%
 ```{r}
 #| label: "label county data"
 
-clust_dat <- mapply(function(df, mod, system_name) {
-  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
-    st_as_sf() %>%
-    cbind(., mod$mod$classification) %>%
-    mutate(cluster = paste0(substr(system_name,1,1), mod.mod.classification)) %>%
-    select(-mod.mod.classification)
-}, df = ses_data_list, mod = ses_mclustBIC, system_name=names(ses_data_list))
+clust_dat <- list()
+
+clust_dat[["Resource"]] <- read.csv("data/model results/clust_dat_resource.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
+clust_dat[["Actors"]] <- read.csv("data/model results/clust_dat_actors.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
 
 resource_means <- clust_dat$Resource %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -394,7 +249,7 @@ resource_means <- clust_dat$Resource %>%
 
 actor_means <- clust_dat$Actors %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -402,17 +257,19 @@ actor_means <- clust_dat$Actors %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE))
 ```
-
+<!--
 \newpage
 #### Cluster R1: Counties near famous recreation areas represent the study area average of farmland loss, developed land gain
 
 ```{r}
+#| eval: false
+
 r1 <- clust_dat[["Resource"]] %>%
   filter(cluster == "R1")
 
 r1_means <- r1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -442,9 +299,9 @@ Cropland loss in R1 is around the state average with a mean of -0.8%, and loss o
 The spatial outlier in R1 is Gem County. Though it is far from a national park, it is included in R1 because it tends towards the state average in many data indicators, unlike its neighbors in clusters with more deviations from average. Twin Falls also stands out spatially, but shares the recreation access (especially skiing), amount of developed land, developed land gain, and the tendency towards the study area average of this cluster.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Resource"]] %>%
-  filter(year %in% c(1990)) %>%
-  mutate(year = "1990-2020") %>%
   ggplot(aes(fill = cluster)) +
   geom_sf(show.legend = FALSE) +
   scale_fill_manual(values = c("thistle3", "white", "white", "white", "white", "white", "white", "white")) +
@@ -456,12 +313,14 @@ clust_dat[["Resource"]] %>%
 #### Cluster R2: Isolated areas with some natural amenities experience little land use change
 
 ```{r}
+#| eval: false
+
 r2 <- clust_dat[["Resource"]] %>%
   filter(cluster == "R2")
 
 r2_means <- r2 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -490,6 +349,8 @@ Comments on variables not included in the model:
 Cluster R2 is characterized by the presence of natural amenities, such as forests and ski areas, but more difficulty traveling to these destinations and urban centers. This cluster has relatively low developed land gain, though cropland loss remains about average for the study area. This may be a combination of lots of federally owned and managed land, which limits development, and low highway and travel access, which limits job opportunities and amenity accessibility. 
 
 ```{r}
+#| eval: false
+
 clust_dat[["Resource"]] %>%
   filter(year %in% c(1990)) %>%
   mutate(year = "1990-2020") %>%
@@ -504,12 +365,14 @@ clust_dat[["Resource"]] %>%
 #### Cluster R3: Isolated areas in dry shrublands experience little land use change
 
 ```{r}
+#| eval: false
+
 r3 <- clust_dat[["Resource"]] %>%
   filter(cluster == "R3")
 
 r3_means <- r3 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -538,6 +401,8 @@ Comments on variables not included in the model:
 Cluster R3 is characterized by many shrublands, indicating limits to water access that lead to both less farmland and development. There is less access to major roadways, both to access recreation and urban centers. This cluster is experiencing less land use change, likely because of the limits of its resource system.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Resource"]] %>%
   filter(year %in% c(2000)) %>%
   mutate(year = "1990-2020") %>%
@@ -552,12 +417,14 @@ clust_dat[["Resource"]] %>%
 #### Cluster R4: Urban growth threatens farmland
 
 ```{r}
+#| eval: false
+
 r4 <- clust_dat[["Resource"]] %>%
   filter(cluster == "R4")
 
 r4_means <- r4 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -589,6 +456,8 @@ Comments on variables not included in the model:
 Cluster R4 is the Treasure Valley of Idaho, location of the state's capital and largest city, Boise, in Ada County. Next to Ada County, Canyon County is known for high quality agricultural lands that grow large quantities of vegetable seed for farmers worldwide, as well as many other agricultural products. The Treasure Valley is experiencing large population growth (see Actors cluster A1), which results in the high developed land gain. This cluster showcases the classic archetype of farmlands threatened by urban growth.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Resource"]] %>%
   filter(year %in% c(1990)) %>%
   mutate(year = "1990-2020") %>%
@@ -603,12 +472,14 @@ clust_dat[["Resource"]] %>%
 #### Cluster R5: Agricultural production areas with limited recreation and development
 
 ```{r}
+#| eval: false
+
 r5 <- clust_dat[["Resource"]] %>%
   filter(cluster == "R5")
 
 r5_means <- r5 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -639,6 +510,8 @@ Comments on variables not included in the model:
 Cluster R5 contains counties that focus on agricultural production, with lots of croplands and lower natural land covers. Recreation and natural amenities are low, and developed land and development hover at the study area average. Access to highways is higher, allowing agricultural products to be shipped and sold, and farms are more successful at turning a profit in these counties compared to others (with the exception of R3, but R3 also doesn't have many farms).
 
 ```{r}
+#| eval: false
+
 clust_dat[["Resource"]] %>%
   filter(year %in% c(2020)) %>%
   mutate(year = "1990-2020") %>%
@@ -648,7 +521,7 @@ clust_dat[["Resource"]] %>%
   facet_wrap(vars(year)) +
   theme_void()
 ```
-
+-->
 \newpage
 ### Actors Clusters
 
@@ -663,7 +536,7 @@ Although this analysis identifies 6 resource archetypes in the study area, it on
 
 clust_dat_sc[["Actors"]] %>%
   st_drop_geometry() %>%
-  pivot_longer(cols = !c(county, year, cluster),
+  pivot_longer(cols = !c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "value") %>%
   left_join(ci_clust[["Actors"]][,c("cluster", "input_data_name", "sig")]) %>%
@@ -673,21 +546,23 @@ clust_dat_sc[["Actors"]] %>%
   geom_boxplot() +
   scale_x_continuous(limits = c(-1,1)) +
   scale_y_discrete(name = "Variable",
-                   limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "avg_age", "unemployment_rate", "High.school", "Bachelors", "tenure_pc1", "perc_farms_w_net_loss", "pop_urban")),
-                   labels = rev(c("Population Density", "Population Growth", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Average Age", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelors", "Full-Owned Farms", "Farms with Net Loss", "Urban Population"))) +
-  scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
-                    values = c("orchid3", "orchid3", "beige"),
-                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
+                   limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "pop_urban")),
+                   labels = rev(c("Population Density", "Population Growth", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Percent Retired", "Average Age", "Median Household Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelors", "Race (PC1)", "Percent Hispanic", "Full-Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Urban Population"))) +
+  scale_fill_manual(limits = c("TRUE", "FALSE"),#, "Not in model"),
+                    values = c("orchid3", "orchid3"),#, "beige"),
+                    labels = c("Yes", "No"),#, "Not in model\n(removed during\nvariable selection)"),
                     name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  scale_alpha_manual(limits = c("TRUE", "FALSE", "Not in model"),
+  scale_alpha_manual(limits = c("TRUE", "FALSE"),#, "Not in model"),
                     values = c(1, 0.3, 0.3),
-                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"), name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  scale_color_manual(limits = c("TRUE", "FALSE", "Not in model"),
-                    values = c("black", "gray50", "gray50"),
-                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
+                    labels = c("Yes", "No"),#, "Not in model\n(removed during\nvariable selection)"), 
+                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  scale_color_manual(limits = c("TRUE", "FALSE"),#, "Not in model"),
+                    values = c("black", "gray50"),#, "gray50"),
+                    labels = c("Yes", "No"),#, "Not in model\n(removed during\nvariable selection)"),
                     name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
   facet_wrap(vars(cluster)) +
-  theme_bw()
+  theme_bw() +
+  theme(legend.position = "bottom")
 
 #######
 # figure for model ouputs
@@ -712,11 +587,13 @@ clust_dat_sc[["Actors"]] %>%
 #   labs(x = "Cluster mean (scaled values)", y = "Variable") +
 #   theme_classic()
 ```
-
+<!--
 \newpage
 #### Cluster A1: More urbanites
 
 ```{r}
+#| eval: false
+
 a1 <- clust_dat[["Actors"]] %>%
   filter(cluster == "A1")
 
@@ -743,6 +620,8 @@ To characterize Actors cluster A1, I report its significantly different variable
 Cluster A1 consists of Ada, Blaine, and Canyon counties in 1990-2020, Bannock and Bonneville counties in 1990-2010, Teton and Madison counties in 2000-2020, and Elmore County in 2000. In these counties and years, the number of actors in the system is generally increasing quickly. Most of the population is living in urban areas (although there is a wide range), and many have graduated college. The farming actors are at a financial disadvantage, as on average 60% of their farms operate at a net loss in any given year.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Actors"]] %>%
   # filter(year %in% c(2000)) %>%
   # mutate(year = "1990-2020") %>%
@@ -757,6 +636,8 @@ clust_dat[["Actors"]] %>%
 #### Cluster A2: Manufacturing provides additional rural employment
 
 ```{r}
+#| eval: false
+
 a2 <- clust_dat[["Actors"]] %>%
   filter(cluster == "A2")
 
@@ -782,6 +663,8 @@ To characterize Actors cluster A2, I report its significantly different variable
 Cluster A2 consists of 8 counties in 2020: Bannock, Bingham, Bonneville, Elmore, Gem, Jefferson, Payette, and Twin Falls. Many here are employed in manufacturing, or support manufacturing in the services and transportation sectors. With many farms operating at a net loss, manufacturing can offer off-farm employment. This is the only cluster where unemployment is lower than the study area average, which could be because of these manufacturing jobs. A majority of the actors in these counties are living in rural areas, few are unemployed, and many have college degrees.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Actors"]] %>%
   filter(year %in% c(2020)) %>%
   # mutate(year = "1990-2020") %>%
@@ -796,6 +679,8 @@ clust_dat[["Actors"]] %>%
 #### Cluster A3: Slow growing population in urban areas
 
 ```{r}
+#| eval: false
+
 a3 <- clust_dat[["Actors"]] %>%
   filter(cluster == "A3")
 
@@ -824,6 +709,8 @@ Cluster A3 consists of Cassia, Fremont, Gooding, Jerome, Minidoka, Power, and Wa
 The defining characteristic of this archetype seems to be slow population growth, an sometimes population decline, and low population density, but do contain an urban area where some to most of the population live (compared to A4, where population growth is also slow but the population is much more rural). Farmers in this cluster may have more power than in other clusters, as this is the cluster with the lowest percentage of farms operating at a net loss.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Actors"]] %>%
   # filter(year %in% c(2020)) %>%
   # mutate(year = "1990-2020") %>%
@@ -838,6 +725,8 @@ clust_dat[["Actors"]] %>%
 #### Cluster A4: Slow growing population in rural areas
 
 ```{r}
+#| eval: false
+
 a4 <- clust_dat[["Actors"]] %>%
   filter(cluster == "A4")
 
@@ -863,6 +752,8 @@ To characterize Actors cluster A4, I report its significantly different variable
 Cluster A4 consists of Adams, Butte, and Camas counties in 1990-2020, as well as Clark and Lincoln counties in 1990-2010, and Owyhee County in 1990. The low population density and low to nonexistent urban population suggest that this archetype is very rural, and the population here grows more slowly. The US Census defines "urban" by population and housing density, so once these counties' population centers crosses the census threshold, they likely transitioned to A3.
 
 ```{r}
+#| eval: false
+
 clust_dat[["Actors"]] %>%
   # filter(year %in% c(2020)) %>%
   # mutate(year = "1990-2020") %>%
@@ -880,6 +771,7 @@ Each county in each analysis year has both a Resource archetype and an Actors ar
 ```{r}
 #| label: fig-RA-assoc
 #| fig-cap: "Actors clusters present in each Resource cluster."
+#| eval: false
 
 county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county", "year", "cluster")]),
                           st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
@@ -927,6 +819,7 @@ No counties transitioned between resource clusters in the 40 years of this study
 ```{r}
 #| label: fig-r5-shifts
 #| fig-cap: "Shifts in percent developed land and housing density in R5 (urban growth threatens farmland)."
+#| eval: false
 
 p1 <- ggplot(data = r4, aes(x=year, y=percent_developed, color = county)) +
   geom_point() +
@@ -950,6 +843,7 @@ p1+p2 + guide_area() +
 ```{r}
 #| label: fig-r1-shifts
 #| fig-cap: "Shifts in percent developed land and housing density in R1 (counties near famous recreation areas represent the study area average of farmland loss, developed land gain). The dramatic increases in 2000 in Teton and Madison counties are accompanied by an actors transition to A1 (more urbanites)."
+#| eval: false
 
 p1 <- ggplot(data = r1, aes(x=year, y=percent_developed, color = county)) +
   geom_point() +
@@ -985,6 +879,7 @@ I only have NCP data for 2016-2020, so NCP must be analyzed as an outcome of the
 ```{r}
 #| label: "get NCP data"
 #| include: false
+#| eval: false
 
 # get list of file paths
 NCP_data_files <- list.files("data/NCP_data", pattern = ".tif",
@@ -1016,6 +911,7 @@ names(NCP_data) <- names(aligned_rasts)
 ```{r}
 #| label: "summarise NCP by county"
 #| include: false
+#| eval: false
 
 max_min_NCP_layers <- as.numeric(lapply(NCP_data, FUN = function(x) {max(values(x), na.rm=T)})) - as.numeric(lapply(NCP_data, FUN = function(x) {min(values(x), na.rm=T)}))
 
@@ -1040,6 +936,7 @@ NCP_by_county_sd <- exact_extract(x = NCP_sc,
 ```{r}
 #| label: "cluster NCP calcs"
 #| include: false
+#| eval: false
 
 NCP_cats <- data.frame(NCP = names(NCP_data),
                        NCP_cat = c(rep("Climate Adaptation", 2),
@@ -1074,7 +971,7 @@ NCP_means_sd <- left_join(NCP_means, NCP_stdev) %>%
 #| fig-cap: "The range of mean 2016-2020 NCP values for each county in each Resource cluster pathway. Values are scaled so that 0 represents the mean of each NCP across the study area, so values below 0 are below average and above 0 are above average. I separated the 21 NCP layers I used in chapter 1 into the 6 NCP categories used in chapter 1, so even clusters with 2 counties (e.g. R5 = Ada and Canyon County) have >2 means in each category from multiple NCP layers."
 #| fig-width: 8
 #| fig-height: 6
-
+#| eval: false
 
 ggplot(NCP_means_sd, aes(x=mean, y=barcode.R)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -1123,6 +1020,8 @@ The presence of A1 actors (educated, growing, urban population) is associated wi
 
 I need to think more about the NCP results and if they belong in this chapter. I don't find any surprising results here; the resource systems and their NCP outcomes all seem logical to me. Additionally, the NCP ranges seem to be either really wide or small and all centered on the average (recreation and water quality especially). Both those patterns are difficult to draw conclusions from.
 
+-->
+
 \newpage
 # References {.unnumbered}
 
@@ -1135,30 +1034,31 @@ I need to think more about the NCP results and if they belong in this chapter. I
 #| eval: false
 
 clust_dat[["Resource"]] %>%
-  filter(year %in% c(2020)) %>%
-  mutate(year = "1990-2020") %>%
-  mutate(cluster = factor(cluster, 
-                          levels = c("R1", "R2", "R3", "R4", "R5"),
-                          labels = c("Counties near\nfamous recreation areas\nrepresent the\nstudy area average\nof farmland loss,\ndeveloped land gain",
-                                     "Isolated areas\nwith some natural amenities\nexperience little\nland use change",
-                                     "Isolated areas\nin dry shrublands\nexperience little\nland use change",
-                                     "Urban growth\nthreatens farmland",
-                                     "Agricultural production areas\nwith limited recreation\nand development"))) %>%
+  filter(year %in% c(1990, 2020)) %>%
+  mutate(year = ifelse(year == 1990, "1990", "2000-2020")) %>%
+  # mutate(cluster = factor(cluster, 
+  #                         levels = c("R1", "R2", "R3", "R4", "R5"),
+  #                         labels = c("Counties near\nfamous recreation areas\nrepresent the\nstudy area average\nof farmland loss,\ndeveloped land gain",
+  #                                    "Isolated areas\nwith some natural amenities\nexperience little\nland use change",
+  #                                    "Isolated areas\nin dry shrublands\nexperience little\nland use change",
+  #                                    "Urban growth\nthreatens farmland",
+  #                                    "Agricultural production areas\nwith limited recreation\nand development"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
-  scale_fill_manual(name = "", values = rev(viridis::turbo(5, begin=0.2))) +
+  facet_wrap(vars(year)) +
+  scale_fill_manual(name = "", values = rev(viridis::turbo(6, begin=0.1))) +
   theme_void() +
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'))+
   guides(fill = guide_legend(label.position = "bottom"))
 
 clust_dat[["Actors"]] %>%
-    mutate(cluster = factor(cluster, 
-                          levels = c("A1", "A2", "A3", "A4"),
-                          labels = c("More urbanites",
-                                     "Manufacturing provides\nadditional rural\nemployment",
-                                     'Slow growing population\nin "urban" areas',
-                                     'Slow growing population\nin "rural" areas'))) %>%
+    # mutate(cluster = factor(cluster, 
+    #                       levels = c("A1", "A2", "A3", "A4"),
+    #                       labels = c("More urbanites",
+    #                                  "Manufacturing provides\nadditional rural\nemployment",
+    #                                  'Slow growing population\nin "urban" areas',
+    #                                  'Slow growing population\nin "rural" areas'))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   scale_fill_discrete(name="") +

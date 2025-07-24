@@ -1,0 +1,239 @@
+---
+title: "Cluster Model"
+author: "Carolyn Koehn"
+---
+
+```{r}
+#| label: setup
+
+# load libraries
+
+library(mclust)
+library(clustvarsel)
+library(tidyverse, quietly = TRUE)
+library(sf)
+library(terra)
+library(exactextractr)
+library(patchwork)
+```
+
+```{r}
+#| label: "load data"
+
+# county data
+aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+  select(c("GEOID", "NAME")) %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+
+# data retrieved from above sources
+# see notebooks/data_retrieval.qmd for all methods
+ru_data <- read.csv("data/RU_data.csv")
+rs_data <- read.csv("data/RS_data.csv")
+resource <- left_join(ru_data, rs_data) %>%
+  filter(county %in% aoi$NAME)
+actors <- read.csv("data/Actor_data.csv") %>%
+  filter(county %in% aoi$NAME)
+
+
+ses_data_list <- list(Resource = resource,
+                      Actors = actors)
+```
+
+I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data (Mirkin, 2016).
+
+```{r}
+#| label: "scale data"
+
+ses_data_list_sc <- lapply(ses_data_list, function(df) {
+  df %>%
+    na.omit() %>%
+    ungroup() %>%
+    mutate(across(!c(county, year),
+                  ~ (.x - mean(.x)) / (max(.x) - min(.x))))
+})
+```
+
+Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected. To account for this, I ran the variable selection algorithm 20 times and used the list of variables most frequently selected between the 20 runs.
+
+I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal.
+
+I tested for a range of 1-9 possible clusters. 
+
+```{r}
+#| label: "variable selection bootstrap"
+#| eval: false
+
+ses_var_sel <- mapply(function(df, ses_system) {
+  selected_vars <- data.frame(run = 1:20)
+  selected_vars[,colnames(df)[-c(1:2)]] <- NA
+  
+  for (i in 1:20) {
+    varsel <- clustvarsel(data = df[,-c(1:2)],
+              G = 1:9,
+              search = "greedy",
+              direction = "backward",
+              fit = FALSE)
+    newrow <- (colnames(df)[-c(1:2)] %in% names(varsel$subset))
+    selected_vars[i,2:ncol(selected_vars)] <- newrow
+  }
+  write.csv(selected_vars,
+            paste0("data/bootstrap/", ses_system, "_var_sel.csv"),
+            row.names = FALSE)
+}, df = ses_data_list_sc, ses_system = names(ses_data_list_sc))
+```
+
+```{r}
+#| label: "variable selection"
+
+ses_data_sel <- mapply(function(df, ses_system) {
+  file.name <- list.files(full.names = TRUE, recursive = TRUE,
+                          pattern = "greedy backward *9")
+  selected_vars <- read.csv(file.name[str_detect(file.name, ses_system)])
+  if(nrow(unique(selected_vars[,-1])) == 1) {
+    varsel <- unique(selected_vars[,-1])
+  } else { stop("Multiple variable selection possibilities") }
+  
+  df[,c(TRUE, TRUE, as.logical(varsel))]
+}, df=ses_data_list_sc, ses_system = names(ses_data_list_sc),
+SIMPLIFY = FALSE)
+```
+
+From the Resource clusters, the following variables were removed: shrubland change, developed land change, and river length.
+
+```{r}
+#| include: false
+
+print(colnames(ses_data_list_sc[["Resource"]])[!(colnames(ses_data_list_sc[["Resource"]]) %in% colnames(ses_data_sel[["Resource"]]))])
+```
+
+From the Actors clusters, no variables were removed.
+
+```{r}
+#| include: false
+
+print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actors"]]) %in% colnames(ses_data_sel[["Actors"]]))])
+```
+
+### Gaussian Model-Based Clustering
+
+To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-9 possible clusters. <!-- We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE (mclust book?, rmixmod manual?)). -->
+
+Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
+
+```{r}
+#| label: "model selection"
+
+ses_mclustBIC <- lapply(ses_data_sel, function(df) {
+  BIC <- NULL
+  LL <- NULL
+  for(j in 1:200) {
+    rBIC <- mclustBIC(df[,-c(1:2)], G=1:10, verbose=FALSE,
+                    initalization = list(hcPairs=hcRandomPairs(df[,-c(1:2)])))
+    rModel <- mclustModel(df[,-c(1:2)], BICvalues = rBIC)
+    LL <- c(LL, rModel$loglik)
+    BIC <- mclustBICupdate(BIC, rBIC)
+  }
+  list(mod=Mclust(df[,-c(1:2)], x = BIC), LL=LL)
+})
+```
+
+<!-- for hist code, see https://centerstat.org/wp-content/uploads/2021/05/CAMM-mixture-modeling-demo-R-2021.pdf page 5-19 -->
+
+`r ses_mclustBIC[["Resource"]]$mod$G` clusters was the best fit for the resource data. `r ses_mclustBIC[["Actors"]]$mod$G` clusters was the best fit for the resource data.
+
+To get a sense for how the data are clustering, we can view their groups on a principal components graph.
+
+```{r}
+pca_viz <- lapply(ses_data_sel, function(df) {
+  prcomp(df[,-c(1:2)])
+})
+
+factoextra::fviz_pca_biplot(
+  pca_viz[["Resource"]],
+  habillage=as.factor(ses_mclustBIC[["Resource"]]$mod$classification),
+  title = "Resource",
+  geom = "point", repel = TRUE,
+  addEllipses = TRUE)
+factoextra::fviz_pca_biplot(
+  pca_viz[["Actors"]],
+  habillage=as.factor(ses_mclustBIC[["Actors"]]$mod$classification),
+  title = "Actors",
+  geom = "point", repel = TRUE,
+  addEllipses = TRUE)
+```
+
+```{r}
+#| label: "get CIs"
+#| include: false
+
+ci_clust <- mapply(function(mod, ses_system, input_data) {
+  bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "bs")
+  
+  t(as.data.frame(summary(bootmod, "ci")$mean)) %>%
+    as.data.frame() %>%
+    mutate(cluster = paste0(str_sub(ses_system, 1,1), str_sub(rownames(.), -1, -1)),
+           input_data_name = str_sub(rownames(.), 1, -3),
+           sig = !(`2.5%`<0 & `97.5%`>0))
+}, mod = ses_mclustBIC, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
+
+# write.csv(ci_clust[["Resource"]], "../data/model results/ci_clust_resource.csv",
+#           row.names = FALSE)
+# write.csv(ci_clust[["Actors"]], "../data/model results/ci_clust_actors.csv",
+#           row.names = FALSE)
+```
+
+```{r}
+clust_dat_sc <- mapply(function(df, mod, system_name) {
+  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
+    st_as_sf() %>%
+    cbind(., mod$mod$classification) %>%
+    mutate(cluster = paste0(substr(system_name,1,1), mod.mod.classification)) %>%
+    select(-mod.mod.classification)
+}, df = ses_data_list_sc, mod = ses_mclustBIC, system_name=names(ses_data_list))
+
+# write.csv(st_drop_geometry(clust_dat_sc[["Resource"]]),
+#           "../data/model results/clust_dat_sc_resource.csv",
+#           row.names = FALSE)
+# write.csv(st_drop_geometry(clust_dat_sc[["Actors"]]),
+#           "../data/model results/clust_dat_sc_actors.csv",
+#           row.names = FALSE)
+```
+
+```{r}
+#| label: "label county data"
+
+clust_dat <- mapply(function(df, mod, system_name) {
+  left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
+    st_as_sf() %>%
+    cbind(., mod$mod$classification) %>%
+    mutate(cluster = paste0(substr(system_name,1,1), mod.mod.classification)) %>%
+    select(-mod.mod.classification)
+}, df = ses_data_list, mod = ses_mclustBIC, system_name=names(ses_data_list))
+
+# write.csv(st_drop_geometry(clust_dat[["Resource"]]),
+#           "../data/model results/clust_dat_resource.csv",
+#           row.names = FALSE)
+# write.csv(st_drop_geometry(clust_dat[["Actors"]]),
+#           "../data/model results/clust_dat_actors.csv",
+#           row.names = FALSE)
+
+resource_means <- clust_dat$Resource %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE))
+
+actor_means <- clust_dat$Actors %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE))
+```
