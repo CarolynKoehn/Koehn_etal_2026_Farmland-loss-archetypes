@@ -27,11 +27,11 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 
 # data retrieved from above sources
 # see notebooks/data_retrieval.qmd for all methods
-ru_data <- read.csv("data/RU_data.csv")
-rs_data <- read.csv("data/RS_data.csv")
+ru_data <- read.csv("../data/RU_data.csv")
+rs_data <- read.csv("../data/RS_data.csv")
 resource <- left_join(ru_data, rs_data) %>%
   filter(county %in% aoi$NAME)
-actors <- read.csv("data/Actor_data.csv") %>%
+actors <- read.csv("../data/Actor_data.csv") %>%
   filter(county %in% aoi$NAME)
 
 
