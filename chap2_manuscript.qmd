@@ -2,7 +2,7 @@
 title: "Data-driven archetypes of farmland change: Preliminary results"
 author: Carolyn Koehn
 abstract: |
-  Approximately 1.5 million km$^2$ of global land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period. The processes leading to this conversion are variable and often highly localized. Uncertainty regarding the causal process of agricultural lands loss limits local efforts to address or mitigate the loss through agricultural lands protection. A better understanding of the different processes of agricultural lands loss and the associated factors can inform the development of effective, diverse toolboxes of agricultural lands protection to apply in different localities. In this chapter, I will use a multi-dimensional cluster analysis to identify archetypes of change over time in counties where agricultural lands are at risk of conversion. I will draw on publicly-availabile data to calculate descriptive metrics for counties in southern Idaho's Snake River Plain. Identifying and understanding patterns and associated indicators of working lands loss will allow for more informed and effective working lands protection and development planning. Our workflow for identifying archetypes of agricultural land loss uses publicly available data and can be used in other threatened regions to describe and address processes of land use change.
+  Approximately 1.5 million km$^2$ of global land was converted from agriculture to highly developed areas between 1992 and 2018. The processes leading to this conversion are variable, but most farmland protection policy focuses on controlling urban sprawl. A better understanding of the multiple contexts in which farmland loss occurs can inform the development of more diverse policies for agricultural land protection. We used an interdisciplinary archetypes approach that identifies recurring patterns of variables in social-ecological systems across different spaces and time periods. We combined finite Gaussian mixture model cluster analysis and qualitative case studies to find recurring patterns of change over time in 26 counties in southern Idaho's Snake River Plain, a region of the western United States [US] with both high agricultural production and high population growth where agricultural lands are at risk of conversion. We chose data linked to second-tier variables in the resource and actors subsystems in Ostrom’s social-ecological systems framework. Specifically, we calculated descriptive metrics for 1990, 2000, 2010, and 2020 from the US Census, land use/land cover spatial data, and the US Census of Agriculture. We found that these 26 counties over 4 time points clustered into 6 resource clusters and 3 actors clusters. Resource clusters were strongly driven by developed land, housing density, and jobs supporting agriculture, whereas actor clusters were strongly driven by residents with a Bachelor’s degree, workers in manufacturing, and average age. We then selected 4 counties from the full pool of counties to do qualitative case study analysis and link those insights with the results of the data driven clusters. Through combined quantitative and qualitative approaches, we found that agricultural land loss occurs in multiple contexts, including urban sprawl and in more rural areas with recreation access. We reveal spatially distant counties in the same archetype that may be able to share successful farmland protection policies, as well as neighboring counties in different archetypes that will likely require different policy pathways to protect farmland. We intentionally used publicly available data so that this approach could be applied to many areas grappling with agricultural land loss.
 date: last-modified
 bibliography: chap2.bib
 number-sections: true
@@ -28,27 +28,36 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 
 # Context
 
-Approximately 1.5 million km2 of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales [@zhu2022].
+<!-- big scary problem -->
+Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social well-being [@smith2001].
 
-The Snake River Plain of Idaho is a perfect place to study this phenomenon because it is experiencing different drivers of agricultural land conversion across its counties (though I am tempted to expand this to the West, as the same logic applies). We have observed pressures due to urban/suburban sprawl, amenity migration, and agricultural industrialization. The purpose of this archetype analysis is to characterize the pathways to and outcomes of farmland loss as described by public data. These archetypes will aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities.
+<!-- 
 
-I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
+- middle range theories can unite what we know about farmland loss not related to urban sprawl
+- archetypes describe recurring patterns in social-ecological systems
+- some of those recurring patterns are: urban/suburban sprawl, amenity migration, and agricultural industrialization
 
-In this analysis, I create archetypes for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total).
+-->
 
-Archetypes of agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. The research questions from my proposal are:
 
-1. Are there identifiable archetypes of agricultural lands loss in the western U.S.?
-2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-3. Which of nature’s contributions to people are associated with and most threatened by different archetypes of land use change?
 
-As I worked through this preliminary analysis, the questions I answer here are slightly different:
+<!-- 
+
+- communities are dynamic
+- we can take advantage of long term datasets
+- public data ensures that similar analysis can be carried out across the country
+
+-->
+
+<!-- study area, methods, research questions -->
+The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. We hypothesize that land use change is occurring due to urban/suburban sprawl, amenity migration, and agricultural industrialization in different areas across the region. This research will aid in identifying where distinct processes of land use change are occurring, contributing to a diverse toolbox for agricultural lands protection in diverse localities. We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. Our research questions were:
 
 1. Are there identifiable archetypes of social-ecological systems (specifically, the resource systems and actors of counties) in Idaho's Snake River Plain?
 2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-3. How is farmland loss experienced in different archetypes?
+3. What is the relationship between these archetypes and farmland loss?
 4. Are there counties that have shifted archetypes through time, and what are their characteristics?
-5. What are the outcomes of different resource system archetypes, as measured by nature's contributions to people?
+
+<!-- I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level. -->
 
 # Methods
 
@@ -67,20 +76,27 @@ These are the data used in this preliminary analysis:
 | | | Percent cropland | National Land Cover Database (NLCD) |
 | | Natural Amenities | Percent forestland | NLCD |
 | | | Percent shrubland | NLCD |
-| | | Percent federally managed land | PAD-US |
+| | | Percent federally managed land | BLM Surface Management Agencies |
+| | | Lake area | WWF HydroLAKES |
+| | | River length | WWF Hydrosheds |
 | | Urban / Residential | Percent developed land | NLCD |
 | RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | Census of Agriculture |
 | | Natural Amenities | Percent land in recreation areas | Protected Areas Database |
-| | Natural Amenities | Distance to nearest national park | Protected Areas Database |
-| | Natural Amenities | Distance to nearest ski area | Protected Areas Database |
+| | | Distance to nearest national park | Protected Areas Database |
+| | | Distance to nearest ski area | Protected Areas Database |
 | | Urban / Residential | Number houses per unit area | US Census |
-| | Urban / Residential | Percent non-federal land within 10km of a major roadway | US Census TIGER/Line, PAD-US |
+| | | Percent non-federal land within 10km of a major roadway | US Census TIGER/Line, PAD-US |
+| | | Healthcare workers per 1000 residents | County Business Patterns |
 | RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | Census of Agriculture |
+| | | Percent change of land area in farms | Census of Agriculture |
 | | | Percent change of land cover in cropland (5 year period) | NLCD |
 | | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD |
 | | | Percent change of land cover in shrubland (5 year period) | NLCD |
 | | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD |
 | RU4 -- Economic Value | Agriculture | Percent farms with net loss | Census of Agriculture |
+| | | Agriculture support jobs per 1000 residents | Census of Agriculture |
+| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | County Business Patterns |
+| | Urban / Residential | Median home value | US Census |
 | RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres).[^1] | Census of Agriculture |
 
 Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units.
@@ -94,11 +110,16 @@ Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's
 | A1 -- Number of Relevant Actors | All | Population per unit area | US Census |
 | | | Percent population change (10 year period) | US Census |
 | A2 -- Socioeconomic Attributes | All | Percent employed in different industries.$^1$ | County Business Patterns |
+| | | Percent population 65+ and not in labor force | US Census |
 | | | Age of population (weighted average) | [NCI SEER](https://seer.cancer.gov/popdata/download.html) |
+| | | Median household income | US Census |
 | | | Unemployment rate | Bureau of Labor Statistics |
 | | | Percent population with high school, Bachelors degree | USDA Economic Research Service (ERS) |
+| | | Racial composition of population[^1] | US Census |
+| | | Percent population with Hispanic ethnicity | US Census |
 | | Agriculture | Percent farms full- or part-owned, or tenant operated.$^1$ | Census of Agriculture |
 | | | Percent farms with net loss | Census of Agriculture |
+| | | Number of hired workers | Census of Agriculture |
 | A4 -- Location | All | Percent population in "urban" areas[^2] | US Census |
 
 Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors.
