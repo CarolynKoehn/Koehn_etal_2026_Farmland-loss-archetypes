@@ -29,17 +29,18 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 # Context
 
 <!-- big scary problem -->
-Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social well-being [@smith2001].
+Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social well-being [@smith2001]. In order to protect high quality agricultural lands, it is critical to understand the multiple pathways that those lands are converted to other uses.
 
 <!-- 
 
 - middle range theories can unite what we know about farmland loss not related to urban sprawl
 - archetypes describe recurring patterns in social-ecological systems
 - some of those recurring patterns are: urban/suburban sprawl, amenity migration, and agricultural industrialization
+- described within case studies in sociology literature, to our knowledge multiple pathways(?) of farmland loss have not been described in a generalized way across (?) scales
 
 -->
 
-
+Since agricultural land conversion occurs via different processes in different contexts, farmland loss may be best described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019].
 
 <!-- 
 
