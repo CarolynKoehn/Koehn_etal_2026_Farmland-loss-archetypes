@@ -28,27 +28,36 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 
 # Context
 
-Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales [@zhu2022].
+<!-- big scary problem -->
+Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social well-being [@smith2001].
 
-The Snake River Plain of Idaho is a perfect place to study this phenomenon because it is experiencing different drivers of agricultural land conversion across its counties (though I am tempted to expand this to the West, as the same logic applies). We have observed pressures due to urban/suburban sprawl, amenity migration, and agricultural industrialization. The purpose of this archetype analysis is to characterize the pathways to and outcomes of farmland loss as described by public data. These archetypes will aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities.
+<!-- 
 
-I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
+- middle range theories can unite what we know about farmland loss not related to urban sprawl
+- archetypes describe recurring patterns in social-ecological systems
+- some of those recurring patterns are: urban/suburban sprawl, amenity migration, and agricultural industrialization
 
-In this analysis, I create archetypes for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total).
+-->
 
-Archetypes of agricultural lands loss can aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities. The research questions from my proposal are:
 
-1. Are there identifiable archetypes of agricultural lands loss in the western U.S.?
-2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-3. Which of nature’s contributions to people are associated with and most threatened by different archetypes of land use change?
 
-As I worked through this preliminary analysis, the questions I answer here are slightly different:
+<!-- 
+
+- communities are dynamic
+- we can take advantage of long term datasets
+- public data ensures that similar analysis can be carried out across the country
+
+-->
+
+<!-- study area, methods, research questions -->
+The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. We hypothesize that land use change is occurring due to urban/suburban sprawl, amenity migration, and agricultural industrialization in different areas across the region. This research will aid in identifying where distinct processes of land use change are occurring, contributing to a diverse toolbox for agricultural lands protection in diverse localities. We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. Our research questions were:
 
 1. Are there identifiable archetypes of social-ecological systems (specifically, the resource systems and actors of counties) in Idaho's Snake River Plain?
 2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-3. How is farmland loss experienced in different archetypes?
+3. What is the relationship between these archetypes and farmland loss?
 4. Are there counties that have shifted archetypes through time, and what are their characteristics?
-5. What are the outcomes of different resource system archetypes, as measured by nature's contributions to people?
+
+<!-- I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level. -->
 
 # Methods
 
