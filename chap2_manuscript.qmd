@@ -28,7 +28,7 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 
 # Context
 
-Approximately 1.5 million km2 of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales [@zhu2022].
+Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as the expansion of rural settlements and industrial land, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). While other pathways to agricultural land loss may not impact as large of a total area as urban sprawl, they have can have significant impacts, especially at local scales [@zhu2022].
 
 The Snake River Plain of Idaho is a perfect place to study this phenomenon because it is experiencing different drivers of agricultural land conversion across its counties (though I am tempted to expand this to the West, as the same logic applies). We have observed pressures due to urban/suburban sprawl, amenity migration, and agricultural industrialization. The purpose of this archetype analysis is to characterize the pathways to and outcomes of farmland loss as described by public data. These archetypes will aid in identifying where distinct processes of land use change are occurring, contributing to better land use prediction models and a diverse toolbox for agricultural lands protection in diverse localities.
 
@@ -67,20 +67,27 @@ These are the data used in this preliminary analysis:
 | | | Percent cropland | National Land Cover Database (NLCD) |
 | | Natural Amenities | Percent forestland | NLCD |
 | | | Percent shrubland | NLCD |
-| | | Percent federally managed land | PAD-US |
+| | | Percent federally managed land | BLM Surface Management Agencies |
+| | | Lake area | WWF HydroLAKES |
+| | | River length | WWF Hydrosheds |
 | | Urban / Residential | Percent developed land | NLCD |
 | RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | Census of Agriculture |
 | | Natural Amenities | Percent land in recreation areas | Protected Areas Database |
-| | Natural Amenities | Distance to nearest national park | Protected Areas Database |
-| | Natural Amenities | Distance to nearest ski area | Protected Areas Database |
+| | | Distance to nearest national park | Protected Areas Database |
+| | | Distance to nearest ski area | Protected Areas Database |
 | | Urban / Residential | Number houses per unit area | US Census |
-| | Urban / Residential | Percent non-federal land within 10km of a major roadway | US Census TIGER/Line, PAD-US |
+| | | Percent non-federal land within 10km of a major roadway | US Census TIGER/Line, PAD-US |
+| | | Healthcare workers per 1000 residents | County Business Patterns |
 | RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | Census of Agriculture |
+| | | Percent change of land area in farms | Census of Agriculture |
 | | | Percent change of land cover in cropland (5 year period) | NLCD |
 | | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD |
 | | | Percent change of land cover in shrubland (5 year period) | NLCD |
 | | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD |
 | RU4 -- Economic Value | Agriculture | Percent farms with net loss | Census of Agriculture |
+| | | Agriculture support jobs per 1000 residents | Census of Agriculture |
+| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | County Business Patterns |
+| | Urban / Residential | Median home value | US Census |
 | RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres).[^1] | Census of Agriculture |
 
 Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units.
@@ -94,11 +101,16 @@ Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's
 | A1 -- Number of Relevant Actors | All | Population per unit area | US Census |
 | | | Percent population change (10 year period) | US Census |
 | A2 -- Socioeconomic Attributes | All | Percent employed in different industries.$^1$ | County Business Patterns |
+| | | Percent population 65+ and not in labor force | US Census |
 | | | Age of population (weighted average) | [NCI SEER](https://seer.cancer.gov/popdata/download.html) |
+| | | Median household income | US Census |
 | | | Unemployment rate | Bureau of Labor Statistics |
 | | | Percent population with high school, Bachelors degree | USDA Economic Research Service (ERS) |
+| | | Racial composition of population[^1] | US Census |
+| | | Percent population with Hispanic ethnicity | US Census |
 | | Agriculture | Percent farms full- or part-owned, or tenant operated.$^1$ | Census of Agriculture |
 | | | Percent farms with net loss | Census of Agriculture |
+| | | Number of hired workers | Census of Agriculture |
 | A4 -- Location | All | Percent population in "urban" areas[^2] | US Census |
 
 Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors.
