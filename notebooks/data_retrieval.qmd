@@ -204,6 +204,8 @@ county_polys <- county_polys %>%
   dplyr::summarise() %>%
   st_make_valid()
 
+fed_for_roads <- county_polys
+
 fed_by_county <- county_polys %>%
     mutate(fed_area = st_area(.)) %>%
     st_drop_geometry() %>%
@@ -613,7 +615,7 @@ for(c in GEOID_names) {
                                      st_transform(subset(county_shapes, NAME == c),
                                                   st_crs(ps_roads_buff)))
   roads_by_county_fed <- st_intersection(ps_roads_buff, 
-                                         st_transform(subset(pad_fed_years[["2020"]], 
+                                         st_transform(subset(fed_for_roads, 
                                                              NAME == c),
                                                       st_crs(ps_roads_buff)))
   
