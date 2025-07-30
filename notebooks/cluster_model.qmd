@@ -32,7 +32,8 @@ rs_data <- read.csv("../data/RS_data.csv")
 resource <- left_join(ru_data, rs_data) %>%
   filter(county %in% aoi$NAME)
 actors <- read.csv("../data/Actor_data.csv") %>%
-  filter(county %in% aoi$NAME)
+  filter(county %in% aoi$NAME) %>%
+  select(-pop_urban)
 
 
 ses_data_list <- list(Resource = resource,
@@ -77,7 +78,7 @@ ses_var_sel <- mapply(function(df, ses_system) {
     selected_vars[i,2:ncol(selected_vars)] <- newrow
   }
   write.csv(selected_vars,
-            paste0("data/bootstrap/", ses_system, "_var_sel.csv"),
+            paste0("../data/bootstrap/", ses_system, "_var_sel.csv"),
             row.names = FALSE)
 }, df = ses_data_list_sc, ses_system = names(ses_data_list_sc))
 ```
@@ -87,15 +88,16 @@ ses_var_sel <- mapply(function(df, ses_system) {
 
 ses_data_sel <- mapply(function(df, ses_system) {
   file.name <- list.files(full.names = TRUE, recursive = TRUE,
-                          pattern = "1-5 groups",
+                          pattern = "var_sel.csv",
                           path = "..")
   selected_vars <- read.csv(file.name[str_detect(file.name, ses_system)])
   if(nrow(unique(selected_vars[,-1])) == 1) {
     varsel <- unique(selected_vars[,-1])
   } else { stop("Multiple variable selection possibilities") }
   
-  df[,c(TRUE, TRUE, as.logical(varsel))]
-}, df=ses_data_list_sc, ses_system = names(ses_data_list_sc),
+  return(df[,c(TRUE, TRUE, as.logical(varsel))])
+}, df=ses_data_list_sc, 
+ses_system = names(ses_data_list_sc),
 SIMPLIFY = FALSE)
 ```
 
