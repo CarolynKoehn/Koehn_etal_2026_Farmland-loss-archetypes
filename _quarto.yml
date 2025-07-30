@@ -9,13 +9,24 @@ notebook-links: false
 execute:
   echo: false
   freeze: auto
+  
+filters:
+  - multibib
+validate-yaml: false
+citeproc: false
+  
+bibliography: 
+  main: chap2.bib
+  data: chap2_data.bib
+csl: elsevier-harvard-modified.csl
 
 format:
-  pdf:
-    keep-tex: true
-    include-in-header: 
-      text: |
-        \usepackage[format=plain]{caption}
+  # pdf:
+  #   keep-tex: true
+  #   cite-method: citeproc
+  #   include-in-header: 
+  #     text: |
+  #       \usepackage[format=plain]{caption}
   docx: default
 
 
