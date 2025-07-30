@@ -4,7 +4,6 @@ author: Carolyn Koehn
 abstract: |
   Approximately 1.5 million km$^2$ of global land was converted from agriculture to highly developed areas between 1992 and 2018. The processes leading to this conversion are variable, but most farmland protection policy focuses on controlling urban sprawl. A better understanding of the multiple contexts in which farmland loss occurs can inform the development of more diverse policies for agricultural land protection. We used an interdisciplinary archetypes approach that identifies recurring patterns of variables in social-ecological systems across different spaces and time periods. We combined finite Gaussian mixture model cluster analysis and qualitative case studies to find recurring patterns of change over time in 26 counties in southern Idaho's Snake River Plain, a region of the western United States [US] with both high agricultural production and high population growth where agricultural lands are at risk of conversion. We chose data linked to second-tier variables in the resource and actors subsystems in Ostrom’s social-ecological systems framework. Specifically, we calculated descriptive metrics for 1990, 2000, 2010, and 2020 from the US Census, land use/land cover spatial data, and the US Census of Agriculture. We found that these 26 counties over 4 time points clustered into 6 resource clusters and 3 actors clusters. Resource clusters were strongly driven by developed land, housing density, and jobs supporting agriculture, whereas actor clusters were strongly driven by residents with a Bachelor’s degree, workers in manufacturing, and average age. We then selected 4 counties from the full pool of counties to do qualitative case study analysis and link those insights with the results of the data driven clusters. Through combined quantitative and qualitative approaches, we found that agricultural land loss occurs in multiple contexts, including urban sprawl and in more rural areas with recreation access. We reveal spatially distant counties in the same archetype that may be able to share successful farmland protection policies, as well as neighboring counties in different archetypes that will likely require different policy pathways to protect farmland. We intentionally used publicly available data so that this approach could be applied to many areas grappling with agricultural land loss.
 date: last-modified
-bibliography: chap2.bib
 number-sections: true
 ---
 
@@ -59,43 +58,41 @@ The localized and overall effects of industrial expansion have not been included
 
 ## Data Selection
 
-In this analysis, I selected data that was available for these counties from 1990-2020. I linked data sources I knew to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009]. For the full framework, including variables without data sources that I knew of and data sources I excluded because they do not include all analysis years, see the attached file `SES_data_outline.docx`.
-
-These are the data used in this preliminary analysis:
+We linked data available from 1990-2020 to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009] based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found. Detailed data processing steps and sources for all data tables for each indicator and year can be found in Appendix A.
 
 ::: {#tbl-datasel-R}
 
 | Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
 |--|---|---|---|
 | RS1 -- Sector | Agriculture, Natural Amenities, Urban / Residential | | |
-| RS3 -- Size of Resource System | Agriculture  | Percent land in farms | Census of Agriculture |
+| RS3 -- Size of Resource System | Agriculture  | Percent land in farms | US Census of Agriculture |
 | | | Percent cropland | National Land Cover Database (NLCD) |
 | | Natural Amenities | Percent forestland | NLCD |
 | | | Percent shrubland | NLCD |
-| | | Percent federally managed land | BLM Surface Management Agencies |
-| | | Lake area | WWF HydroLAKES |
-| | | River length | WWF Hydrosheds |
+| | | Percent federally managed land | US Bureau of Land Management Surface Management Agencies |
+| | | Lake area | HydroSHEDS |
+| | | River length | HydroSHEDS |
 | | Urban / Residential | Percent developed land | NLCD |
-| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | Census of Agriculture |
-| | Natural Amenities | Percent land in recreation areas | Protected Areas Database |
-| | | Distance to nearest national park | Protected Areas Database |
-| | | Distance to nearest ski area | Protected Areas Database |
-| | Urban / Residential | Number houses per unit area | US Census |
-| | | Percent non-federal land within 10km of a major roadway | US Census TIGER/Line, PAD-US |
-| | | Healthcare workers per 1000 residents | County Business Patterns |
-| RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | Census of Agriculture |
-| | | Percent change of land area in farms | Census of Agriculture |
+| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | US Census of Agriculture |
+| | Natural Amenities | Percent land in recreation areas | Protected Areas Database - US (PAD-US) |
+| | | Distance to nearest national park | PAD-US |
+| | | Distance to nearest ski area | PAD-US |
+| | Urban / Residential | Number houses per unit area | US Decennial Census |
+| | | Percent non-federal land within 10km of a major roadway | US Decennial Census, PAD-US |
+| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP) |
+| RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | US Census of Agriculture |
+| | | Percent change of land area in farms | US Census of Agriculture |
 | | | Percent change of land cover in cropland (5 year period) | NLCD |
 | | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD |
 | | | Percent change of land cover in shrubland (5 year period) | NLCD |
 | | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD |
-| RU4 -- Economic Value | Agriculture | Percent farms with net loss | Census of Agriculture |
-| | | Agriculture support jobs per 1000 residents | Census of Agriculture |
-| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | County Business Patterns |
-| | Urban / Residential | Median home value | US Census |
-| RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres).[^1] | Census of Agriculture |
+| RU4 -- Economic Value | Agriculture | Percent farms with net loss | US Census of Agriculture |
+| | | Agriculture support jobs per 1000 residents | US Census of Agriculture |
+| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | US Census CBP |
+| | Urban / Residential | Median home value | US Decennial Census |
+| RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres)* | US Census of Agriculture |
 
-Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units.
+Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units. * indicates that principal components were used to reduce dimensions.
 
 :::
 
@@ -103,27 +100,23 @@ Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's
 
 | Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
 |--|--|---|---|
-| A1 -- Number of Relevant Actors | All | Population per unit area | US Census |
-| | | Percent population change (10 year period) | US Census |
-| A2 -- Socioeconomic Attributes | All | Percent employed in different industries.$^1$ | County Business Patterns |
-| | | Percent population 65+ and not in labor force | US Census |
-| | | Age of population (weighted average) | [NCI SEER](https://seer.cancer.gov/popdata/download.html) |
-| | | Median household income | US Census |
-| | | Unemployment rate | Bureau of Labor Statistics |
+| A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census |
+| | | Percent population change (10 year period) | US Decennial Census |
+| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | US Census CBP |
+| | | Percent population 65+ and not in labor force | US Decennial Census |
+| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program |
+| | | Median household income | US Decennial Census |
+| | | Unemployment rate | US Bureau of Labor Statistics |
 | | | Percent population with high school, Bachelors degree | USDA Economic Research Service (ERS) |
-| | | Racial composition of population[^1] | US Census |
-| | | Percent population with Hispanic ethnicity | US Census |
-| | Agriculture | Percent farms full- or part-owned, or tenant operated.$^1$ | Census of Agriculture |
-| | | Percent farms with net loss | Census of Agriculture |
-| | | Number of hired workers | Census of Agriculture |
-| A4 -- Location | All | Percent population in "urban" areas[^2] | US Census |
+| | | Racial composition of population* | US Decennial Census |
+| | | Percent population with Hispanic ethnicity | US Decennial Census |
+| | Agriculture | Percent farms full- or part-owned, or tenant operated.$^1$ | US Census of Agriculture |
+| | | Percent farms with net loss | US Census of Agriculture |
+| | | Number of hired workers | US Census of Agriculture |
 
-Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors.
+Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors. * indicates that principal components were used to reduce dimensions.
 
 :::
-
-[^1]: Principal components used to reduce dimensions.
-[^2]: Urban as defined by US Census.
 
 I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data [@hennig2016].
 
@@ -135,20 +128,19 @@ Before clustering begins, it is useful to select the most important variables fo
 
 I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal.
 
-I tested for a range of 1-9 possible clusters. 
-<!-- It's recommended that the maximum number of clusters be set to the next highest integer from $n^{0.3}$ [CITE]. $104^{0.3} = 4.028$, so 5 is selected as the maximum. -->
+I tested for a range of 1-5 possible clusters. It's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006].
 
-From the Resource clusters, the following variables were removed: shrubland change, developed land change, and river length.
+From the Resource clusters, the following variables were removed: land in farms; change in land in farms; workers in hospitality and healthcare; and the second principal component for farm size.
 
 From the Actors clusters, no variables were removed.
 
 ### Gaussian Model-Based Clustering
 
-To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-9 possible clusters. <!-- We'd prefer to select $\leq5$ groups (next integer after $n^{0.3}$, CITE (mclust book?, rmixmod manual?)). -->
+To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-5 possible clusters.
 
 Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
-6 clusters was the best fit for the resource data. 3 clusters was the best fit for the resource data.
+3 clusters was the best fit for the resource data. 3 clusters was the best fit for the resource data.
 
 The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima.
 
@@ -156,7 +148,7 @@ The log likelihood values from the bootstrapping process indicate that there are
 
 ## Cluster Descriptions
 
-Each cluster corresponds to an archetype. For an archetype analysis, not only do you assign each cluser a name, but you also tell a unifying narrative of the units in that cluster. I've done my best to describe the defining attributes of each cluster and tell a short unifying narrative about each one.
+Each cluster corresponds to an archetype. For an archetype analysis, not only do you assign each cluster a name, but you also tell a unifying narrative of the units in that cluster. I've done my best to describe the defining attributes of each cluster and tell a short unifying narrative about each one.
 
 ### Resource Clusters
 
@@ -175,7 +167,7 @@ ci_clust[["Actors"]] <- read.csv("data/model results/ci_clust_actors.csv")
 #| label: fig-R-CIs
 #| message: false
 #| fig-cap: "Characteristics of each Resource cluster. The means for each variable in each cluster are estimated by the 8-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
-#| fig-height: 8.5
+#| fig-height: 7.5
 #| fig-width: 8
 
 clust_dat_sc <- list()
@@ -186,60 +178,23 @@ clust_dat_sc[["Resource"]] <- read.csv("data/model results/clust_dat_sc_resource
 clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv") %>%
   left_join(aoi, by = c("county" = "NAME")) %>%
   st_as_sf()
-
-clust_dat_sc[["Resource"]] %>%
-  st_drop_geometry() %>%
-  pivot_longer(cols = !c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "value") %>%
-  left_join(ci_clust[["Resource"]][,c("cluster", "input_data_name", "sig")]) %>%
-  mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
-  ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
-  geom_vline(xintercept=0, color = "black", linetype="dashed") +
-  geom_boxplot() +
-  scale_x_continuous(limits = c(-1,1), name = "") +
-  scale_y_discrete(name = "Variable",
-                   limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2")),
-                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) +
-  scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
-                    values = c("orchid3", "orchid3", "beige"),
-                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
-                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  scale_alpha_manual(limits = c("TRUE", "FALSE", "Not in model"),
-                    values = c(1, 0.3, 0.3),
-                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"), name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  scale_color_manual(limits = c("TRUE", "FALSE", "Not in model"),
-                    values = c("black", "gray50", "gray50"),
-                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
-                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  facet_wrap(vars(cluster)) +
-  theme_bw() +
-  theme(legend.position = "bottom")
-        # legend.position.inside = c(0.85, 0.25),
-        # legend.justification = "center")
   
 ##############
 # code for model output instead of raw data
 
-# join with mean
-# as.data.frame(ses_mclustBIC[["Resource"]]$mod$parameters$mean) %>%
-#   mutate(input_data_name = rownames(.)) %>%
-#   pivot_longer(cols = !input_data_name,
-#                names_to = "cluster",
-#                values_to = "mean") %>%
-#   mutate(cluster = str_replace(cluster, "V", substr("R",1,1))) %>%
-#   left_join(ci_clust[["Resource"]]) %>%
-#   mutate(sig = !(`2.5%`<0 & `97.5%`>0)) %>%
-#   ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
-#   geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
-#   geom_point(show.legend = FALSE) +
-#   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
-#   facet_wrap(vars(cluster)) +
-#   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
-#   scale_y_discrete(limits = c("farm_size_pc1", "developed_change", "shrub_change", "forest_change", "cropland_change", "perc_farms_change", "perc_farms_w_net_loss", "housing_units_per_acre", "dist_to_NP", "dist_to_ski", "perc_rec", "percent_developed", "perc_fed", "percent_forest", "percent_cropland"),
-#                    labels = c("Farm Size (PC1)", "Developed Land Loss/Gain", "Shrubland Loss/Gain", "Forest Loss/Gain", "Cropland Loss/Gain", "Farms Loss/Gain", "Farms with Net Loss (%)", "Housing Density", "Distance to National Park", "Distance to Ski Area", "Recreation Land", "Developed Land", "Federal Land", "Forest", "Cropland")) +
-#   labs(x = "Cluster mean (scaled values)", y = "Variable") +
-#   theme_classic()
+ggplot(aes(x = mean, y = input_data_name, colour = sig),
+       data = ci_clust$Resource) +
+  geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
+  geom_point(show.legend = FALSE) +
+  geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
+  facet_wrap(vars(cluster)) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
+
+  scale_y_discrete(limits = rev(c("percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "perc_farms_change", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1")),
+                   labels = rev(c("Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Farm Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Med Home Value", "Farm Size (PC1)"))) +
+  labs(x = "Cluster mean\n(centered and scaled)", y = "") +
+  theme_classic() +
+  theme(text = element_text(size = 14))
 ```
 
 ```{r}
@@ -551,58 +506,21 @@ Although this analysis identifies 6 resource archetypes in the study area, it on
 #| fig-height: 6
 #| fig-width: 7.5
 
-clust_dat_sc[["Actors"]] %>%
-  st_drop_geometry() %>%
-  pivot_longer(cols = !c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "value") %>%
-  left_join(ci_clust[["Actors"]][,c("cluster", "input_data_name", "sig")]) %>%
-  mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
-  ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
-  geom_vline(xintercept=0, color = "black", linetype="dashed") +
-  geom_boxplot() +
-  scale_x_continuous(limits = c(-1,1)) +
-  scale_y_discrete(name = "Variable",
-                   limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "pop_urban")),
-                   labels = rev(c("Population Density", "Population Growth", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Percent Retired", "Average Age", "Median Household Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelors", "Race (PC1)", "Percent Hispanic", "Full-Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Urban Population"))) +
-  scale_fill_manual(limits = c("TRUE", "FALSE"),#, "Not in model"),
-                    values = c("orchid3", "orchid3"),#, "beige"),
-                    labels = c("Yes", "No"),#, "Not in model\n(removed during\nvariable selection)"),
-                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  scale_alpha_manual(limits = c("TRUE", "FALSE"),#, "Not in model"),
-                    values = c(1, 0.3, 0.3),
-                    labels = c("Yes", "No"),#, "Not in model\n(removed during\nvariable selection)"), 
-                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  scale_color_manual(limits = c("TRUE", "FALSE"),#, "Not in model"),
-                    values = c("black", "gray50"),#, "gray50"),
-                    labels = c("Yes", "No"),#, "Not in model\n(removed during\nvariable selection)"),
-                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
-  facet_wrap(vars(cluster)) +
-  theme_bw() +
-  theme(legend.position = "bottom")
-
 #######
 # figure for model ouputs
 
-# join with mean
-# as.data.frame(ses_mclustBIC[["Actors"]]$mod$parameters$mean) %>%
-#   mutate(input_data_name = rownames(.)) %>%
-#   pivot_longer(cols = !input_data_name,
-#                names_to = "cluster",
-#                values_to = "mean") %>%
-#   mutate(cluster = str_replace(cluster, "V", substr("A",1,1))) %>%
-#   left_join(ci_clust[["Actors"]]) %>%
-#   mutate(sig = !(`2.5%`<0 & `97.5%`>0)) %>%
-#   ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
-#   geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
-#   geom_point(show.legend = FALSE) +
-#   geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`), show.legend = FALSE) +
-#   facet_wrap(vars(cluster)) +
-#   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
-#   scale_y_discrete(limits = c("pop_urban", "perc_farms_w_net_loss", "Bachelors", "unemployment_rate", "emply_pc2", "perc_pop_change", "pop_per_acre"),
-#                    labels = c("Urban Population (%)", "Farms with Net Loss (%)", "Residents with Bachelors", "Unemployment Rate", "Industry Employment (PC2)", "Population Loss/Gain", "Population Density")) +
-#   labs(x = "Cluster mean (scaled values)", y = "Variable") +
-#   theme_classic()
+ggplot(aes(x = mean, y = input_data_name, colour = sig),
+       data = ci_clust$Actors) +
+  geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
+  geom_point(show.legend = FALSE) +
+  geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
+  facet_wrap(vars(cluster)) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
+  scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc2", "emply_pc3", "avg_age", "High.school", "Bachelors", "tenure_pc1", "perc_farms_w_net_loss", "num_hired")),
+                   labels = rev(c("Population Density", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Average Age", "Residents with High School Education", "Residents with Bachelors", "Full-Owned Farms", "Farms with Net Loss", "Hired Ag Workers"))) +
+  labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
+  theme_classic() +
+  theme(text = element_text(size = 14))
 ```
 <!--
 \newpage
@@ -1042,8 +960,7 @@ I need to think more about the NCP results and if they belong in this chapter. I
 \newpage
 # References {.unnumbered}
 
-:::{#refs}
-
+:::{#refs-main}
 :::
 
 ```{r}
@@ -1063,7 +980,7 @@ clust_dat[["Resource"]] %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year)) +
-  scale_fill_manual(name = "", values = rev(viridis::turbo(6, begin=0.1))) +
+  scale_fill_manual(name = "", values = rev(viridis::turbo(3, begin=0.1))) +
   theme_void() +
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'))+
@@ -1086,3 +1003,159 @@ clust_dat[["Actors"]] %>%
   guides(fill = guide_legend(label.position = "bottom"))
 ```
 
+\newpage
+# Appendix A: Data Sources and Processing
+
+- include study area medians and range
+
+@CofAg_1992_landinfarms
+
+::: {#refs-data}
+:::
+
+\newpage
+# Appendix B: Cluster Details
+
+Medians and ranges from county data for each archetype, including data indicators that were removed during variable selection, are reported here. For medians and ranges for each data indicator across the study area, see Appendix A.
+
+## Resource Archetypes
+
+### R1
+
+```{r}
+#| include: false
+#| label: "R1 data"
+
+r1 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R1")
+
+r1_means <- r1 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            median = median(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE)) %>%
+  mutate(var_name_clean = factor(input_data_name,
+                                 levels = c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2"),
+                                 labels = c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) %>%
+  arrange(var_name_clean) %>%
+  relocate(var_name_clean, .before = input_data_name) %>%
+  select(-input_data_name)
+```
+
+The counties in R1 are `r names(table(r1$county)[table(r1$county)==4])`, Elmore (2000-20), and Clark (1990).
+
+::: {#tbl-data-R1}
+
+| Indicator  | Mean | Median  | Minimum  |  Maximum |
+|----------|---|---|---|---|
+|  Land in farms (% of county land) |  `r round(subset(r1_means, var_name_clean == "Land in Farms")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Land in Farms")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms")$max, 0)`%  |
+|  Cropland (% of county land) |  `r round(subset(r1_means, var_name_clean == "Cropland")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Cropland")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Cropland")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Cropland")$max, 0)`%  |
+|  Forest (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Forest")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Forest")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Forest")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Forest")$max, 0)`%  |
+|  Shrubland (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Shrubland")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Shrubland")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Shrubland")$max, 0)`%  |
+|  Federal Land (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Federal Land")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Federal Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Federal Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Federal Land")$max, 0)`%  |
+|  Total Lake Area |  **`r round(subset(r1_means, var_name_clean == "Lake Area")$mean, 0)` km$^2$** | `r round(subset(r1_means, var_name_clean == "Lake Area")$median, 0)` km$^2$  |  `r round(subset(r1_means, var_name_clean == "Lake Area")$min, 0)` km$^2$ | `r round(subset(r1_means, var_name_clean == "Lake Area")$max, 0)` km$^2$  |
+|  Rivers (km per km$^2$) |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$mean, 2)`% | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$median, 2)`%  |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$min, 2)`% | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$max, 2)`%  |
+|  Developed Land (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Developed Land")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Developed Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Developed Land")$max, 0)`%  |
+|  Farm Density (farms per km$^2$) |  **`r round(subset(r1_means, var_name_clean == "Farm Density")$mean*247.1053814672, 2)`%** | `r round(subset(r1_means, var_name_clean == "Farm Density")$median*247.1053814672, 2)`%  |  `r round(subset(r1_means, var_name_clean == "Farm Density")$min*247.1053814672, 2)`% | `r round(subset(r1_means, var_name_clean == "Farm Density")$max*247.1053814672, 2)`%  |
+|  Recreation Land (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Recreation Land")$mean, 1)`%** | `r round(subset(r1_means, var_name_clean == "Recreation Land")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Recreation Land")$min, 1)`% | `r round(subset(r1_means, var_name_clean == "Recreation Land")$max, 1)`%  |
+|  Distance to a Ski Area |  **`r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$mean, 0)` km** | `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$median, 0)` km  |  `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$min, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$max, 0)` km  |
+|  Distance to a National Park |  **`r round(subset(r1_means, var_name_clean == "Distance to a National Park")$mean, 0)` km** | `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$median, 0)` km  |  `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$min, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$max, 0)` km  |
+|  Housing Density (houses per km$^2$) |  **`r round(subset(r1_means, var_name_clean == "Housing Density")$mean*247.1053814672, 1)`** | `r round(subset(r1_means, var_name_clean == "Housing Density")$median*247.1053814672, 1)`  |  `r round(subset(r1_means, var_name_clean == "Housing Density")$min*247.1053814672, 1)` | `r round(subset(r1_means, var_name_clean == "Housing Density")$max*247.1053814672, 1)`  |
+|  Non-Federal Land near Highway (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$mean, 1)`%** | `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$min, 1)`% | `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$max, 1)`%  |
+
+
+Summary statistics for counties in archetype R1. Bolded cluster means are significantly different from the study area mean (p < 0.05).
+
+:::
+
+
+```{r}
+#| label: fig-R-ranges
+#| message: false
+#| fig-cap: ""
+#| fig-height: 8.5
+#| fig-width: 8
+
+clust_dat_sc <- list()
+
+clust_dat_sc[["Resource"]] <- read.csv("data/model results/clust_dat_sc_resource.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
+clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
+
+clust_dat_sc[["Resource"]] %>%
+  st_drop_geometry() %>%
+  pivot_longer(cols = !c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "value") %>%
+  left_join(ci_clust[["Resource"]][,c("cluster", "input_data_name", "sig")]) %>%
+  mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
+  ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
+  geom_vline(xintercept=0, color = "black", linetype="dashed") +
+  geom_boxplot() +
+  scale_x_continuous(limits = c(-1,1), name = "") +
+  scale_y_discrete(limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2")),
+                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) +
+  scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
+                    values = c("orchid3", "orchid3", "beige"),
+                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
+                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  scale_alpha_manual(limits = c("TRUE", "FALSE", "Not in model"),
+                    values = c(1, 0.3, 0.3),
+                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"), name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  scale_color_manual(limits = c("TRUE", "FALSE", "Not in model"),
+                    values = c("black", "gray50", "gray50"),
+                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
+                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  facet_wrap(vars(cluster)) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+        # legend.position.inside = c(0.85, 0.25),
+        # legend.justification = "center")
+```
+
+
+
+```{r}
+#| label: fig-A-ranges
+#| message: false
+#| fig-cap: ""
+#| fig-height: 7
+#| fig-width: 7.5
+
+clust_dat_sc[["Actors"]] %>%
+  st_drop_geometry() %>%
+  pivot_longer(cols = !c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "value") %>%
+  left_join(ci_clust[["Actors"]][,c("cluster", "input_data_name", "sig")]) %>%
+  mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
+  ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
+  geom_vline(xintercept=0, color = "black", linetype="dashed") +
+  geom_boxplot() +
+  scale_x_continuous(limits = c(-1,1)) +
+  scale_y_discrete(limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "pop_urban")),
+                   labels = rev(c("Population Density", "Population Growth", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Percent Retired", "Average Age", "Median Household Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelors", "Race (PC1)", "Percent Hispanic", "Full-Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Urban Population"))) +
+  scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
+                    values = c("orchid3", "orchid3", "beige"),
+                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
+                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  scale_alpha_manual(limits = c("TRUE", "FALSE", "Not in model"),
+                    values = c(1, 0.3, 0.3),
+                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"), 
+                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  scale_color_manual(limits = c("TRUE", "FALSE", "Not in model"),
+                    values = c("black", "gray50", "gray50"),
+                    labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
+                    name = "Cluster mean\nsignificantly different\nfrom study area mean\n(p<0.05)") +
+  facet_wrap(vars(cluster)) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
