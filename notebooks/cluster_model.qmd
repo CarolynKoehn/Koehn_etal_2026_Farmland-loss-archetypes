@@ -191,11 +191,19 @@ filtered_data
 ci_clust <- mapply(function(mod, ses_system, input_data) {
   bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "bs", max.nonfit = 99900)
   
+  clust_means <- as.data.frame(mod$mod$parameters$mean) %>%
+  mutate(input_data_name = rownames(.)) %>%
+  pivot_longer(cols = !input_data_name,
+               names_to = "cluster",
+               values_to = "mean") %>%
+  mutate(cluster = str_replace(cluster, "V", substr(ses_system,1,1)))
+  
   t(as.data.frame(summary(bootmod, "ci")$mean)) %>%
     as.data.frame() %>%
     mutate(cluster = paste0(str_sub(ses_system, 1,1), str_sub(rownames(.), -1, -1)),
            input_data_name = str_sub(rownames(.), 1, -3),
-           sig = !(`2.5%`<0 & `97.5%`>0))
+           sig = !(`2.5%`<0 & `97.5%`>0)) %>%
+    left_join(clust_means, by = c("input_data_name", "cluster"))
 }, mod = ses_mclustBIC, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
 
 # write.csv(ci_clust[["Resource"]], "../data/model results/ci_clust_resource.csv",
