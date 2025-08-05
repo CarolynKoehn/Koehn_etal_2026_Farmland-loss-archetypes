@@ -2830,79 +2830,277 @@ a_data <- left_join(a_data, hired_clean, by = c("county", "year"))
 
 ### Population in urban and rural areas
 
-Data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were digitized from https://www2.census.gov/library/publications/decennial/1990/cph-2/cph-2-14.pdf (available at https://www.census.gov/library/publications/1992/dec/cph-2.html)
+Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. Urban definition here: https://www.census.gov/newsroom/blogs/random-samplings/2022/12/redefining-urban-areas-following-2020-census.html
+
+Total population and housing units data for blocks in Idaho, 1990-2020, data downloaded from:
+Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 19.0 [dataset]. Minneapolis, MN: IPUMS. 2024. http://doi.org/10.18128/D050.V19.0
 
 ```{r}
 #| label: "urban rural pop"
 
-tot_pop1990 <- read.csv("../data/cencounts.csv") %>%
-  select(pop1990, name) %>%
-  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
-  mutate(name = str_remove(name, "ID "),
-         name = str_remove(name, " County"))
-urb_rur1990 <- read.csv("../data/1990_US_Census_data.csv")  %>%
-  select(County, Year, Pop_urban, Pop_rural) %>%
-  left_join(tot_pop1990, by = c("County" = "name"))
-urb_rur2000 <- get_decennial(geography = "county",
-                             state = "ID",
-                             variables = c("P002001", "P002002", "P002005"),
-                             year = 2000) %>%
-  mutate(NAME = str_remove(NAME, " County, Idaho")) %>%
-  pivot_wider(id_cols = NAME,
-              names_from = variable,
-              values_from = value)
-urb_rur2010 <- get_decennial(geography = "county",
-                             state = "ID",
-                             variables = c("P002001", "P002002", "P002005"),
-                             year = 2010) %>%
-  mutate(NAME = str_remove(NAME, " County, Idaho")) %>%
-  pivot_wider(id_cols = NAME,
-              names_from = variable,
-              values_from = value)
-urb_rur2020 <- get_decennial(geography = "county",
-                             state = "ID",
-                             variables = c("P2_001N", "P2_002N", "P2_003N"),
-                             year = 2020,
-                             sumfile = "dhc") %>%
-  mutate(NAME = str_remove(NAME, " County, Idaho")) %>%
-  pivot_wider(id_cols = NAME,
-              names_from = variable,
-              values_from = value)
-# save a backup copy
-# write.csv(urb_rur2000,
-#           "../data/API_data_download_backup/urb_rur2000.csv",
-#           row.names = FALSE)
-# write.csv(urb_rur2010,
-#           "../data/API_data_download_backup/urb_rur2010.csv",
-#           row.names = FALSE)
-# write.csv(urb_rur2020,
-#           "../data/API_data_download_backup/urb_rur2020.csv",
-#           row.names = FALSE)
+#############
+# get urban populations
 
-urb_rur <- data.frame(county = c(urb_rur1990$County,
-                                 urb_rur2000$NAME,
-                                 urb_rur2010$NAME,
-                                 urb_rur2020$NAME),
-                      year = rep(c(1990, 2000, 2010, 2020), each = nrow(urb_rur1990)),
-                      pop_urban = c(urb_rur1990$Pop_urban,
-                                    urb_rur2000$P002002,
-                                    urb_rur2010$P002002,
-                                    urb_rur2020$P2_002N),
-                      pop_rural = c(urb_rur1990$Pop_rural,
-                                    urb_rur2000$P002005,
-                                    urb_rur2010$P002005,
-                                    urb_rur2020$P2_003N),
-                      pop_total = c(urb_rur1990$pop1990,
-                                    urb_rur2000$P002001,
-                                    urb_rur2010$P002001,
-                                    urb_rur2020$P2_001N))
+censdata_files <- list.files(path = "../data/nhgis0004_csv/nhgis0004_csv", 
+                             pattern=".csv",
+                             full.names = TRUE)
+censdata_list <- vector(mode = "list", length = length(censdata_files))
+for(i in 1:length(censdata_list)) {
+  censdata_list[[i]] <- read.csv(censdata_files[i])
+}
 
-urb_rur <- urb_rur %>%
+blocks_files <- paste0("/vsizip/../data/nhgis0004_shape/nhgis0004_shape/nhgis0004_shapefile_tl", c(2000,2000,2010,2020), "_160_block_", seq(1990, 2020, 10), ".zip/ID_block_", seq(1990, 2020, 10), ".shp")
+blocks_list <- vector(mode = "list", length = length(blocks_files))
+for(i in 1:length(blocks_list)) {
+  blocks_list[[i]] <- st_read(blocks_files[i])
+}
+
+join_clean_cens_blocks <- function(censdata, blocks) {
+  pop_col <- ncol(censdata)-1
+  hous_col <- ncol(censdata)
+  
+  censdata %>%
+  rename("tot_pop" = pop_col,
+         "hous_units" = hous_col) %>%
+  select(GISJOIN, tot_pop, hous_units) %>%
+  full_join(blocks, by = "GISJOIN") %>%
+  st_as_sf() %>%
+  mutate(area_sq_mi = units::set_units(st_area(.), "mi2"),
+         hous_dens = units::drop_units(hous_units / area_sq_mi))
+}
+
+block_data_list <- mapply(join_clean_cens_blocks, 
+                          censdata = censdata_list, 
+                          blocks = blocks_list,
+                          SIMPLIFY = FALSE)
+
+init_urban_core <- function(block_data) {
+  block_data %>%
+    filter(hous_dens >= 425)
+}
+
+init_urban_core_list <- lapply(block_data_list, init_urban_core)
+
+fill_urb_area <- function(init_urban_core, block_data) {
+  current_urb <- init_urban_core
+  repeat {
+    neighbors <- st_intersects(current_urb, block_data)
+    nb_idx <- unique(unlist(neighbors))
+    new_urb <- block_data[nb_idx, ] %>%
+      filter(hous_dens >= 200) %>%
+      rbind(current_urb) %>%
+      distinct()
+  
+    if(nrow(current_urb) == nrow(new_urb)) {
+      break
+    } else {
+      current_urb <- new_urb
+    }
+  }
+  
+  return(new_urb)
+}
+
+urb_areas_list <- mapply(fill_urb_area,
+                         init_urban_core = init_urban_core_list,
+                         block_data = block_data_list,
+                         SIMPLIFY = FALSE)
+
+urb_areas_thresholded <- function(urb_areas, block_data) {
+  urb_union <- st_union(urb_areas)
+  urb_union_polys <- st_cast(urb_union, "POLYGON")
+  
+  blocks_covered <- st_covered_by(block_data, urb_union_polys)
+  high_dens_nucleus <- which(block_data$hous_dens >= 1275)
+  high_dens_blocks <- blocks_covered[high_dens_nucleus]
+  high_dens_poly_idx <- unique(unlist(high_dens_blocks))
+  urb_area_polys <- urb_union_polys[high_dens_poly_idx]
+
+  new_blocks_covered <- st_covered_by(block_data, urb_area_polys)
+  new_blocks_covered <- lapply(new_blocks_covered, function(x) {
+    if(length(x) == 0) {
+      return(NA)
+    } else {
+      return(x)
+    }
+  })
+  
+  urb_areas_filt <- block_data %>%
+    st_drop_geometry() %>%
+    mutate(in_urb_area = unlist(new_blocks_covered)) %>%
+    group_by(in_urb_area) %>%
+    summarise(pop_thres = sum(tot_pop),
+              hous_thres = sum(hous_units)) %>%
+    filter(pop_thres >= 5000 | hous_thres >= 2000)
+
+    return(urb_area_polys[urb_areas_filt$in_urb_area])
+}
+
+urb_areas_thresholded_list <- mapply(urb_areas_thresholded,
+                                     urb_areas = urb_areas_list,
+                                     block_data = block_data_list,
+                                     SIMPLIFY = FALSE)
+
+block_data_list <- mapply(function(x, y) {
+  x$in_urb_area <- as.logical(
+  rowSums(
+    st_covered_by(x, y, sparse = FALSE)
+    )
+  )
+  
+  return(x)
+}, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
+
+urb_pop_1990 <- block_data_list[[1]] %>%
+  st_drop_geometry() %>%
+  group_by(FIPSSTCO, in_urb_area) %>%
+  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
+  pivot_wider(id_cols = "FIPSSTCO",
+              names_from = "in_urb_area",
+              values_from = "pop") %>%
+  rename("urb_pop" = "TRUE",
+         "rur_pop" = "FALSE") %>%
   rowwise() %>%
-  mutate(across(pop_urban:pop_rural, ~as.numeric(.x)/as.numeric(pop_total)*100))
+  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
+         tot_pop = sum(urb_pop, rur_pop),
+         perc_pop_urb = urb_pop / tot_pop * 100,
+         county = recode(FIPSSTCO, !!!GEOID_names),
+         year = 1990)
 
-# join
-a_data <- left_join(a_data, urb_rur[,c("county", "year", "pop_urban")])
+urb_pop_2000 <- block_data_list[[2]] %>%
+  st_drop_geometry() %>%
+  group_by(FIPSSTCO, in_urb_area) %>%
+  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
+  pivot_wider(id_cols = "FIPSSTCO",
+              names_from = "in_urb_area",
+              values_from = "pop") %>%
+  rename("urb_pop" = "TRUE",
+         "rur_pop" = "FALSE") %>%
+  rowwise() %>%
+  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
+         tot_pop = sum(urb_pop, rur_pop),
+         perc_pop_urb = urb_pop / tot_pop * 100,
+         county = recode(FIPSSTCO, !!!GEOID_names),
+         year = 2000)
+
+urb_pop_2010 <- block_data_list[[3]] %>%
+  st_drop_geometry() %>%
+  rowwise() %>%
+  mutate(FIPSSTCO = paste0(STATEFP10, COUNTYFP10)) %>%
+  ungroup() %>%
+  group_by(FIPSSTCO, in_urb_area) %>%
+  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
+  pivot_wider(id_cols = "FIPSSTCO",
+              names_from = "in_urb_area",
+              values_from = "pop") %>%
+  rename("urb_pop" = "TRUE",
+         "rur_pop" = "FALSE") %>%
+  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
+         tot_pop = sum(urb_pop, rur_pop),
+         perc_pop_urb = urb_pop / tot_pop * 100,
+         county = recode(FIPSSTCO, !!!GEOID_names),
+         year = 2010)
+
+urb_pop_2020 <- block_data_list[[3]] %>%
+  st_drop_geometry() %>%
+  rowwise() %>%
+  mutate(FIPSSTCO = paste0(STATEFP10, COUNTYFP10)) %>%
+  ungroup() %>%
+  group_by(FIPSSTCO, in_urb_area) %>%
+  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
+  pivot_wider(id_cols = "FIPSSTCO",
+              names_from = "in_urb_area",
+              values_from = "pop") %>%
+  rename("urb_pop" = "TRUE",
+         "rur_pop" = "FALSE") %>%
+  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
+         tot_pop = sum(urb_pop, rur_pop),
+         perc_pop_urb = urb_pop / tot_pop * 100,
+         county = recode(FIPSSTCO, !!!GEOID_names),
+         year = 2020)
+
+urb_pop_all <- rbind(urb_pop_1990, urb_pop_2000, urb_pop_2010, urb_pop_2020) %>%
+  ungroup() %>%
+  select(county, year, perc_pop_urb)
+
+###################
+# get population of nearest urban area (within 10 mi)
+pop_of_urb_areas <- mapply(function(x, y) {
+  blocks_covered <- st_covered_by(x, y)
+  blocks_covered <- lapply(blocks_covered, function(x) {
+    if(length(x) == 0) {
+      return(NA)
+    } else {
+      return(x)
+    }
+  })
+  
+  urb_areas_pop <- x %>%
+    st_drop_geometry() %>%
+    mutate(in_urb_area = unlist(blocks_covered)) %>%
+    group_by(in_urb_area) %>%
+    summarise(tot_pop = sum(tot_pop, na.rm=TRUE)) %>%
+    na.omit()
+  
+  return(y %>%
+           st_as_sf(.) %>%
+           filter(!st_is_empty(.) & st_is_valid(.)) %>%
+           mutate(tot_pop = urb_areas_pop$tot_pop))
+}, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
+
+urb_rur_cont <- urb_pop_all %>%
+    mutate(max_near_urb_pop = NA)
+
+years <- seq(1990, 2020, 10)
+for(i in 1:length(pop_of_urb_areas)) {
+  urb_pop <- filter(urb_pop_all, year == years[i]) %>%
+    mutate(max_near_urb_pop = NA)
+  
+  for(j in 1:nrow(urb_pop)) {
+    county_shape <- filter(county_shapes, NAME == urb_pop$county[j]) %>%
+      st_transform(st_crs(pop_of_urb_areas[[i]]))
+    
+    if(urb_pop$perc_pop_urb[j] > 0) {
+      urb_areas_intersecting_idx <- as.logical(rowSums(st_intersects(pop_of_urb_areas[[i]], 
+                                                  county_shape,
+                                                  sparse = FALSE)))
+      urb_areas_intersecting <- pop_of_urb_areas[[i]][urb_areas_intersecting_idx,]
+      
+      max_urb_area_pop <- max(urb_areas_intersecting$tot_pop)
+    } else {
+      nearest_urb <- st_nearest_feature(county_shape, pop_of_urb_areas[[i]])
+      
+      dist_nearest_urb <- st_distance(county_shape, pop_of_urb_areas[[i]][nearest_urb,])
+      
+      max_urb_area_pop <- as.integer(
+        ifelse(test = (dist_nearest_urb < units::set_units(10, "mi")), 
+               yes = st_drop_geometry(pop_of_urb_areas[[i]])[nearest_urb, "tot_pop"], 
+               no = 0)
+        )
+    }
+    
+    urb_pop$max_near_urb_pop[j] <- max_urb_area_pop
+  }
+  
+  urb_rur_cont <- full_join(urb_rur_cont, urb_pop, by = join_by(county, year, perc_pop_urb, max_near_urb_pop))
+}
+
+##############
+# principal components
+urb_rur_cont_sc <- urb_rur_cont %>%
+  filter(!is.na(max_near_urb_pop)) %>%
+  mutate(across(!c(county, year),
+                ~ (.x - mean(.x)) / (max(.x) - min(.x))))
+
+urb_rur_pca <- prcomp(urb_rur_cont_sc[, -c(1:2)])
+summary(urb_rur_pca)
+biplot(urb_rur_pca)
+
+a_data <- cbind(urb_rur_cont, urb_rur_pca$x[,1:2]) %>%
+  rename("urb_rur_pc1" = "PC1",
+         "urb_rur_pc2" = "PC2") %>%
+  select(county, year, urb_rur_pc1, urb_rur_pc2) %>%
+  right_join(a_data, by = c("county", "year"))
 ```
 
 Save actors data:
