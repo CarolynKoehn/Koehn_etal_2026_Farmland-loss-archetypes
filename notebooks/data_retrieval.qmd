@@ -796,6 +796,26 @@ rs_data <- health_pop %>%
   right_join(rs_data, by = c("county", "year"))
 ```
 
+## RS9 - Location
+
+### All
+
+#### Average slope
+
+```{r}
+#| label: "slope"
+
+elevation <- elevatr::get_elev_raster(county_shapes, z=9, clip="locations")
+
+slope <- terrain(elevation, v="slope")
+
+avg_slope <- exact_extract(slope, county_shapes, fun="mean", append_cols = "NAME") %>%
+  rename("avg_slope" = "mean")
+
+rs_data <- left_join(rs_data, avg_slope, by = c("county" = "NAME"))
+```
+
+
 ```{r}
 #| label: "save RS data"
 
