@@ -32,8 +32,7 @@ rs_data <- read.csv("../data/RS_data.csv")
 resource <- left_join(ru_data, rs_data) %>%
   filter(county %in% aoi$NAME)
 actors <- read.csv("../data/Actor_data.csv") %>%
-  filter(county %in% aoi$NAME) %>%
-  select(-pop_urban)
+  filter(county %in% aoi$NAME)
 
 
 ses_data_list <- list(Resource = resource,
@@ -101,7 +100,7 @@ ses_system = names(ses_data_list_sc),
 SIMPLIFY = FALSE)
 ```
 
-From the Resource clusters, the following variables were removed: land in farms; change in land in farms; workers in hospitality and healthcare; and the second principal component for farm size.
+From the Resource clusters, the following variables were removed: lake area.
 
 ```{r}
 #| include: false
@@ -109,7 +108,7 @@ From the Resource clusters, the following variables were removed: land in farms;
 print(colnames(ses_data_list_sc[["Resource"]])[!(colnames(ses_data_list_sc[["Resource"]]) %in% colnames(ses_data_sel[["Resource"]]))])
 ```
 
-From the Actors clusters, no variables were removed.
+From the Actors clusters, the following variables were removed: percent retired, average age, residents with a high school education, farm tenure status, and racial composition.
 
 ```{r}
 #| include: false
@@ -169,16 +168,16 @@ factoextra::fviz_pca_biplot(
 drmod_resource <- MclustDR(ses_mclustBIC$Resource$mod)
 drmod_actors <- MclustDR(ses_mclustBIC$Actors$mod)
 
-summary(drmod_resource)
-hist(as.numeric(summary(drmod_resource)$basis))
+summary(drmod_actors)
+hist(as.numeric(summary(drmod_actors)$basis))
 
 # Identify rows with the value
-row_indices <- apply(summary(drmod_resource)$basis, 1, 
-                     function(row) any(row %in% c(as.numeric(summary(drmod_resource)$basis)[as.numeric(summary(drmod_resource)$basis)>0.4],
-                                       as.numeric(summary(drmod_resource)$basis)[as.numeric(summary(drmod_resource)$basis) < -0.4])))
+row_indices <- apply(summary(drmod_actors)$basis, 1, 
+                     function(row) any(row %in% c(as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis)>0.4],
+                                       as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis) < -0.4])))
 
 # Subset the data
-filtered_data <- summary(drmod_resource)$basis[row_indices, ]
+filtered_data <- summary(drmod_actors)$basis[row_indices, ]
 
 filtered_data
 ```
