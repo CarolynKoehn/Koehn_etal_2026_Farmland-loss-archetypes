@@ -188,7 +188,7 @@ filtered_data
 #| include: false
 
 ci_clust <- mapply(function(mod, ses_system, input_data) {
-  bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "bs", max.nonfit = 99900)
+  bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "wlbs")
   
   clust_means <- as.data.frame(mod$mod$parameters$mean) %>%
   mutate(input_data_name = rownames(.)) %>%
