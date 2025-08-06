@@ -2858,10 +2858,12 @@ Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kug
 ```{r}
 #| label: "urban rural pop"
 
+id_buff <- st_buffer(st_union(county_shapes), dist = units::set_units(150, "mi"))
+
 #############
 # get urban populations
 
-censdata_files <- list.files(path = "../data/nhgis0004_csv/nhgis0004_csv", 
+censdata_files <- list.files(path = "../data/nhgis0006_csv/nhgis0006_csv", 
                              pattern=".csv",
                              full.names = TRUE)
 censdata_list <- vector(mode = "list", length = length(censdata_files))
@@ -2869,10 +2871,30 @@ for(i in 1:length(censdata_list)) {
   censdata_list[[i]] <- read.csv(censdata_files[i])
 }
 
-blocks_files <- paste0("/vsizip/../data/nhgis0004_shape/nhgis0004_shape/nhgis0004_shapefile_tl", c(2000,2000,2010,2020), "_160_block_", seq(1990, 2020, 10), ".zip/ID_block_", seq(1990, 2020, 10), ".shp")
+blocks_zip_files <- list.files(path = "..", pattern="shapefile", recursive = TRUE, full.names = TRUE)
+blocks_shp_files <- vector(mode = "character", length = length(blocks_zip_files))
+for(i in 1:length(blocks_zip_files)) {
+  blocks_shp_files[i] <- paste0("/vsizip/", 
+                                blocks_zip_files[i], "/",
+                                filter(unzip(zipfile = blocks_zip_files[i], list=TRUE),
+                                       str_detect(Name, ".shp$"))$Name)
+}
 blocks_list <- vector(mode = "list", length = length(blocks_files))
+years <- seq(1990, 2020, 10)
 for(i in 1:length(blocks_list)) {
-  blocks_list[[i]] <- st_read(blocks_files[i])
+  for(f in blocks_shp_files[str_detect(blocks_shp_files, as.character(years[i]))]) {
+    if(f == blocks_shp_files[str_detect(blocks_shp_files, as.character(years[i]))][1]) {
+      year_blocks <- st_read(f)
+    } else {
+      year_blocks <- rbind(year_blocks, st_read(f))
+    }
+  }
+  
+  # make poygons valid and crop to within 150 miles of Idaho
+  blocks_list[[i]] <- year_blocks %>%
+    st_make_valid(.) %>%
+    filter(st_is_valid(.)) %>%
+    st_filter(st_transform(id_buff, st_crs(.)))
 }
 
 join_clean_cens_blocks <- function(censdata, blocks) {
@@ -2962,11 +2984,31 @@ urb_areas_thresholded_list <- mapply(urb_areas_thresholded,
                                      SIMPLIFY = FALSE)
 
 block_data_list <- mapply(function(x, y) {
-  x$in_urb_area <- as.logical(
-  rowSums(
-    st_covered_by(x, y, sparse = FALSE)
+  x$dist_from_urb <- NA
+  
+  in_urb_area <- as.logical(
+    rowSums(
+      st_covered_by(x, y, sparse = FALSE)
+      )
     )
-  )
+  
+  x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & in_urb_area == TRUE, 0, NA)
+  
+  miles <- 10
+  repeat {
+    urb_area_dist <- as.logical(
+      rowSums(
+        st_covered_by(x, st_union(st_buffer(y, units::set_units(miles, "mi"))), sparse = FALSE)
+        )
+      )
+    
+    if(any(is.na(x$dist_from_urb))) {
+      x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & in_urb_area == TRUE, miles, NA)
+      miles <- miles + 10
+    } else {
+      break
+    }
+  }
   
   return(x)
 }, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
