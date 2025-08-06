@@ -805,9 +805,9 @@ rs_data <- health_pop %>%
 ```{r}
 #| label: "slope"
 
-elevation <- elevatr::get_elev_raster(county_shapes, z=9, clip="locations")
+elevation <- elevatr::get_elev_raster(st_transform(county_shapes, 5070), z=9, clip="locations")
 
-slope <- terrain(elevation, v="slope")
+slope <- terrain(elevation, v="slope", unit="degrees")
 
 avg_slope <- exact_extract(slope, county_shapes, fun="mean", append_cols = "NAME") %>%
   rename("avg_slope" = "mean")
