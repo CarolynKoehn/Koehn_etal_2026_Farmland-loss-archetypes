@@ -190,13 +190,14 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
   geom_point(show.legend = FALSE) +
   geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
-  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
 
   scale_y_discrete(limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2", "avg_slope")),
                    labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)", "Average Slope"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "") +
-  theme_classic() +
-  theme(text = element_text(size = 14))
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        panel.grid.major.y = element_blank())
 ```
 
 ```{r}
@@ -231,275 +232,41 @@ actor_means <- clust_dat$Actors %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE))
 ```
-<!--
-\newpage
-#### Cluster R1: Counties near famous recreation areas represent the study area average of farmland loss, developed land gain
 
 ```{r}
-#| eval: false
-
-r1 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R1")
-
-r1_means <- r1 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE))
-```
-
-To characterize Resource cluster R1, I report its significantly different variables and their mean values from the raw data:
-
-- Lower than average federal land (mean: 23.5%, min: 5.8% [Teton], max: 36.8% [Gem])
-- Higher than average farm density (mean: `r round(0.00118*247.1053814672, 1)` farms per $km^2$, min: `r round(0.000648*247.1053814672, 1)` farms per $km^2$ [Bonneville, 1990], max: `r round(0.00231*247.1053814672, 1)` farms per $km^2$ [Gem, 2010])
-- Lower than average recreation land (mean: 0.1%, min: 0.007% [Bonneville, 1990], max: 0.4% [Twin Falls, 2020])
-- Lower than average distance to a ski area (mean: 5.5 km, min: 0 km [Madison, Bannock, Twin Falls], max: 25.7 km [Bingham])
-- Higher than average amount of non-federal land with highway access (mean: 54.3%, min: 40.6% [Twin Falls], max: 75.4% [Teton])
-- The farm size PC scores for this cluster indicate a tendency towards small farms (1-50 acres), but the range of farm size scores is large
-
-Comments on variables not included in the model:
-
-- Lowest distance to a national park of all clusters
-- Land in farms and cropland slightly higher than average
-
-Cluster R1 is characterized by nearness to famous recreation areas like national parks and ski areas. Though recreation land in the counties themselves are low overall, these counties may be attractive to people who want to live within a short travel distance of famous recreation destinations like Yellowstone National Park and Grand Teton National Park, as well as accessing a number of popular ski resorts. This is evidenced by the high amount of land with access to a major road, making travel to recreation and urban centers easier. 
-
-Cropland loss in R1 is around the state average with a mean of -0.8%, and loss of farms follows a similar pattern (R1: -3.6%, all counties: -5.8%). Developed land gain is also around the state average with a mean of +0.2%. Cluster R1 is only outpaced in developed land gain by R4, which contains the Treasure Valley and major growth of its cities' suburbs.
-
-The spatial outlier in R1 is Gem County. Though it is far from a national park, it is included in R1 because it tends towards the state average in many data indicators, unlike its neighbors in clusters with more deviations from average. Twin Falls also stands out spatially, but shares the recreation access (especially skiing), amount of developed land, developed land gain, and the tendency towards the study area average of this cluster.
-
-```{r}
-#| eval: false
+#| label: "fig-resource-cluster-map"
 
 clust_dat[["Resource"]] %>%
+  # mutate(cluster = factor(cluster, 
+  #                         levels = c("R1", "R2", "R3", "R4", "R5"),
+  #                         labels = c("Counties near\nfamous recreation areas\nrepresent the\nstudy area average\nof farmland loss,\ndeveloped land gain",
+  #                                    "Isolated areas\nwith some natural amenities\nexperience little\nland use change",
+  #                                    "Isolated areas\nin dry shrublands\nexperience little\nland use change",
+  #                                    "Urban growth\nthreatens farmland",
+  #                                    "Agricultural production areas\nwith limited recreation\nand development"))) %>%
   ggplot(aes(fill = cluster)) +
-  geom_sf(show.legend = FALSE) +
-  scale_fill_manual(values = c("thistle3", "white", "white", "white", "white", "white", "white", "white")) +
+  geom_sf() +
   facet_wrap(vars(year)) +
-  theme_void()
+  scale_fill_manual(name = "", values = rev(viridis::turbo(3, begin=0.075, end=0.8))) +
+  theme_void() +
+  theme(legend.position="bottom",
+        legend.spacing.x = unit(0, 'cm'))+
+  guides(fill = guide_legend(label.position = "bottom"))
 ```
 
-\newpage
-#### Cluster R2: Isolated areas with some natural amenities experience little land use change
 
-```{r}
-#| eval: false
+<!-- change these for new model
 
-r2 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R2")
+#### Cluster R1:...
 
-r2_means <- r2 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE))
-```
+#### Cluster R2: Counties with large areas of isolated land
 
-To characterize Resource cluster R2, I report its significantly different variables and their mean values from the raw data:
+Characteristic resources of R2 are low housing and farm density, high presence of shrubland and federal land, and less land with access to a major roadway (@fig-R-CIs). Access to natural recreation areas like lakes, rivers, and ski areas is fairly low (@suppfigb-R-ranges, @supptblb-data-R1). There is low cropland cover and larger farms are more common, indicating that agriculture in these counties is more focused on livestock grazing. Many R2 counties are large (@fig-resource-cluster-map), and data on the large areas of isolated lands can mask the presence and growth of developed areas (e.g. the city of Twin Falls in Twin Falls county).
 
-- Higher than average forest cover (mean: 20%, min: 4.6% [Power, 1990], max: 53% [Adams, 2010])
-- Higher than average federal land (mean: 47%, min: 22% [Fremont], max: 65% [Elmore])
-- Lower than average developed land (mean: 1.9%, min: 1% [Camas, 1990], max: 3% [Fremont, 2020])
-- Lower than average farm density (mean: `r round(0.00031*247.1053814672, 1)` farms per $km^2$, min: `r round(0.00011*247.1053814672, 2)` farms per $km^2$ [Blaine, 2010], max: `r round(0.000601*247.1053814672, 1)` farms per $km^2$ [Washington, 2010])
-- Higher than average recreation land (mean: 2.6%, min: 0.005% [Cassia, 1990], max: 8.4% [Blaine, 2020])
-- Lower than average distance to a ski area (mean: 11 km, min: 0 km [Cassia, Camas, Adams, Blaine], max: 38 km [Washington])
-- Lower than average housing density (mean: `r round(0.00445*247.1053814672, 1)` units per $km^2$, min: `r round(0.000699*247.1053814672, 1)` units per $km^2$ [Camas, 1990], max: `r round(0.00914*247.1053814672, 1)` units per $km^2$ [Blaine, 2020])
-- Lower than average land with highway access (mean: 35%, min: 27% [Elmore], max: 49% [Fremont])
-- Lower than average developed land gain (mean: +0.07%, min: +0.03% [Camas, 2000], max: +0.12% [Cassia, 2020])
-- Farm size PC scores indicate a tendency towards larger farms (500-2,000 acres), but the range of farm size scores is large
-
-Comments on variables not included in the model:
-
-- Slightly less cropland and land in farms than the study area average
-
-Cluster R2 is characterized by the presence of natural amenities, such as forests and ski areas, but more difficulty traveling to these destinations and urban centers. This cluster has relatively low developed land gain, though cropland loss remains about average for the study area. This may be a combination of lots of federally owned and managed land, which limits development, and low highway and travel access, which limits job opportunities and amenity accessibility. 
-
-```{r}
-#| eval: false
-
-clust_dat[["Resource"]] %>%
-  filter(year %in% c(1990)) %>%
-  mutate(year = "1990-2020") %>%
-  ggplot(aes(fill = cluster)) +
-  geom_sf(show.legend = FALSE) +
-  scale_fill_manual(values = c("white", "thistle3", "white", "white", "white", "white", "white", "white")) +
-  facet_wrap(vars(year)) +
-  theme_void()
-```
-
-\newpage
-#### Cluster R3: Isolated areas in dry shrublands experience little land use change
-
-```{r}
-#| eval: false
-
-r3 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R3")
-
-r3_means <- r3 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE))
-```
-
-To characterize Resource cluster R3, I report its significantly different variables and their mean values from the raw data:
-
-- Higher than average shrubland (mean: 72%, min: 61% [Owyhee, 2020], max: 79% [Butte, 1990])
-- Lower than average farm density (mean: `r round(0.000103*247.1053814672, 2)` farms per $km^2$, min: `r round(0.0000594*247.1053814672, 2)` farms per $km^2$ [Clark, 2020], max: `r round(0.00015*247.1053814672, 2)` farms per $km^2$ [Butte, 2010])
-- Lower than average recreation land (mean: 1%, min: 0.02% [Clark], max: 2.9% [Butte])
-- Higher than average distance to a ski area (mean: 48 km, min: 39 km [Clark], max: 57 km [Owyhee])
-- Lower than average housing density (mean: `r round(0.000747*247.1053814672, 1)` units per $km^2$, min: `r round(0.000428*247.1053814672, 1)` units per $km^2$ [Clark, 2020], max: `r round(0.000975*247.1053814672, 1)` units per $km^2$ [Owyhee, 2010])
-- Lower than average access to a major highway (mean: 25%, min: 15% [Owyhee], max: 32% [Butte])
-- Lower than average cropland loss (mean: -0.05%, min: -0.26% [Butte, 1990], max: +0.23% [Owyhee, 2000])
-- Lower than average developed land gain (mean: +0.03%, min: +0.01 [Clark, 2020], max: +0.04% [Clark, 1990])
-- Lower than average farms with net loss (mean: 41%, min: 22% [Clark, 1990], max: 56% [Owyhee, 2020])
-- Farm size PC scores indicate a tendency towards larger farms (500-2,000+ acres)
-
-Comments on variables not included in the model:
-
-- Low cropland and land in farms compared to the study area average
-
-Cluster R3 is characterized by many shrublands, indicating limits to water access that lead to both less farmland and development. There is less access to major roadways, both to access recreation and urban centers. This cluster is experiencing less land use change, likely because of the limits of its resource system.
-
-```{r}
-#| eval: false
-
-clust_dat[["Resource"]] %>%
-  filter(year %in% c(2000)) %>%
-  mutate(year = "1990-2020") %>%
-  ggplot(aes(fill = cluster)) +
-  geom_sf(show.legend = FALSE) +
-  scale_fill_manual(values = c("white", "white", "thistle3", "white", "white", "white", "white", "white")) +
-  facet_wrap(vars(year)) +
-  theme_void()
-```
-
-\newpage
-#### Cluster R4: Urban growth threatens farmland
-
-```{r}
-#| eval: false
-
-r4 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R4")
-
-r4_means <- r4 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE))
-```
-
-To characterize Resource cluster R4, I report its significantly different variables and their mean values from the raw data:
-
-- Lower than average forest (mean: 0.18%, min: 0.002% [Canyon, 1990], max: 0.385% [Ada, 2020])
-- Lower than average shrubland (mean: 9.6%, min: 1.4% [Canyon, 1990], max: 19% [Ada, 2020])
-- Higher than average developed land (mean: 15.8%, min: 10.2% [Ada, 1990], max: 21.8% [Canyon, 2020])
-- Higher than average farm density (mean: `r round(0.00382*247.1053814672, 1)` farms per $km^2$, min: `r round(0.0017*247.1053814672, 1)` farms per $km^2$ [Ada, 2020], max: `r round(0.0062*247.1053814672, 1)` farms per $km^2$ [Canyon, 2010])
-- Lower than average recreation land (mean: 0.285%, min: 0.15% [Canyon, 1990], max: 0.42% [Ada, 2020])
-- Higher than average housing density (mean: `r round(0.18*247.1053814672, 1)` units per $km^2$, min: `r round(0.0878*247.1053814672, 1)` units per $km^2$ [Canyon, 1990], max: `r round(0.292*247.1053814672, 1)` units per $km^2$ [Ada, 2020])
-- Higher than average non-federal land with highway access (mean: 75%, min: 52% [Ada], max: 98% [Canyon])
-- Higher than average cropland loss (mean: -1.32%, min: -1.93% [Canyon, 2020], max: -0.84% [Ada, 2010])
-- Slightly lower than average forest gain (mean: 0%, min: -0.03% [Ada, 2000], max: +0.02% [Ada, 2020])
-- Slightly higher than average shrubland gain (mean: +0.24%, min: -0.37% [Ada, 2000], max: +1.12% [Ada, 2020])
-- Higher than average developed land gain (mean: +1.24%, min: +0.61% [Canyon, 1990], max: +1.84% [Canyon, 2010])
-- Higher than average farms with net loss (mean: 66.6%, min: 46.3% [Canyon, 1990], max: 78.5% [Ada, 2020])
-- Lower farm size PC1 scores correspond to smaller farms (1-10 acres)
-
-Comments on variables not included in the model:
-
-- Cropland and land in farms variable but tending higher than the study area average
-
-Cluster R4 is the Treasure Valley of Idaho, location of the state's capital and largest city, Boise, in Ada County. Next to Ada County, Canyon County is known for high quality agricultural lands that grow large quantities of vegetable seed for farmers worldwide, as well as many other agricultural products. The Treasure Valley is experiencing large population growth (see Actors cluster A1), which results in the high developed land gain. This cluster showcases the classic archetype of farmlands threatened by urban growth.
-
-```{r}
-#| eval: false
-
-clust_dat[["Resource"]] %>%
-  filter(year %in% c(1990)) %>%
-  mutate(year = "1990-2020") %>%
-  ggplot(aes(fill = cluster)) +
-  geom_sf(show.legend = FALSE) +
-  scale_fill_manual(values = c("white", "white", "white", "thistle3", "white", "white", "white", "white")) +
-  facet_wrap(vars(year)) +
-  theme_void()
-```
-
-\newpage
-#### Cluster R5: Agricultural production areas with limited recreation and development
-
-```{r}
-#| eval: false
-
-r5 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R5")
-
-r5_means <- r5 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE))
-```
-
-To characterize Resource cluster R5, I report its significantly different variables and their mean values from the raw data:
-
-- Lower than average forest cover (mean: 0.002%, min: 0% [Lincoln, Minidoka], max: 0.01% [Payette, 2020])
-- Lower than average shrubland (mean: 20%, min: 4% [Jerome, 2020], max: 39%, [Gooding, 2010])
-- Lower than average federal land (mean: 16%, min: 8% [Gooding], max: 29% [Minidoka])
-- Higher than average farm density (mean: `r round(0.00138*247.1053814672, 1)` farms per $km^2$, min: `r round(0.000298*247.1053814672, 1)` farms per $km^2$ [Lincoln, 2020], max: `r round(0.00252*247.1053814672, 1)` farms per $km^2$ [Payette, 2010])
-- Lower than average recreation land (mean: 0.094%, min: 0.005% [Payette, 1990], max: 0.379% [Gooding, 2020])
-- Higher than average distance to a ski area (mean: 33 km, min: 23 km [Minidoka], max: 41 km [Payette])
-- Lower than average housing density (mean: `r round(0.0162*247.1053814672, 1)` units per $km^2$, min: `r round(0.0018*247.1053814672, 1)` units per $km^2$ [Lincoln, 1990], max: `r round(0.0372*247.1053814672, 1)` units per $km^2$ [Payette, 2020])
-- Higher than average land with highway access (mean: 64%, min: 46% [Minidoka], max: 75% [Gooding])
-- Lower than average cropland loss (mean: -0.15%, min: -0.59% [Payette, 1990], max: +0.4% [Jerome, 1990])
-- Lower than average forest gain, but since these counties have very little forest, this isn't too important
-- Lower than average farms with net loss (mean: 48%, min: 31% [Minidoka, 1990], max: 67% [Payette, 2000])
-- Farm size PC scores indicate a tendency towards an even distribution of farms of all sizes
-
-Comments on variables not included in the model:
-
-- Cropland and land in farms tend to be higher than average
-
-Cluster R5 contains counties that focus on agricultural production, with lots of croplands and lower natural land covers. Recreation and natural amenities are low, and developed land and development hover at the study area average. Access to highways is higher, allowing agricultural products to be shipped and sold, and farms are more successful at turning a profit in these counties compared to others (with the exception of R3, but R3 also doesn't have many farms).
-
-```{r}
-#| eval: false
-
-clust_dat[["Resource"]] %>%
-  filter(year %in% c(2020)) %>%
-  mutate(year = "1990-2020") %>%
-  ggplot(aes(fill = cluster)) +
-  geom_sf(show.legend = FALSE) +
-  scale_fill_manual(values = c("white", "white", "white", "white", "thistle3", "white", "white", "white")) +
-  facet_wrap(vars(year)) +
-  theme_void()
-```
+#### Cluster R3: Industrialized croplands...
 -->
-\newpage
-### Actors Clusters
 
-Although this analysis identifies 6 resource archetypes in the study area, it only identified 4 actors archetypes.
+### Actors Clusters
 
 ```{r}
 #| label: fig-A-CIs
@@ -517,12 +284,13 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
   geom_point(show.legend = FALSE) +
   geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
-  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey80")) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
   scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc2", "emply_pc3", "avg_age", "High.school", "Bachelors", "tenure_pc1", "perc_farms_w_net_loss", "num_hired")),
                    labels = rev(c("Population Density", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Average Age", "Residents with High School Education", "Residents with Bachelors", "Full-Owned Farms", "Farms with Net Loss", "Hired Ag Workers"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
-  theme_classic() +
-  theme(text = element_text(size = 14))
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        panel.grid.major.y = element_blank())
 ```
 <!--
 \newpage
@@ -969,24 +737,7 @@ I need to think more about the NCP results and if they belong in this chapter. I
 #| label: "spare code"
 #| eval: false
 
-clust_dat[["Resource"]] %>%
-  filter(year %in% c(1990, 2020)) %>%
-  mutate(year = ifelse(year == 1990, "1990", "2000-2020")) %>%
-  # mutate(cluster = factor(cluster, 
-  #                         levels = c("R1", "R2", "R3", "R4", "R5"),
-  #                         labels = c("Counties near\nfamous recreation areas\nrepresent the\nstudy area average\nof farmland loss,\ndeveloped land gain",
-  #                                    "Isolated areas\nwith some natural amenities\nexperience little\nland use change",
-  #                                    "Isolated areas\nin dry shrublands\nexperience little\nland use change",
-  #                                    "Urban growth\nthreatens farmland",
-  #                                    "Agricultural production areas\nwith limited recreation\nand development"))) %>%
-  ggplot(aes(fill = cluster)) +
-  geom_sf() +
-  facet_wrap(vars(year)) +
-  scale_fill_manual(name = "", values = rev(viridis::turbo(3, begin=0.1))) +
-  theme_void() +
-  theme(legend.position="bottom",
-        legend.spacing.x = unit(0, 'cm'))+
-  guides(fill = guide_legend(label.position = "bottom"))
+
 
 clust_dat[["Actors"]] %>%
     # mutate(cluster = factor(cluster, 
@@ -1126,7 +877,432 @@ clust_dat_sc[["Resource"]] %>%
 
 
 ```{r}
-#| label: fig-A-ranges
+#| include: false
+#| label: "R1 data"
+
+r1 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R1")
+
+r1_means <- r1 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            median = median(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE)) %>%
+  mutate(var_name_clean = factor(input_data_name,
+                                 levels = c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2"),
+                                 labels = c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) %>%
+  arrange(var_name_clean) %>%
+  relocate(var_name_clean, .before = input_data_name) %>%
+  select(-input_data_name)
+
+###############
+# get farm size raw data
+# farm sizes range
+# list parameters
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               year = c(2002, 2012, 2022),
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "area operated")
+# retrieve
+farm_sizes <- nassqs(params)
+# save a backup copy
+# write.csv(farm_sizes,
+#           "../data/API_data_download_backup/farm_sizes.csv",
+#           row.names = FALSE)
+
+# clean
+farm_sizes2 <- farm_sizes %>%
+  # remove redundant categories
+  filter(!(domaincat_desc %in% c("AREA OPERATED: (180 TO 219 ACRES)",
+                                 "AREA OPERATED: (220 TO 259 ACRES)",
+                                 "AREA OPERATED: (260 TO 499 ACRES)",
+                                 "AREA OPERATED: (50.0 TO 69.9 ACRES)",
+                                 "AREA OPERATED: (70.0 TO 99.9 ACRES)",
+                                 "AREA OPERATED: (100 TO 139 ACRES)",
+                                 "AREA OPERATED: (140 TO 179 ACRES)",
+                                 "AREA OPERATED: (1,000 OR MORE ACRES)"))) %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = domaincat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
+  mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
+                ~.x/total_farms*100))
+
+# 1992 data
+farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
+  filter(Year == 1992) %>%
+  pivot_wider(id_cols = c("County", "Year"),
+              names_from = "Size",
+              values_from = "Num_farms") %>%
+  rowwise() %>%
+  mutate(across(`under 10 acres`:`over 2,000 acres`,
+                ~.x/`all farms`*100)) %>%
+  # create comparable categories
+  mutate(`AREA OPERATED: (1,000 TO 1,999 ACRES)` = `1,000 to 1,999 acres`,
+         `AREA OPERATED: (1.0 TO 9.9 ACRES)` = `under 10 acres`,
+         `AREA OPERATED: (10.0 TO 49.9 ACRES)` = `10 to 49 acres`,
+         `AREA OPERATED: (180 TO 499 ACRES)` = `180 to 219 acres` + `220 to 259 acres` + `260 to 499 acres`,
+         `AREA OPERATED: (2,000 OR MORE ACRES)` = `over 2,000 acres`,
+         `AREA OPERATED: (50 TO 179 ACRES)` = `50 to 69 acres` + `70 to 99 acres` + `100 to 139 acres` + `140 to 179 acres`,
+         `AREA OPERATED: (500 TO 999 ACRES)` = `500 to 999 acres`) %>%
+  rename("county_name" = "County",
+         "year" = "Year")
+
+# join
+farm_sizes_all <- rbind(farm_sizes2[,1:9],
+                        farm_sizes_1992[,c(1:2,16:22)]) %>%
+  replace(is.na(.), 0) %>%
+  mutate(county = str_to_title(county_name),
+         year = as.integer(year)-2)
+
+farm_sizes_r1 <- left_join(r1, farm_sizes_all, by = c("county", "year")) %>%
+  rowwise() %>%
+  mutate(small_farm_perc = sum(`AREA OPERATED: (1.0 TO 9.9 ACRES)`,
+                               `AREA OPERATED: (10.0 TO 49.9 ACRES)`),
+         med_farm_perc = sum(`AREA OPERATED: (50 TO 179 ACRES)`,
+                             `AREA OPERATED: (180 TO 499 ACRES)`),
+         large_farm_perc = sum(`AREA OPERATED: (1,000 TO 1,999 ACRES)`,
+                               `AREA OPERATED: (2,000 OR MORE ACRES)`,
+                             `AREA OPERATED: (500 TO 999 ACRES)`))
+```
+
+The counties in R1 are `r names(table(r1$county)[table(r1$county)==4])`, Elmore (2000-20), and Clark (1990).
+
+::: {#supptblb-data-R1}
+
+| Indicator  | Mean | Median  | Minimum  |  Maximum |
+|----------|---|---|---|---|
+|  Land in farms (% of county land) |  `r round(subset(r1_means, var_name_clean == "Land in Farms")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Land in Farms")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms")$max, 0)`%  |
+|  Cropland (% of county land) |  `r round(subset(r1_means, var_name_clean == "Cropland")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Cropland")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Cropland")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Cropland")$max, 0)`%  |
+|  Forest (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Forest")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Forest")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Forest")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Forest")$max, 0)`%  |
+|  Shrubland (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Shrubland")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Shrubland")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Shrubland")$max, 0)`%  |
+|  Federal Land (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Federal Land")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Federal Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Federal Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Federal Land")$max, 0)`%  |
+|  Total Lake Area |  **`r round(subset(r1_means, var_name_clean == "Lake Area")$mean, 0)` km$^2$** | `r round(subset(r1_means, var_name_clean == "Lake Area")$median, 0)` km$^2$  |  `r round(subset(r1_means, var_name_clean == "Lake Area")$min, 0)` km$^2$ | `r round(subset(r1_means, var_name_clean == "Lake Area")$max, 0)` km$^2$  |
+|  Rivers (km per km$^2$) |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$mean, 2)` | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$median, 2)`  |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$min, 2)` | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$max, 2)`  |
+|  Developed Land (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Developed Land")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Developed Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Developed Land")$max, 0)`%  |
+|  Farm Density (farms per km$^2$) |  **`r round(subset(r1_means, var_name_clean == "Farm Density")$mean*247.1053814672, 2)`** | `r round(subset(r1_means, var_name_clean == "Farm Density")$median*247.1053814672, 2)`  |  `r round(subset(r1_means, var_name_clean == "Farm Density")$min*247.1053814672, 2)` | `r round(subset(r1_means, var_name_clean == "Farm Density")$max*247.1053814672, 2)`  |
+|  Recreation Land (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Recreation Land")$mean, 1)`%** | `r round(subset(r1_means, var_name_clean == "Recreation Land")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Recreation Land")$min, 1)`% | `r round(subset(r1_means, var_name_clean == "Recreation Land")$max, 1)`%  |
+|  Distance to a Ski Area |  **`r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$mean, 0)` km** | `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$median, 0)` km  |  `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$min, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$max, 0)` km  |
+|  Distance to a National Park |  **`r round(subset(r1_means, var_name_clean == "Distance to a National Park")$mean, 0)` km** | `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$median, 0)` km  |  `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$min, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$max, 0)` km  |
+|  Housing Density (houses per km$^2$) |  `r round(subset(r1_means, var_name_clean == "Housing Density")$mean*247.1053814672, 1)` | `r round(subset(r1_means, var_name_clean == "Housing Density")$median*247.1053814672, 1)`  |  `r round(subset(r1_means, var_name_clean == "Housing Density")$min*247.1053814672, 1)` | `r round(subset(r1_means, var_name_clean == "Housing Density")$max*247.1053814672, 1)`  |
+|  Non-Federal Land near Highway (% of county land) |  **`r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$mean, 1)`%** | `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$min, 1)`% | `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$max, 1)`%  |
+|  Healthcare workers per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$max, 0)`  |
+|  Change in number of farms (% difference, 5-yr period) |  **`r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$mean, 0)`%** | `r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$min, 0)`% | +`r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$max, 0)`%  |
+|  Land in Farms Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$min, 0)`% | +`r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$max, 0)`%  |
+|  Cropland Change (difference in % of county land, 5-yr period) |  **`r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$mean, 1)`%** | `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$max, 1)`%  |
+|  Forest Change (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$mean, 1)`% | +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$max, 1)`%  |
+|  Shrubland Change (difference in % of county land, 5-yr period) |  **+`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$mean, 1)`%** | +`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$max, 1)`%  |
+|  Developed Land Gain (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$mean, 1)`% | +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$max, 1)`%  |
+|  Farms with Net Loss (% of all farms) |  `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
+|  Workers supporting agriculture, per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$max, 0)`  |
+|  Hospitality workers per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$max, 0)`  |
+|  Median Home Value |  **\$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$mean, 0), big.mark=",", trim=TRUE)`** | \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Small farms (1-49 acres, % of all farms) |  `r round(mean(farm_sizes_r1$small_farm_perc), 0)`% | `r round(median(farm_sizes_r1$small_farm_perc), 0)`%  |  `r round(min(farm_sizes_r1$small_farm_perc), 0)`% | `r round(max(farm_sizes_r1$small_farm_perc), 0)`%  |
+|  Mid-size farms (50-499 acres, % of all farms) |  `r round(mean(farm_sizes_r1$med_farm_perc), 0)`% | `r round(median(farm_sizes_r1$med_farm_perc), 0)`%  |  `r round(min(farm_sizes_r1$med_farm_perc), 0)`% | `r round(max(farm_sizes_r1$med_farm_perc), 0)`%  |
+|  Large farms (500+ acres, % of all farms) |  `r round(mean(farm_sizes_r1$large_farm_perc), 0)`% | `r round(median(farm_sizes_r1$large_farm_perc), 0)`%  |  `r round(min(farm_sizes_r1$large_farm_perc), 0)`% | `r round(max(farm_sizes_r1$large_farm_perc), 0)`%  |
+
+
+Summary statistics for counties in archetype R1. Bolded cluster means are significantly different from the study area mean (p < 0.05).
+
+:::
+
+### R2
+
+```{r}
+#| include: false
+#| label: "R2 data"
+
+r2 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R2")
+
+r2_means <- r2 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            median = median(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE)) %>%
+  mutate(var_name_clean = factor(input_data_name,
+                                 levels = c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2"),
+                                 labels = c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) %>%
+  arrange(var_name_clean) %>%
+  relocate(var_name_clean, .before = input_data_name) %>%
+  select(-input_data_name)
+
+###############
+# get farm size raw data
+# farm sizes range
+# list parameters
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               year = c(2002, 2012, 2022),
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "area operated")
+# retrieve
+farm_sizes <- nassqs(params)
+# save a backup copy
+# write.csv(farm_sizes,
+#           "../data/API_data_download_backup/farm_sizes.csv",
+#           row.names = FALSE)
+
+# clean
+farm_sizes2 <- farm_sizes %>%
+  # remove redundant categories
+  filter(!(domaincat_desc %in% c("AREA OPERATED: (180 TO 219 ACRES)",
+                                 "AREA OPERATED: (220 TO 259 ACRES)",
+                                 "AREA OPERATED: (260 TO 499 ACRES)",
+                                 "AREA OPERATED: (50.0 TO 69.9 ACRES)",
+                                 "AREA OPERATED: (70.0 TO 99.9 ACRES)",
+                                 "AREA OPERATED: (100 TO 139 ACRES)",
+                                 "AREA OPERATED: (140 TO 179 ACRES)",
+                                 "AREA OPERATED: (1,000 OR MORE ACRES)"))) %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = domaincat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
+  mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
+                ~.x/total_farms*100))
+
+# 1992 data
+farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
+  filter(Year == 1992) %>%
+  pivot_wider(id_cols = c("County", "Year"),
+              names_from = "Size",
+              values_from = "Num_farms") %>%
+  rowwise() %>%
+  mutate(across(`under 10 acres`:`over 2,000 acres`,
+                ~.x/`all farms`*100)) %>%
+  # create comparable categories
+  mutate(`AREA OPERATED: (1,000 TO 1,999 ACRES)` = `1,000 to 1,999 acres`,
+         `AREA OPERATED: (1.0 TO 9.9 ACRES)` = `under 10 acres`,
+         `AREA OPERATED: (10.0 TO 49.9 ACRES)` = `10 to 49 acres`,
+         `AREA OPERATED: (180 TO 499 ACRES)` = `180 to 219 acres` + `220 to 259 acres` + `260 to 499 acres`,
+         `AREA OPERATED: (2,000 OR MORE ACRES)` = `over 2,000 acres`,
+         `AREA OPERATED: (50 TO 179 ACRES)` = `50 to 69 acres` + `70 to 99 acres` + `100 to 139 acres` + `140 to 179 acres`,
+         `AREA OPERATED: (500 TO 999 ACRES)` = `500 to 999 acres`) %>%
+  rename("county_name" = "County",
+         "year" = "Year")
+
+# join
+farm_sizes_all <- rbind(farm_sizes2[,1:9],
+                        farm_sizes_1992[,c(1:2,16:22)]) %>%
+  replace(is.na(.), 0) %>%
+  mutate(county = str_to_title(county_name),
+         year = as.integer(year)-2)
+
+farm_sizes_r2 <- left_join(r2, farm_sizes_all, by = c("county", "year")) %>%
+  rowwise() %>%
+  mutate(small_farm_perc = sum(`AREA OPERATED: (1.0 TO 9.9 ACRES)`,
+                               `AREA OPERATED: (10.0 TO 49.9 ACRES)`),
+         med_farm_perc = sum(`AREA OPERATED: (50 TO 179 ACRES)`,
+                             `AREA OPERATED: (180 TO 499 ACRES)`),
+         large_farm_perc = sum(`AREA OPERATED: (1,000 TO 1,999 ACRES)`,
+                               `AREA OPERATED: (2,000 OR MORE ACRES)`,
+                             `AREA OPERATED: (500 TO 999 ACRES)`))
+```
+
+The counties in R2 are `r names(table(r2$county)[table(r2$county)==4])`, Clark (2000-20), Jefferson (1990), and Elmore (1990).
+
+::: {#supptblb-data-r2}
+
+| Indicator  | Mean | Median  | Minimum  |  Maximum |
+|----------|---|---|---|---|
+|  Land in farms (% of county land) |  `r round(subset(r2_means, var_name_clean == "Land in Farms")$mean, 0)`% | `r round(subset(r2_means, var_name_clean == "Land in Farms")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Land in Farms")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Land in Farms")$max, 0)`%  |
+|  Cropland (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Cropland")$mean, 0)`%** | `r round(subset(r2_means, var_name_clean == "Cropland")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Cropland")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Cropland")$max, 0)`%  |
+|  Forest (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Forest")$mean, 0)`%** | `r round(subset(r2_means, var_name_clean == "Forest")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Forest")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Forest")$max, 0)`%  |
+|  Shrubland (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Shrubland")$mean, 0)`%** | `r round(subset(r2_means, var_name_clean == "Shrubland")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Shrubland")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Shrubland")$max, 0)`%  |
+|  Federal Land (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Federal Land")$mean, 0)`%** | `r round(subset(r2_means, var_name_clean == "Federal Land")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Federal Land")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Federal Land")$max, 0)`%  |
+|  Total Lake Area |  **`r round(subset(r2_means, var_name_clean == "Lake Area")$mean, 0)` km$^2$** | `r round(subset(r2_means, var_name_clean == "Lake Area")$median, 0)` km$^2$  |  `r round(subset(r2_means, var_name_clean == "Lake Area")$min, 0)` km$^2$ | `r round(subset(r2_means, var_name_clean == "Lake Area")$max, 0)` km$^2$  |
+|  Rivers (km per km$^2$) |  **`r round(subset(r2_means, var_name_clean == "Length of Rivers")$mean, 2)`** | `r round(subset(r2_means, var_name_clean == "Length of Rivers")$median, 2)`  |  `r round(subset(r2_means, var_name_clean == "Length of Rivers")$min, 2)` | `r round(subset(r2_means, var_name_clean == "Length of Rivers")$max, 2)`  |
+|  Developed Land (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Developed Land")$mean, 0)`%** | `r round(subset(r2_means, var_name_clean == "Developed Land")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Developed Land")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Developed Land")$max, 0)`%  |
+|  Farm Density (farms per km$^2$) |  **`r round(subset(r2_means, var_name_clean == "Farm Density")$mean*247.1053814672, 2)`** | `r round(subset(r2_means, var_name_clean == "Farm Density")$median*247.1053814672, 2)`  |  `r round(subset(r2_means, var_name_clean == "Farm Density")$min*247.1053814672, 2)` | `r round(subset(r2_means, var_name_clean == "Farm Density")$max*247.1053814672, 2)`  |
+|  Recreation Land (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Recreation Land")$mean, 1)`%** | `r round(subset(r2_means, var_name_clean == "Recreation Land")$median, 1)`%  |  `r round(subset(r2_means, var_name_clean == "Recreation Land")$min, 1)`% | `r round(subset(r2_means, var_name_clean == "Recreation Land")$max, 1)`%  |
+|  Distance to a Ski Area |  **`r round(subset(r2_means, var_name_clean == "Distance to a Ski Area")$mean, 0)` km** | `r round(subset(r2_means, var_name_clean == "Distance to a Ski Area")$median, 0)` km  |  `r round(subset(r2_means, var_name_clean == "Distance to a Ski Area")$min, 0)` km | `r round(subset(r2_means, var_name_clean == "Distance to a Ski Area")$max, 0)` km  |
+|  Distance to a National Park |  `r round(subset(r2_means, var_name_clean == "Distance to a National Park")$mean, 0)` km | `r round(subset(r2_means, var_name_clean == "Distance to a National Park")$median, 0)` km  |  `r round(subset(r2_means, var_name_clean == "Distance to a National Park")$min, 0)` km | `r round(subset(r2_means, var_name_clean == "Distance to a National Park")$max, 0)` km  |
+|  Housing Density (houses per km$^2$) |  **`r round(subset(r2_means, var_name_clean == "Housing Density")$mean*247.1053814672, 1)`** | `r round(subset(r2_means, var_name_clean == "Housing Density")$median*247.1053814672, 1)`  |  `r round(subset(r2_means, var_name_clean == "Housing Density")$min*247.1053814672, 1)` | `r round(subset(r2_means, var_name_clean == "Housing Density")$max*247.1053814672, 1)`  |
+|  Non-Federal Land near Highway (% of county land) |  **`r round(subset(r2_means, var_name_clean == "Non-Federal Land near Highway")$mean, 1)`%** | `r round(subset(r2_means, var_name_clean == "Non-Federal Land near Highway")$median, 1)`%  |  `r round(subset(r2_means, var_name_clean == "Non-Federal Land near Highway")$min, 1)`% | `r round(subset(r2_means, var_name_clean == "Non-Federal Land near Highway")$max, 1)`%  |
+|  Healthcare workers per 1000 residents |  `r round(subset(r2_means, var_name_clean == "Healthcare Workers")$mean, 0)` | `r round(subset(r2_means, var_name_clean == "Healthcare Workers")$median, 0)`  |  `r round(subset(r2_means, var_name_clean == "Healthcare Workers")$min, 0)` | `r round(subset(r2_means, var_name_clean == "Healthcare Workers")$max, 0)`  |
+|  Change in number of farms (% difference, 5-yr period) |  `r round(subset(r2_means, var_name_clean == "Farm Loss/Gain")$mean, 0)`% | `r round(subset(r2_means, var_name_clean == "Farm Loss/Gain")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Farm Loss/Gain")$min, 0)`% | +`r round(subset(r2_means, var_name_clean == "Farm Loss/Gain")$max, 0)`%  |
+|  Land in Farms Change (difference in % of county land, 5-yr period) |  `r round(subset(r2_means, var_name_clean == "Land in Farms Loss/Gain")$mean, 0)`% | `r round(subset(r2_means, var_name_clean == "Land in Farms Loss/Gain")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Land in Farms Loss/Gain")$min, 0)`% | +`r round(subset(r2_means, var_name_clean == "Land in Farms Loss/Gain")$max, 0)`%  |
+|  Cropland Change (difference in % of county land, 5-yr period) |  **`r round(subset(r2_means, var_name_clean == "Cropland Loss/Gain")$mean, 1)`%** | `r round(subset(r2_means, var_name_clean == "Cropland Loss/Gain")$median, 1)`%  |  `r round(subset(r2_means, var_name_clean == "Cropland Loss/Gain")$min, 1)`% | +`r round(subset(r2_means, var_name_clean == "Cropland Loss/Gain")$max, 1)`%  |
+|  Forest Change (difference in % of county land, 5-yr period) |  **`r round(subset(r2_means, var_name_clean == "Forest Loss/Gain")$mean, 1)`%** | `r round(subset(r2_means, var_name_clean == "Forest Loss/Gain")$median, 1)`%  |  `r round(subset(r2_means, var_name_clean == "Forest Loss/Gain")$min, 1)`% | +`r round(subset(r2_means, var_name_clean == "Forest Loss/Gain")$max, 1)`%  |
+|  Shrubland Change (difference in % of county land, 5-yr period) |  **`r round(subset(r2_means, var_name_clean == "Shrubland Loss/Gain")$mean, 1)`%** | +`r round(subset(r2_means, var_name_clean == "Shrubland Loss/Gain")$median, 1)`%  |  `r round(subset(r2_means, var_name_clean == "Shrubland Loss/Gain")$min, 1)`% | +`r round(subset(r2_means, var_name_clean == "Shrubland Loss/Gain")$max, 1)`%  |
+|  Developed Land Gain (difference in % of county land, 5-yr period) |  **+`r round(subset(r2_means, var_name_clean == "Developed Land Gain")$mean, 1)`%** | `r round(subset(r2_means, var_name_clean == "Developed Land Gain")$median, 1)`%  |  `r round(subset(r2_means, var_name_clean == "Developed Land Gain")$min, 1)`% | +`r round(subset(r2_means, var_name_clean == "Developed Land Gain")$max, 1)`%  |
+|  Farms with Net Loss (% of all farms) |  **`r round(subset(r2_means, var_name_clean == "Farms with Net Loss")$mean, 0)`%** | `r round(subset(r2_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(r2_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(r2_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
+|  Workers supporting agriculture, per 1000 residents |  **`r round(subset(r2_means, var_name_clean == "Jobs Supporting Ag")$mean, 0)`** | `r round(subset(r2_means, var_name_clean == "Jobs Supporting Ag")$median, 0)`  |  `r round(subset(r2_means, var_name_clean == "Jobs Supporting Ag")$min, 0)` | `r round(subset(r2_means, var_name_clean == "Jobs Supporting Ag")$max, 0)`  |
+|  Hospitality workers per 1000 residents |  `r round(subset(r2_means, var_name_clean == "Jobs in Hospitality")$mean, 0)` | `r round(subset(r2_means, var_name_clean == "Jobs in Hospitality")$median, 0)`  |  `r round(subset(r2_means, var_name_clean == "Jobs in Hospitality")$min, 0)` | `r round(subset(r2_means, var_name_clean == "Jobs in Hospitality")$max, 0)`  |
+|  Median Home Value |  **\$`r format(round(subset(r2_means, var_name_clean == "Med Home Value")$mean, 0), big.mark=",", trim=TRUE)`** | \$`r format(round(subset(r2_means, var_name_clean == "Med Home Value")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(r2_means, var_name_clean == "Med Home Value")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(r2_means, var_name_clean == "Med Home Value")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Small farms (1-49 acres, % of all farms) |  **`r round(mean(farm_sizes_r2$small_farm_perc), 0)`%** | `r round(median(farm_sizes_r2$small_farm_perc), 0)`%  |  `r round(min(farm_sizes_r2$small_farm_perc), 0)`% | `r round(max(farm_sizes_r2$small_farm_perc), 0)`%  |
+|  Mid-size farms (50-499 acres, % of all farms) |  **`r round(mean(farm_sizes_r2$med_farm_perc), 0)`%** | `r round(median(farm_sizes_r2$med_farm_perc), 0)`%  |  `r round(min(farm_sizes_r2$med_farm_perc), 0)`% | `r round(max(farm_sizes_r2$med_farm_perc), 0)`%  |
+|  Large farms (500+ acres, % of all farms) |  **`r round(mean(farm_sizes_r2$large_farm_perc), 0)`%** | `r round(median(farm_sizes_r2$large_farm_perc), 0)`%  |  `r round(min(farm_sizes_r2$large_farm_perc), 0)`% | `r round(max(farm_sizes_r2$large_farm_perc), 0)`%  |
+
+
+Summary statistics for counties in archetype R2. Bolded cluster means are significantly different from the study area mean (p < 0.05).
+
+:::
+
+### R3
+
+```{r}
+#| include: false
+#| label: "R3 data"
+
+r3 <- clust_dat[["Resource"]] %>%
+  filter(cluster == "R3")
+
+r3_means <- r3 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            median = median(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE)) %>%
+  mutate(var_name_clean = factor(input_data_name,
+                                 levels = c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2"),
+                                 labels = c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) %>%
+  arrange(var_name_clean) %>%
+  relocate(var_name_clean, .before = input_data_name) %>%
+  select(-input_data_name)
+
+###############
+# get farm size raw data
+# farm sizes range
+# list parameters
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               year = c(2002, 2012, 2022),
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "area operated")
+# retrieve
+farm_sizes <- nassqs(params)
+# save a backup copy
+# write.csv(farm_sizes,
+#           "../data/API_data_download_backup/farm_sizes.csv",
+#           row.names = FALSE)
+
+# clean
+farm_sizes2 <- farm_sizes %>%
+  # remove redundant categories
+  filter(!(domaincat_desc %in% c("AREA OPERATED: (180 TO 219 ACRES)",
+                                 "AREA OPERATED: (220 TO 259 ACRES)",
+                                 "AREA OPERATED: (260 TO 499 ACRES)",
+                                 "AREA OPERATED: (50.0 TO 69.9 ACRES)",
+                                 "AREA OPERATED: (70.0 TO 99.9 ACRES)",
+                                 "AREA OPERATED: (100 TO 139 ACRES)",
+                                 "AREA OPERATED: (140 TO 179 ACRES)",
+                                 "AREA OPERATED: (1,000 OR MORE ACRES)"))) %>%
+  pivot_wider(id_cols = c(county_name, year),
+              names_from = domaincat_desc,
+              values_from = Value) %>%
+  rowwise() %>%
+  mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
+  mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
+                ~.x/total_farms*100))
+
+# 1992 data
+farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
+  filter(Year == 1992) %>%
+  pivot_wider(id_cols = c("County", "Year"),
+              names_from = "Size",
+              values_from = "Num_farms") %>%
+  rowwise() %>%
+  mutate(across(`under 10 acres`:`over 2,000 acres`,
+                ~.x/`all farms`*100)) %>%
+  # create comparable categories
+  mutate(`AREA OPERATED: (1,000 TO 1,999 ACRES)` = `1,000 to 1,999 acres`,
+         `AREA OPERATED: (1.0 TO 9.9 ACRES)` = `under 10 acres`,
+         `AREA OPERATED: (10.0 TO 49.9 ACRES)` = `10 to 49 acres`,
+         `AREA OPERATED: (180 TO 499 ACRES)` = `180 to 219 acres` + `220 to 259 acres` + `260 to 499 acres`,
+         `AREA OPERATED: (2,000 OR MORE ACRES)` = `over 2,000 acres`,
+         `AREA OPERATED: (50 TO 179 ACRES)` = `50 to 69 acres` + `70 to 99 acres` + `100 to 139 acres` + `140 to 179 acres`,
+         `AREA OPERATED: (500 TO 999 ACRES)` = `500 to 999 acres`) %>%
+  rename("county_name" = "County",
+         "year" = "Year")
+
+# join
+farm_sizes_all <- rbind(farm_sizes2[,1:9],
+                        farm_sizes_1992[,c(1:2,16:22)]) %>%
+  replace(is.na(.), 0) %>%
+  mutate(county = str_to_title(county_name),
+         year = as.integer(year)-2)
+
+farm_sizes_r3 <- left_join(r3, farm_sizes_all, by = c("county", "year")) %>%
+  rowwise() %>%
+  mutate(small_farm_perc = sum(`AREA OPERATED: (1.0 TO 9.9 ACRES)`,
+                               `AREA OPERATED: (10.0 TO 49.9 ACRES)`),
+         med_farm_perc = sum(`AREA OPERATED: (50 TO 179 ACRES)`,
+                             `AREA OPERATED: (180 TO 499 ACRES)`),
+         large_farm_perc = sum(`AREA OPERATED: (1,000 TO 1,999 ACRES)`,
+                               `AREA OPERATED: (2,000 OR MORE ACRES)`,
+                             `AREA OPERATED: (500 TO 999 ACRES)`))
+```
+
+The counties in R3 are `r names(table(r3$county)[table(r3$county)==4])`, and Jefferson (2000-20).
+
+::: {#supptblb-data-r3}
+
+| Indicator  | Mean | Median  | Minimum  |  Maximum |
+|----------|---|---|---|---|
+|  Land in farms (% of county land) |  `r round(subset(r3_means, var_name_clean == "Land in Farms")$mean, 0)`% | `r round(subset(r3_means, var_name_clean == "Land in Farms")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Land in Farms")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Land in Farms")$max, 0)`%  |
+|  Cropland (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Cropland")$mean, 0)`%** | `r round(subset(r3_means, var_name_clean == "Cropland")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Cropland")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Cropland")$max, 0)`%  |
+|  Forest (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Forest")$mean, 0)`%** | `r round(subset(r3_means, var_name_clean == "Forest")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Forest")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Forest")$max, 0)`%  |
+|  Shrubland (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Shrubland")$mean, 0)`%** | `r round(subset(r3_means, var_name_clean == "Shrubland")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Shrubland")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Shrubland")$max, 0)`%  |
+|  Federal Land (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Federal Land")$mean, 0)`%** | `r round(subset(r3_means, var_name_clean == "Federal Land")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Federal Land")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Federal Land")$max, 0)`%  |
+|  Total Lake Area |  **`r round(subset(r3_means, var_name_clean == "Lake Area")$mean, 0)` km$^2$** | `r round(subset(r3_means, var_name_clean == "Lake Area")$median, 0)` km$^2$  |  `r round(subset(r3_means, var_name_clean == "Lake Area")$min, 0)` km$^2$ | `r round(subset(r3_means, var_name_clean == "Lake Area")$max, 0)` km$^2$  |
+|  Rivers (km per km$^2$) |  **`r round(subset(r3_means, var_name_clean == "Length of Rivers")$mean, 2)`** | `r round(subset(r3_means, var_name_clean == "Length of Rivers")$median, 2)`  |  `r round(subset(r3_means, var_name_clean == "Length of Rivers")$min, 2)` | `r round(subset(r3_means, var_name_clean == "Length of Rivers")$max, 2)`  |
+|  Developed Land (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Developed Land")$mean, 0)`%** | `r round(subset(r3_means, var_name_clean == "Developed Land")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Developed Land")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Developed Land")$max, 0)`%  |
+|  Farm Density (farms per km$^2$) |  **`r round(subset(r3_means, var_name_clean == "Farm Density")$mean*247.1053814672, 2)`** | `r round(subset(r3_means, var_name_clean == "Farm Density")$median*247.1053814672, 2)`  |  `r round(subset(r3_means, var_name_clean == "Farm Density")$min*247.1053814672, 2)` | `r round(subset(r3_means, var_name_clean == "Farm Density")$max*247.1053814672, 2)`  |
+|  Recreation Land (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Recreation Land")$mean, 1)`%** | `r round(subset(r3_means, var_name_clean == "Recreation Land")$median, 1)`%  |  `r round(subset(r3_means, var_name_clean == "Recreation Land")$min, 1)`% | `r round(subset(r3_means, var_name_clean == "Recreation Land")$max, 1)`%  |
+|  Distance to a Ski Area |  **`r round(subset(r3_means, var_name_clean == "Distance to a Ski Area")$mean, 0)` km** | `r round(subset(r3_means, var_name_clean == "Distance to a Ski Area")$median, 0)` km  |  `r round(subset(r3_means, var_name_clean == "Distance to a Ski Area")$min, 0)` km | `r round(subset(r3_means, var_name_clean == "Distance to a Ski Area")$max, 0)` km  |
+|  Distance to a National Park |  **`r round(subset(r3_means, var_name_clean == "Distance to a National Park")$mean, 0)` km** | `r round(subset(r3_means, var_name_clean == "Distance to a National Park")$median, 0)` km  |  `r round(subset(r3_means, var_name_clean == "Distance to a National Park")$min, 0)` km | `r round(subset(r3_means, var_name_clean == "Distance to a National Park")$max, 0)` km  |
+|  Housing Density (houses per km$^2$) |  **`r round(subset(r3_means, var_name_clean == "Housing Density")$mean*247.1053814672, 1)`** | `r round(subset(r3_means, var_name_clean == "Housing Density")$median*247.1053814672, 1)`  |  `r round(subset(r3_means, var_name_clean == "Housing Density")$min*247.1053814672, 1)` | `r round(subset(r3_means, var_name_clean == "Housing Density")$max*247.1053814672, 1)`  |
+|  Non-Federal Land near Highway (% of county land) |  **`r round(subset(r3_means, var_name_clean == "Non-Federal Land near Highway")$mean, 1)`%** | `r round(subset(r3_means, var_name_clean == "Non-Federal Land near Highway")$median, 1)`%  |  `r round(subset(r3_means, var_name_clean == "Non-Federal Land near Highway")$min, 1)`% | `r round(subset(r3_means, var_name_clean == "Non-Federal Land near Highway")$max, 1)`%  |
+|  Healthcare workers per 1000 residents |  `r round(subset(r3_means, var_name_clean == "Healthcare Workers")$mean, 0)` | `r round(subset(r3_means, var_name_clean == "Healthcare Workers")$median, 0)`  |  `r round(subset(r3_means, var_name_clean == "Healthcare Workers")$min, 0)` | `r round(subset(r3_means, var_name_clean == "Healthcare Workers")$max, 0)`  |
+|  Change in number of farms (% difference, 5-yr period) |  **`r round(subset(r3_means, var_name_clean == "Farm Loss/Gain")$mean, 0)`%** | `r round(subset(r3_means, var_name_clean == "Farm Loss/Gain")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Farm Loss/Gain")$min, 0)`% | +`r round(subset(r3_means, var_name_clean == "Farm Loss/Gain")$max, 0)`%  |
+|  Land in Farms Change (difference in % of county land, 5-yr period) |  +`r round(subset(r3_means, var_name_clean == "Land in Farms Loss/Gain")$mean, 0)`% | +`r round(subset(r3_means, var_name_clean == "Land in Farms Loss/Gain")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Land in Farms Loss/Gain")$min, 0)`% | +`r round(subset(r3_means, var_name_clean == "Land in Farms Loss/Gain")$max, 0)`%  |
+|  Cropland Change (difference in % of county land, 5-yr period) |  **`r round(subset(r3_means, var_name_clean == "Cropland Loss/Gain")$mean, 1)`%** | `r round(subset(r3_means, var_name_clean == "Cropland Loss/Gain")$median, 1)`%  |  `r round(subset(r3_means, var_name_clean == "Cropland Loss/Gain")$min, 1)`% | +`r round(subset(r3_means, var_name_clean == "Cropland Loss/Gain")$max, 1)`%  |
+|  Forest Change (difference in % of county land, 5-yr period) |  **`r round(subset(r3_means, var_name_clean == "Forest Loss/Gain")$mean, 1)`%** | `r round(subset(r3_means, var_name_clean == "Forest Loss/Gain")$median, 1)`%  |  `r round(subset(r3_means, var_name_clean == "Forest Loss/Gain")$min, 1)`% | +`r round(subset(r3_means, var_name_clean == "Forest Loss/Gain")$max, 1)`%  |
+|  Shrubland Change (difference in % of county land, 5-yr period) |  **`r round(subset(r3_means, var_name_clean == "Shrubland Loss/Gain")$mean, 1)`%** | `r round(subset(r3_means, var_name_clean == "Shrubland Loss/Gain")$median, 1)`%  |  `r round(subset(r3_means, var_name_clean == "Shrubland Loss/Gain")$min, 1)`% | +`r round(subset(r3_means, var_name_clean == "Shrubland Loss/Gain")$max, 1)`%  |
+|  Developed Land Gain (difference in % of county land, 5-yr period) |  **+`r round(subset(r3_means, var_name_clean == "Developed Land Gain")$mean, 1)`%** | +`r round(subset(r3_means, var_name_clean == "Developed Land Gain")$median, 1)`%  |  `r round(subset(r3_means, var_name_clean == "Developed Land Gain")$min, 1)`% | +`r round(subset(r3_means, var_name_clean == "Developed Land Gain")$max, 1)`%  |
+|  Farms with Net Loss (% of all farms) |  `r round(subset(r3_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(r3_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(r3_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(r3_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
+|  Workers supporting agriculture, per 1000 residents |  `r round(subset(r3_means, var_name_clean == "Jobs Supporting Ag")$mean, 0)` | `r round(subset(r3_means, var_name_clean == "Jobs Supporting Ag")$median, 0)`  |  `r round(subset(r3_means, var_name_clean == "Jobs Supporting Ag")$min, 0)` | `r round(subset(r3_means, var_name_clean == "Jobs Supporting Ag")$max, 0)`  |
+|  Hospitality workers per 1000 residents |  `r round(subset(r3_means, var_name_clean == "Jobs in Hospitality")$mean, 0)` | `r round(subset(r3_means, var_name_clean == "Jobs in Hospitality")$median, 0)`  |  `r round(subset(r3_means, var_name_clean == "Jobs in Hospitality")$min, 0)` | `r round(subset(r3_means, var_name_clean == "Jobs in Hospitality")$max, 0)`  |
+|  Median Home Value |  **\$`r format(round(subset(r3_means, var_name_clean == "Med Home Value")$mean, 0), big.mark=",", trim=TRUE)`** | \$`r format(round(subset(r3_means, var_name_clean == "Med Home Value")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(r3_means, var_name_clean == "Med Home Value")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(r3_means, var_name_clean == "Med Home Value")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Small farms (1-49 acres, % of all farms) |  **`r round(mean(farm_sizes_r3$small_farm_perc), 0)`%** | `r round(median(farm_sizes_r3$small_farm_perc), 0)`%  |  `r round(min(farm_sizes_r3$small_farm_perc), 0)`% | `r round(max(farm_sizes_r3$small_farm_perc), 0)`%  |
+|  Mid-size farms (50-499 acres, % of all farms) |  **`r round(mean(farm_sizes_r3$med_farm_perc), 0)`%** | `r round(median(farm_sizes_r3$med_farm_perc), 0)`%  |  `r round(min(farm_sizes_r3$med_farm_perc), 0)`% | `r round(max(farm_sizes_r3$med_farm_perc), 0)`%  |
+|  Large farms (500+ acres, % of all farms) |  **`r round(mean(farm_sizes_r3$large_farm_perc), 0)`%** | `r round(median(farm_sizes_r3$large_farm_perc), 0)`%  |  `r round(min(farm_sizes_r3$large_farm_perc), 0)`% | `r round(max(farm_sizes_r3$large_farm_perc), 0)`%  |
+
+
+Summary statistics for counties in archetype R3. Bolded cluster means are significantly different from the study area mean (p < 0.05).
+
+:::
+
+\newpage
+## Actors Archetypes
+
+
+::: {#suppfigb-A-ranges}
+
+```{r}
+#| label: suppfigb-A-ranges
+>>>>>>> bb4f77b0336ef52a83272a4ae446658fae873508
 #| message: false
 #| fig-cap: ""
 #| fig-height: 7
