@@ -27,7 +27,35 @@ format:
   #   include-in-header: 
   #     text: |
   #       \usepackage[format=plain]{caption}
-  docx: default
+  docx: 
+    reference-doc: custom-reference-doc.docx
+    notebook-links: false
+    number-sections: true
+    fig-format: png
+    df-print: kable
+    link-bibliography: false
+    link-citations: false
+    crossref:
+      ref-hyperlink: false
+      custom:
+        - kind: float
+          key: supptbla
+          reference-prefix: Table A
+          space-before-numbering: false
+          caption-location: top
+        - kind: float
+          key: suppfiga
+          reference-prefix: Figure A
+          space-before-numbering: false
+        - kind: float
+          key: supptblb
+          reference-prefix: Table B
+          space-before-numbering: false
+          caption-location: top
+        - kind: float
+          key: suppfigb
+          reference-prefix: Figure B
+          space-before-numbering: false
 
 
 
