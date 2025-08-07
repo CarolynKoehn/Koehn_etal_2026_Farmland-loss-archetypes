@@ -2855,6 +2855,10 @@ Since the definition of urban area changed for the 2020 census, we recreate urba
 Total population and housing units data for blocks in Idaho, 1990-2020, data downloaded from:
 Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 19.0 [dataset]. Minneapolis, MN: IPUMS. 2024. http://doi.org/10.18128/D050.V19.0
 
+Use RUCA counts instead? https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes and paper that uses it: https://doi.org/10.1111/ruso.70012
+
+Maybe census land use definition for resource system?
+
 ```{r}
 #| label: "urban rural pop"
 
@@ -2879,14 +2883,21 @@ for(i in 1:length(blocks_zip_files)) {
                                 filter(unzip(zipfile = blocks_zip_files[i], list=TRUE),
                                        str_detect(Name, ".shp$"))$Name)
 }
-blocks_list <- vector(mode = "list", length = length(blocks_files))
+blocks_list <- vector(mode = "list", length = 4)
 years <- seq(1990, 2020, 10)
 for(i in 1:length(blocks_list)) {
-  for(f in blocks_shp_files[str_detect(blocks_shp_files, as.character(years[i]))]) {
-    if(f == blocks_shp_files[str_detect(blocks_shp_files, as.character(years[i]))][1]) {
-      year_blocks <- st_read(f)
+  year_files <- blocks_shp_files[str_detect(blocks_shp_files, 
+                                            paste0(years[i], ".shp"))]
+  for(f in year_files) {
+    if(f == year_files[1]) {
+      year_blocks <- st_read(f) %>%
+        select(GISJOIN) %>%
+        mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7)))
     } else {
-      year_blocks <- rbind(year_blocks, st_read(f))
+      year_blocks <- st_read(f) %>%
+        select(GISJOIN) %>%
+        mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7))) %>%
+        rbind(year_blocks)
     }
   }
   
@@ -2908,13 +2919,19 @@ join_clean_cens_blocks <- function(censdata, blocks) {
   full_join(blocks, by = "GISJOIN") %>%
   st_as_sf() %>%
   mutate(area_sq_mi = units::set_units(st_area(.), "mi2"),
-         hous_dens = units::drop_units(hous_units / area_sq_mi))
+         hous_dens = units::drop_units(hous_units / area_sq_mi)) %>%
+    st_make_valid(.) %>%
+    filter(st_is_valid(.) & !st_is_empty(.))
 }
 
 block_data_list <- mapply(join_clean_cens_blocks, 
                           censdata = censdata_list, 
                           blocks = blocks_list,
                           SIMPLIFY = FALSE)
+
+# remove large lists to free memory
+# rm(censdata_list)
+# rm(blocks_list)
 
 init_urban_core <- function(block_data) {
   block_data %>%
@@ -2947,6 +2964,9 @@ urb_areas_list <- mapply(fill_urb_area,
                          init_urban_core = init_urban_core_list,
                          block_data = block_data_list,
                          SIMPLIFY = FALSE)
+
+# free memory
+# rm(init_urban_core_list)
 
 urb_areas_thresholded <- function(urb_areas, block_data) {
   urb_union <- st_union(urb_areas)
@@ -2983,6 +3003,8 @@ urb_areas_thresholded_list <- mapply(urb_areas_thresholded,
                                      block_data = block_data_list,
                                      SIMPLIFY = FALSE)
 
+# rm(urb_areas_list)
+
 block_data_list <- mapply(function(x, y) {
   x$dist_from_urb <- NA
   
@@ -3003,7 +3025,7 @@ block_data_list <- mapply(function(x, y) {
       )
     
     if(any(is.na(x$dist_from_urb))) {
-      x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & in_urb_area == TRUE, miles, NA)
+      x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & urb_area_dist == TRUE, miles, x$dist_from_urb)
       miles <- miles + 10
     } else {
       break
