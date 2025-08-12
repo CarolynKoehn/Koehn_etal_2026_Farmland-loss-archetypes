@@ -802,6 +802,8 @@ rs_data <- health_pop %>%
 
 #### Average slope
 
+Tested a PCA of mean, median, max, and stdev of slope and range of elevations, and it correlated pretty closely to mean slope (cor: 0.978883)
+
 ```{r}
 #| label: "slope"
 
