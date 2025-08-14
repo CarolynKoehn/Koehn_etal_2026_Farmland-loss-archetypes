@@ -294,6 +294,11 @@ rs_data <- rs_data %>%
 
 ### Urban Land
 
+Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. Urban definition here: https://www.census.gov/newsroom/blogs/random-samplings/2022/12/redefining-urban-areas-following-2020-census.html
+
+Total population and housing units data for blocks in Idaho, 1990-2020, data downloaded from:
+Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 19.0 [dataset]. Minneapolis, MN: IPUMS. 2024. http://doi.org/10.18128/D050.V19.0
+
 ```{r}
 #| label: "urban land"
 
@@ -3072,169 +3077,111 @@ a_data <- left_join(a_data, hired_clean, by = c("county", "year"))
 
 ### Population in urban and rural areas
 
-Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. Urban definition here: https://www.census.gov/newsroom/blogs/random-samplings/2022/12/redefining-urban-areas-following-2020-census.html
-
-Total population and housing units data for blocks in Idaho, 1990-2020, data downloaded from:
-Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 19.0 [dataset]. Minneapolis, MN: IPUMS. 2024. http://doi.org/10.18128/D050.V19.0
-
 Use RUCA counts instead? https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes and paper that uses it: https://doi.org/10.1111/ruso.70012
 
-Maybe census land use definition for resource system?
+RUCA codes are a proxy for social isolation
+
+RUCA codes are not comparable across years.
 
 ```{r}
 #| label: "urban rural pop"
 
-
-
-urb_pop_1990 <- block_data_list[[1]] %>%
-  st_drop_geometry() %>%
-  group_by(FIPSSTCO, in_urb_area) %>%
-  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
-  pivot_wider(id_cols = "FIPSSTCO",
-              names_from = "in_urb_area",
-              values_from = "pop") %>%
-  rename("urb_pop" = "TRUE",
-         "rur_pop" = "FALSE") %>%
+ruca_1990 <- readxl::read_xls("../data/ruca1990.xls",
+                              sheet = "Data") %>%
+  mutate(FIPS = str_sub(`FIPS state-county-tract code`, 1, 5)) %>%
+  filter(str_starts(FIPS, "16")) %>%
+  group_by(FIPS) %>%
+  mutate(tot_pop = sum(as.integer(`Census tract population, 1990`))) %>%
   rowwise() %>%
-  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
-         tot_pop = sum(urb_pop, rur_pop),
-         perc_pop_urb = urb_pop / tot_pop * 100,
-         county = recode(FIPSSTCO, !!!GEOID_names),
-         year = 1990)
-
-urb_pop_2000 <- block_data_list[[2]] %>%
-  st_drop_geometry() %>%
-  group_by(FIPSSTCO, in_urb_area) %>%
-  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
-  pivot_wider(id_cols = "FIPSSTCO",
-              names_from = "in_urb_area",
-              values_from = "pop") %>%
-  rename("urb_pop" = "TRUE",
-         "rur_pop" = "FALSE") %>%
-  rowwise() %>%
-  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
-         tot_pop = sum(urb_pop, rur_pop),
-         perc_pop_urb = urb_pop / tot_pop * 100,
-         county = recode(FIPSSTCO, !!!GEOID_names),
-         year = 2000)
-
-urb_pop_2010 <- block_data_list[[3]] %>%
-  st_drop_geometry() %>%
-  rowwise() %>%
-  mutate(FIPSSTCO = paste0(STATEFP10, COUNTYFP10)) %>%
+  mutate(tract_pop_perc = as.integer(`Census tract population, 1990`) / tot_pop * 100) %>%
+  group_by(FIPS, `Rural-urban commuting area code`) %>%
+  summarise(ruca_pop = sum(tract_pop_perc)) %>%
   ungroup() %>%
-  group_by(FIPSSTCO, in_urb_area) %>%
-  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
-  pivot_wider(id_cols = "FIPSSTCO",
-              names_from = "in_urb_area",
-              values_from = "pop") %>%
-  rename("urb_pop" = "TRUE",
-         "rur_pop" = "FALSE") %>%
-  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
-         tot_pop = sum(urb_pop, rur_pop),
-         perc_pop_urb = urb_pop / tot_pop * 100,
-         county = recode(FIPSSTCO, !!!GEOID_names),
-         year = 2010)
-
-urb_pop_2020 <- block_data_list[[3]] %>%
-  st_drop_geometry() %>%
+  mutate(county = recode(FIPS, !!!GEOID_names), 
+         year=1990,
+         .after = FIPS) %>%
+  rename("RUCA" = "Rural-urban commuting area code") %>%
+  select(-FIPS)
+  
+ruca_2000 <- readxl::read_xls("../data/ruca00.xls",
+                              sheet= "Data") %>%
+  select(`State-County FIPS Code`, `RUCA Secondary Code 2000`, `Tract Population 2000`) %>%
+  filter(str_starts(`State-County FIPS Code`, "16")) %>%
+  group_by(`State-County FIPS Code`) %>%
+  mutate(tot_pop = sum(as.integer(`Tract Population 2000`))) %>%
   rowwise() %>%
-  mutate(FIPSSTCO = paste0(STATEFP10, COUNTYFP10)) %>%
+  mutate(tract_pop_perc = as.integer(`Tract Population 2000`) / tot_pop * 100) %>%
+  group_by(`State-County FIPS Code`, `RUCA Secondary Code 2000`) %>%
+  summarise(ruca_pop = sum(tract_pop_perc)) %>%
   ungroup() %>%
-  group_by(FIPSSTCO, in_urb_area) %>%
-  summarise(pop = sum(tot_pop, na.rm=TRUE)) %>%
-  pivot_wider(id_cols = "FIPSSTCO",
-              names_from = "in_urb_area",
-              values_from = "pop") %>%
-  rename("urb_pop" = "TRUE",
-         "rur_pop" = "FALSE") %>%
-  mutate(across(rur_pop:urb_pop, ~replace_na(.x, 0)),
-         tot_pop = sum(urb_pop, rur_pop),
-         perc_pop_urb = urb_pop / tot_pop * 100,
-         county = recode(FIPSSTCO, !!!GEOID_names),
-         year = 2020)
+  mutate(county = recode(`State-County FIPS Code`, !!!GEOID_names), 
+         year=2000,
+         .after = `State-County FIPS Code`) %>%
+  rename("RUCA" = "RUCA Secondary Code 2000") %>%
+  select(-`State-County FIPS Code`)
 
-urb_pop_all <- rbind(urb_pop_1990, urb_pop_2000, urb_pop_2010, urb_pop_2020) %>%
+ruca_2010 <- readxl::read_xlsx("../data/ruca2010revised.xlsx",
+                               sheet = "Data",
+                               skip = 1) %>%
+  select(`State-County FIPS Code`, `Secondary RUCA Code, 2010 (see errata)`, `Tract Population, 2010`) %>%
+  filter(str_starts(`State-County FIPS Code`, "16")) %>%
+  group_by(`State-County FIPS Code`) %>%
+  mutate(tot_pop = sum(as.integer(`Tract Population, 2010`))) %>%
+  rowwise() %>%
+  mutate(tract_pop_perc = as.integer(`Tract Population, 2010`) / tot_pop * 100) %>%
+  group_by(`State-County FIPS Code`, `Secondary RUCA Code, 2010 (see errata)`) %>%
+  summarise(ruca_pop = sum(tract_pop_perc)) %>%
   ungroup() %>%
-  select(county, year, perc_pop_urb)
+  mutate(county = recode(`State-County FIPS Code`, !!!GEOID_names), 
+         year=2010,
+         .after = `State-County FIPS Code`) %>%
+  rename("RUCA" = "Secondary RUCA Code, 2010 (see errata)") %>%
+  select(-`State-County FIPS Code`)
 
-###################
-# get population of nearest urban area (within 10 mi)
-pop_of_urb_areas <- mapply(function(x, y) {
-  blocks_covered <- st_covered_by(x, y)
-  blocks_covered <- lapply(blocks_covered, function(x) {
-    if(length(x) == 0) {
-      return(NA)
-    } else {
-      return(x)
-    }
-  })
-  
-  urb_areas_pop <- x %>%
-    st_drop_geometry() %>%
-    mutate(in_urb_area = unlist(blocks_covered)) %>%
-    group_by(in_urb_area) %>%
-    summarise(tot_pop = sum(tot_pop, na.rm=TRUE)) %>%
-    na.omit()
-  
-  return(y %>%
-           st_as_sf(.) %>%
-           filter(!st_is_empty(.) & st_is_valid(.)) %>%
-           mutate(tot_pop = urb_areas_pop$tot_pop))
-}, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
+ruca_2020 <- readxl::read_xlsx("../data/RUCA-codes-2020-tract.xlsx",
+                               sheet = "RUCA2020 Tract Data",
+                               skip = 1) %>%
+  select(CountyFIPS23, SecondaryRUCA, Population) %>%
+  filter(str_starts(CountyFIPS23, "16")) %>%
+  group_by(CountyFIPS23) %>%
+  mutate(tot_pop = sum(as.integer(Population))) %>%
+  rowwise() %>%
+  mutate(tract_pop_perc = as.integer(Population) / tot_pop * 100) %>%
+  group_by(CountyFIPS23, SecondaryRUCA) %>%
+  summarise(ruca_pop = sum(tract_pop_perc)) %>%
+  ungroup() %>%
+  mutate(county = recode(CountyFIPS23, !!!GEOID_names), 
+         year=2020,
+         .after = CountyFIPS23) %>%
+  rename("RUCA" = "SecondaryRUCA") %>%
+  select(-CountyFIPS23)
 
-urb_rur_cont <- urb_pop_all %>%
-    mutate(max_near_urb_pop = NA)
-
-years <- seq(1990, 2020, 10)
-for(i in 1:length(pop_of_urb_areas)) {
-  urb_pop <- filter(urb_pop_all, year == years[i]) %>%
-    mutate(max_near_urb_pop = NA)
-  
-  for(j in 1:nrow(urb_pop)) {
-    county_shape <- filter(county_shapes, NAME == urb_pop$county[j]) %>%
-      st_transform(st_crs(pop_of_urb_areas[[i]]))
-    
-    if(urb_pop$perc_pop_urb[j] > 0) {
-      urb_areas_intersecting_idx <- as.logical(rowSums(st_intersects(pop_of_urb_areas[[i]], 
-                                                  county_shape,
-                                                  sparse = FALSE)))
-      urb_areas_intersecting <- pop_of_urb_areas[[i]][urb_areas_intersecting_idx,]
-      
-      max_urb_area_pop <- max(urb_areas_intersecting$tot_pop)
-    } else {
-      nearest_urb <- st_nearest_feature(county_shape, pop_of_urb_areas[[i]])
-      
-      dist_nearest_urb <- st_distance(county_shape, pop_of_urb_areas[[i]][nearest_urb,])
-      
-      max_urb_area_pop <- as.integer(
-        ifelse(test = (dist_nearest_urb < units::set_units(10, "mi")), 
-               yes = st_drop_geometry(pop_of_urb_areas[[i]])[nearest_urb, "tot_pop"], 
-               no = 0)
-        )
-    }
-    
-    urb_pop$max_near_urb_pop[j] <- max_urb_area_pop
-  }
-  
-  urb_rur_cont <- full_join(urb_rur_cont, urb_pop, by = join_by(county, year, perc_pop_urb, max_near_urb_pop))
-}
+ruca_all <- rbind(ruca_1990, ruca_2000, ruca_2010, ruca_2020) %>%
+  rowwise() %>%
+  mutate(primRUCA = ifelse(str_detect(RUCA, "\\."),
+                                      str_remove_all(str_extract(RUCA, ".*\\."), "\\."),
+                           RUCA)) %>%
+  group_by(county, year, primRUCA) %>%
+  summarise(ruca_pop = sum(ruca_pop)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = "primRUCA",
+              names_prefix = "RUCA",
+              values_from = "ruca_pop",
+              values_fill = 0) %>%
+  select(-RUCA99)
 
 ##############
 # principal components
-urb_rur_cont_sc <- urb_rur_cont %>%
-  filter(!is.na(max_near_urb_pop)) %>%
-  mutate(across(!c(county, year),
-                ~ (.x - mean(.x)) / (max(.x) - min(.x))))
+ruca_pca <- prcomp(ruca_all[, -c(1:2)])
+summary(ruca_pca)
+biplot(ruca_pca)
 
-urb_rur_pca <- prcomp(urb_rur_cont_sc[, -c(1:2)])
-summary(urb_rur_pca)
-biplot(urb_rur_pca)
-
-a_data <- cbind(urb_rur_cont, urb_rur_pca$x[,1:2]) %>%
-  rename("urb_rur_pc1" = "PC1",
-         "urb_rur_pc2" = "PC2") %>%
-  select(county, year, urb_rur_pc1, urb_rur_pc2) %>%
+# explain >75% variance
+a_data <- cbind(ruca_all, ruca_pca$x[,1:3]) %>%
+  rename("ruca_pc1" = "PC1",
+         "ruca_pc2" = "PC2",
+         "ruca_pc3" = "PC3") %>%
+  select(county, year, ruca_pc1, ruca_pc2, ruca_pc3) %>%
   right_join(a_data, by = c("county", "year"))
 ```
 
