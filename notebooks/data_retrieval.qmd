@@ -292,6 +292,226 @@ rs_data <- rs_data %>%
   mutate(across(percent_forest:percent_developed, ~ifelse(is.na(.x), 0, .x)))
 ```
 
+### Urban Land
+
+```{r}
+#| label: "urban land"
+
+id_buff <- st_buffer(st_union(county_shapes), dist = units::set_units(150, "mi"))
+
+#############
+# get urban populations
+
+censdata_files <- list.files(path = "../data/nhgis0006_csv/nhgis0006_csv", 
+                             pattern=".csv",
+                             full.names = TRUE)
+censdata_list <- vector(mode = "list", length = length(censdata_files))
+for(i in 1:length(censdata_list)) {
+  censdata_list[[i]] <- read.csv(censdata_files[i])
+}
+
+blocks_zip_files <- list.files(path = "..", pattern="shapefile", recursive = TRUE, full.names = TRUE)
+blocks_shp_files <- vector(mode = "character", length = length(blocks_zip_files))
+for(i in 1:length(blocks_zip_files)) {
+  blocks_shp_files[i] <- paste0("/vsizip/", 
+                                blocks_zip_files[i], "/",
+                                filter(unzip(zipfile = blocks_zip_files[i], list=TRUE),
+                                       str_detect(Name, ".shp$"))$Name)
+}
+blocks_list <- vector(mode = "list", length = 4)
+years <- seq(1990, 2020, 10)
+for(i in 1:length(blocks_list)) {
+  year_files <- blocks_shp_files[str_detect(blocks_shp_files, 
+                                            paste0(years[i], ".shp"))]
+  for(f in year_files) {
+    if(f == year_files[1]) {
+      year_blocks <- st_read(f) %>%
+        select(GISJOIN) %>%
+        mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7)))
+    } else {
+      year_blocks <- st_read(f) %>%
+        select(GISJOIN) %>%
+        mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7))) %>%
+        rbind(year_blocks)
+    }
+  }
+  
+  # make poygons valid and crop to within 150 miles of Idaho
+  blocks_list[[i]] <- year_blocks %>%
+    st_make_valid(.) %>%
+    filter(st_is_valid(.)) %>%
+    st_filter(st_transform(id_buff, st_crs(.)))
+}
+
+join_clean_cens_blocks <- function(censdata, blocks) {
+  pop_col <- ncol(censdata)-1
+  hous_col <- ncol(censdata)
+  
+  censdata %>%
+  rename("tot_pop" = pop_col,
+         "hous_units" = hous_col) %>%
+  select(GISJOIN, tot_pop, hous_units) %>%
+  full_join(blocks, by = "GISJOIN") %>%
+  st_as_sf() %>%
+  mutate(area_sq_mi = units::set_units(st_area(.), "mi2"),
+         hous_dens = units::drop_units(hous_units / area_sq_mi)) %>%
+    st_make_valid(.) %>%
+    filter(st_is_valid(.) & !st_is_empty(.))
+}
+
+block_data_list <- mapply(join_clean_cens_blocks, 
+                          censdata = censdata_list, 
+                          blocks = blocks_list,
+                          SIMPLIFY = FALSE)
+
+# remove large lists to free memory
+# rm(censdata_list)
+# rm(blocks_list)
+
+init_urban_core <- function(block_data) {
+  block_data %>%
+    filter(hous_dens >= 425)
+}
+
+init_urban_core_list <- lapply(block_data_list, init_urban_core)
+
+fill_urb_area <- function(init_urban_core, block_data) {
+  current_urb <- init_urban_core
+  repeat {
+    neighbors <- st_intersects(current_urb, block_data)
+    nb_idx <- unique(unlist(neighbors))
+    new_urb <- block_data[nb_idx, ] %>%
+      filter(hous_dens >= 200) %>%
+      rbind(current_urb) %>%
+      distinct()
+  
+    if(nrow(current_urb) == nrow(new_urb)) {
+      break
+    } else {
+      current_urb <- new_urb
+    }
+  }
+  
+  return(new_urb)
+}
+
+urb_areas_list <- mapply(fill_urb_area,
+                         init_urban_core = init_urban_core_list,
+                         block_data = block_data_list,
+                         SIMPLIFY = FALSE)
+
+# free memory
+# rm(init_urban_core_list)
+
+urb_areas_thresholded <- function(urb_areas, block_data) {
+  urb_union <- st_union(urb_areas)
+  urb_union_polys <- st_cast(urb_union, "POLYGON")
+  
+  blocks_covered <- st_covered_by(block_data, urb_union_polys)
+  high_dens_nucleus <- which(block_data$hous_dens >= 1275)
+  high_dens_blocks <- blocks_covered[high_dens_nucleus]
+  high_dens_poly_idx <- unique(unlist(high_dens_blocks))
+  urb_area_polys <- urb_union_polys[high_dens_poly_idx]
+
+  new_blocks_covered <- st_covered_by(block_data, urb_area_polys)
+  new_blocks_covered <- lapply(new_blocks_covered, function(x) {
+    if(length(x) == 0) {
+      return(NA)
+    } else {
+      return(x)
+    }
+  })
+  
+  urb_areas_filt <- block_data %>%
+    st_drop_geometry() %>%
+    mutate(in_urb_area = unlist(new_blocks_covered)) %>%
+    group_by(in_urb_area) %>%
+    summarise(pop_thres = sum(tot_pop),
+              hous_thres = sum(hous_units)) %>%
+    filter(pop_thres >= 5000 | hous_thres >= 2000)
+
+    return(urb_area_polys[urb_areas_filt$in_urb_area])
+}
+
+urb_areas_thresholded_list <- mapply(urb_areas_thresholded,
+                                     urb_areas = urb_areas_list,
+                                     block_data = block_data_list,
+                                     SIMPLIFY = FALSE)
+
+# rm(urb_areas_list)
+
+block_data_list <- mapply(function(x, y) {
+  x$dist_from_urb <- NA
+  
+  in_urb_area <- as.logical(
+    rowSums(
+      st_covered_by(x, y, sparse = FALSE)
+      )
+    )
+  
+  x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & in_urb_area == TRUE, 0, NA)
+  
+  print("Urban blocks labelled")
+  
+  miles <- 10
+  repeat {
+    urb_area_dist <- as.logical(
+      rowSums(
+        st_covered_by(x, st_union(st_buffer(y, units::set_units(miles, "mi"))), sparse = FALSE)
+        )
+      )
+    
+    if(any(is.na(x$dist_from_urb)) & miles <= 100) {
+      x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & urb_area_dist == TRUE, 
+                                miles, x$dist_from_urb)
+      
+      print(paste("Blocks within", miles, "miles of urban area labelled"))
+      miles <- miles + 10
+    } else {
+      x$dist_from_urb <- ifelse(is.na(x$dist_from_urb), 
+                                ">100", x$dist_from_urb)
+      
+      print("Item compete")
+      break
+    }
+  }
+  
+  return(x)
+}, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
+
+urb_dist_areas <- mapply(function(df, year) {
+  df %>%
+    filter(str_starts(FIPS, "16")) %>%
+    st_drop_geometry() %>%
+    left_join(st_drop_geometry(county_shapes), by = c("FIPS" = "GEOID")) %>%
+    group_by(NAME, dist_from_urb) %>%
+    summarise(area = sum(area_sq_mi),
+              tot_area = mean(tot_area)) %>%
+    mutate(perc_area = units::drop_units(area / units::set_units(tot_area, "mi2")) * 100) %>%
+    select(-c(area, tot_area)) %>%
+    pivot_wider(id_cols = "NAME",
+                names_from = "dist_from_urb",
+                names_prefix = "dist_from_urb",
+                values_from = "perc_area",
+                values_fill = 0) %>%
+    mutate(year = year)
+}, df = block_data_list, year = years)
+
+urb_dist_areas <- do.call(rbind, urb_dist_areas) %>%
+  mutate(across(where(is.numeric), ~ifelse(is.na(.x), 0, .x))) %>%
+  relocate(year, .after = NAME) %>%
+  rename("county" = "NAME") 
+
+urb_dist_pca <- prcomp(urb_dist_areas[,-c(1:2)])
+
+# PC1 and PC2 account for >75% of variance
+rs_data <- cbind(urb_dist_areas[,1:2], urb_dist_pca$x[,c("PC1", "PC2")]) %>%
+  rename("urb_dist_pc1" = "PC1",
+         "urb_dist_pc2" = "PC2") %>%
+  right_join(rs_data, by = c("county", "year"))
+```
+
+
 ## RS4 -- Human-constructed facilities
 
 ### Agriculture
@@ -2864,178 +3084,7 @@ Maybe census land use definition for resource system?
 ```{r}
 #| label: "urban rural pop"
 
-id_buff <- st_buffer(st_union(county_shapes), dist = units::set_units(150, "mi"))
 
-#############
-# get urban populations
-
-censdata_files <- list.files(path = "../data/nhgis0006_csv/nhgis0006_csv", 
-                             pattern=".csv",
-                             full.names = TRUE)
-censdata_list <- vector(mode = "list", length = length(censdata_files))
-for(i in 1:length(censdata_list)) {
-  censdata_list[[i]] <- read.csv(censdata_files[i])
-}
-
-blocks_zip_files <- list.files(path = "..", pattern="shapefile", recursive = TRUE, full.names = TRUE)
-blocks_shp_files <- vector(mode = "character", length = length(blocks_zip_files))
-for(i in 1:length(blocks_zip_files)) {
-  blocks_shp_files[i] <- paste0("/vsizip/", 
-                                blocks_zip_files[i], "/",
-                                filter(unzip(zipfile = blocks_zip_files[i], list=TRUE),
-                                       str_detect(Name, ".shp$"))$Name)
-}
-blocks_list <- vector(mode = "list", length = 4)
-years <- seq(1990, 2020, 10)
-for(i in 1:length(blocks_list)) {
-  year_files <- blocks_shp_files[str_detect(blocks_shp_files, 
-                                            paste0(years[i], ".shp"))]
-  for(f in year_files) {
-    if(f == year_files[1]) {
-      year_blocks <- st_read(f) %>%
-        select(GISJOIN) %>%
-        mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7)))
-    } else {
-      year_blocks <- st_read(f) %>%
-        select(GISJOIN) %>%
-        mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7))) %>%
-        rbind(year_blocks)
-    }
-  }
-  
-  # make poygons valid and crop to within 150 miles of Idaho
-  blocks_list[[i]] <- year_blocks %>%
-    st_make_valid(.) %>%
-    filter(st_is_valid(.)) %>%
-    st_filter(st_transform(id_buff, st_crs(.)))
-}
-
-join_clean_cens_blocks <- function(censdata, blocks) {
-  pop_col <- ncol(censdata)-1
-  hous_col <- ncol(censdata)
-  
-  censdata %>%
-  rename("tot_pop" = pop_col,
-         "hous_units" = hous_col) %>%
-  select(GISJOIN, tot_pop, hous_units) %>%
-  full_join(blocks, by = "GISJOIN") %>%
-  st_as_sf() %>%
-  mutate(area_sq_mi = units::set_units(st_area(.), "mi2"),
-         hous_dens = units::drop_units(hous_units / area_sq_mi)) %>%
-    st_make_valid(.) %>%
-    filter(st_is_valid(.) & !st_is_empty(.))
-}
-
-block_data_list <- mapply(join_clean_cens_blocks, 
-                          censdata = censdata_list, 
-                          blocks = blocks_list,
-                          SIMPLIFY = FALSE)
-
-# remove large lists to free memory
-# rm(censdata_list)
-# rm(blocks_list)
-
-init_urban_core <- function(block_data) {
-  block_data %>%
-    filter(hous_dens >= 425)
-}
-
-init_urban_core_list <- lapply(block_data_list, init_urban_core)
-
-fill_urb_area <- function(init_urban_core, block_data) {
-  current_urb <- init_urban_core
-  repeat {
-    neighbors <- st_intersects(current_urb, block_data)
-    nb_idx <- unique(unlist(neighbors))
-    new_urb <- block_data[nb_idx, ] %>%
-      filter(hous_dens >= 200) %>%
-      rbind(current_urb) %>%
-      distinct()
-  
-    if(nrow(current_urb) == nrow(new_urb)) {
-      break
-    } else {
-      current_urb <- new_urb
-    }
-  }
-  
-  return(new_urb)
-}
-
-urb_areas_list <- mapply(fill_urb_area,
-                         init_urban_core = init_urban_core_list,
-                         block_data = block_data_list,
-                         SIMPLIFY = FALSE)
-
-# free memory
-# rm(init_urban_core_list)
-
-urb_areas_thresholded <- function(urb_areas, block_data) {
-  urb_union <- st_union(urb_areas)
-  urb_union_polys <- st_cast(urb_union, "POLYGON")
-  
-  blocks_covered <- st_covered_by(block_data, urb_union_polys)
-  high_dens_nucleus <- which(block_data$hous_dens >= 1275)
-  high_dens_blocks <- blocks_covered[high_dens_nucleus]
-  high_dens_poly_idx <- unique(unlist(high_dens_blocks))
-  urb_area_polys <- urb_union_polys[high_dens_poly_idx]
-
-  new_blocks_covered <- st_covered_by(block_data, urb_area_polys)
-  new_blocks_covered <- lapply(new_blocks_covered, function(x) {
-    if(length(x) == 0) {
-      return(NA)
-    } else {
-      return(x)
-    }
-  })
-  
-  urb_areas_filt <- block_data %>%
-    st_drop_geometry() %>%
-    mutate(in_urb_area = unlist(new_blocks_covered)) %>%
-    group_by(in_urb_area) %>%
-    summarise(pop_thres = sum(tot_pop),
-              hous_thres = sum(hous_units)) %>%
-    filter(pop_thres >= 5000 | hous_thres >= 2000)
-
-    return(urb_area_polys[urb_areas_filt$in_urb_area])
-}
-
-urb_areas_thresholded_list <- mapply(urb_areas_thresholded,
-                                     urb_areas = urb_areas_list,
-                                     block_data = block_data_list,
-                                     SIMPLIFY = FALSE)
-
-# rm(urb_areas_list)
-
-block_data_list <- mapply(function(x, y) {
-  x$dist_from_urb <- NA
-  
-  in_urb_area <- as.logical(
-    rowSums(
-      st_covered_by(x, y, sparse = FALSE)
-      )
-    )
-  
-  x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & in_urb_area == TRUE, 0, NA)
-  
-  miles <- 10
-  repeat {
-    urb_area_dist <- as.logical(
-      rowSums(
-        st_covered_by(x, st_union(st_buffer(y, units::set_units(miles, "mi"))), sparse = FALSE)
-        )
-      )
-    
-    if(any(is.na(x$dist_from_urb))) {
-      x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & urb_area_dist == TRUE, miles, x$dist_from_urb)
-      miles <- miles + 10
-    } else {
-      break
-    }
-  }
-  
-  return(x)
-}, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
 
 urb_pop_1990 <- block_data_list[[1]] %>%
   st_drop_geometry() %>%
