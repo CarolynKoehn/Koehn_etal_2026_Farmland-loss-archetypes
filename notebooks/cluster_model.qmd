@@ -100,7 +100,7 @@ ses_system = names(ses_data_list_sc),
 SIMPLIFY = FALSE)
 ```
 
-From the Resource clusters, the following variables were removed: workers supporting agriculture and healthcare, recreation and developed land, farm size, change in shrublands and land in farms, and median home value.
+From the Resource clusters, the following variables were removed: workers supporting agriculture and hospitality, recreation and developed land, farm size, change in shrublands and land in farms, and median home value.
 
 ```{r}
 #| include: false
@@ -108,7 +108,7 @@ From the Resource clusters, the following variables were removed: workers suppor
 print(colnames(ses_data_list_sc[["Resource"]])[!(colnames(ses_data_list_sc[["Resource"]]) %in% colnames(ses_data_sel[["Resource"]]))])
 ```
 
-From the Actors clusters, the following variables were removed:number hired workers.
+From the Actors clusters, the following variables were removed: farm tenure and racial composition.
 
 ```{r}
 #| include: false
