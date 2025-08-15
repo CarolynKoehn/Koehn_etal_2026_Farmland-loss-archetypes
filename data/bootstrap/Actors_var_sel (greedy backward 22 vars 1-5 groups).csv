@@ -1,0 +1,3 @@
+"run","ruca_proxy_pc1","ruca_proxy_pc2","urb_rur_pc1","urb_rur_pc2","perc_retired","perc_farms_w_net_loss","emply_pc1","emply_pc2","emply_pc3","pop_per_acre","perc_pop_change","avg_age","unemployment_rate","High.school","Bachelors","tenure_pc1","med_income_in_2020_USD","races_PC1","perc_hispanic","num_hired"
+1,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE
+2,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE
