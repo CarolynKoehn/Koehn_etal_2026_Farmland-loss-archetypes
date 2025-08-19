@@ -172,12 +172,12 @@ summary(drmod_resource)
 hist(as.numeric(summary(drmod_resource)$basis))
 
 # Identify rows with the value
-row_indices <- apply(summary(drmod_resource)$basis, 1, 
-                     function(row) any(row %in% c(as.numeric(summary(drmod_resource)$basis)[as.numeric(summary(drmod_resource)$basis)>0.4],
-                                       as.numeric(summary(drmod_resource)$basis)[as.numeric(summary(drmod_resource)$basis) < -0.4])))
+row_indices <- apply(summary(drmod_actors)$basis, 1, 
+                     function(row) any(row %in% c(as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis)>0.4],
+                                       as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis) < -0.4])))
 
 # Subset the data
-filtered_data <- summary(drmod_resource)$basis[row_indices, ]
+filtered_data <- summary(drmod_actors)$basis[row_indices, ]
 
 filtered_data
 ```
