@@ -172,14 +172,24 @@ summary(drmod_resource)
 hist(as.numeric(summary(drmod_resource)$basis))
 
 # Identify rows with the value
-row_indices <- apply(summary(drmod_resource)$basis, 1, 
-                     function(row) any(row %in% c(as.numeric(summary(drmod_resource)$basis)[as.numeric(summary(drmod_resource)$basis)>0.4],
-                                       as.numeric(summary(drmod_resource)$basis)[as.numeric(summary(drmod_resource)$basis) < -0.4])))
+row_indices <- apply(summary(drmod_actors)$basis, 1, 
+                     function(row) any(row %in% c(as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis)>0.4],
+                                       as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis) < -0.4])))
 
 # Subset the data
-filtered_data <- summary(drmod_resource)$basis[row_indices, ]
+filtered_data <- summary(drmod_actors)$basis[row_indices, ]
 
 filtered_data
+
+# another method to find influential terms
+mults <- c(summary(drmod_resource)$evalues.cumperc[1], (summary(drmod_resource)$evalues.cumperc - lag(summary(drmod_resource)$evalues.cumperc))[2:length(summary(drmod_resource)$evalues.cumperc)]) / 100
+
+row_vals <- apply(summary(drmod_resource)$basis, 1, 
+                     function(row) {
+                       row_val <- sum(abs(row * mults))
+                     })
+names(row_vals) <- row.names(summary(drmod_resource)$basis)
+print(row_vals[order(row_vals, decreasing=TRUE)])
 ```
 
 
