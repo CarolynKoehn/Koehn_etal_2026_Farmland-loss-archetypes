@@ -182,13 +182,13 @@ filtered_data <- summary(drmod_actors)$basis[row_indices, ]
 filtered_data
 
 # another method to find influential terms
-mults <- c(summary(drmod_resource)$evalues.cumperc[1], (summary(drmod_resource)$evalues.cumperc - lag(summary(drmod_resource)$evalues.cumperc))[2:length(summary(drmod_resource)$evalues.cumperc)]) / 100
+mults <- c(summary(drmod_actors)$evalues.cumperc[1], (summary(drmod_actors)$evalues.cumperc - lag(summary(drmod_actors)$evalues.cumperc))[2:length(summary(drmod_actors)$evalues.cumperc)]) / 100
 
-row_vals <- apply(summary(drmod_resource)$basis, 1, 
+row_vals <- apply(summary(drmod_actors)$basis, 1, 
                      function(row) {
                        row_val <- sum(abs(row * mults))
                      })
-names(row_vals) <- row.names(summary(drmod_resource)$basis)
+names(row_vals) <- row.names(summary(drmod_actors)$basis)
 print(row_vals[order(row_vals, decreasing=TRUE)])
 ```
 

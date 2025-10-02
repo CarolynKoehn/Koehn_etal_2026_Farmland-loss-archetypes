@@ -63,7 +63,7 @@ The localized and overall effects of industrial expansion have not been included
 
 ## Data Selection
 
-We linked data available from 1990-2020 to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009] based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found. Detailed data processing steps and sources for all data tables for each indicator and year can be found in Appendix A.
+We linked data available from 1990-2020 to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009] based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
 
 ::: {#tbl-datasel-R}
 
@@ -547,11 +547,79 @@ I need to think more about the NCP results and if they belong in this chapter. I
 
 
 \newpage
-# Appendix A: Data Sources and Processing
+# Appendix A: Data Sources, Processing, and Summary Statistics
 
-All details about data processing will go here
+## Data Sources and Processing
 
-## Resources
+Code for data retrieval and processing can be found in [notebooks/data_retrieval.qmd](https://github.com/CarolynKoehn/FarmPrES-archetypes/blob/main/notebooks/data_retrieval.qmd). We used the `tidyverse` for data cleaning [v2.0.0, @tidyverse] and the `terra` [v1.7.71, @terra] and `sf` [v1.0.16, @sf] packages for raster and vector data processing, respectively.
+
+Census of Agriculture data was published for 1992, 2002, 2012, and 2022, so data from these years was used to represent agricultural indicators in 1990, 2000, 2010, and 2020. All Census of Agriculture data was downloaded at the county scale.
+
+For all indicators that were simplified to principal components with principal component analysis, we retained principal components that explained >70% of the variance according to @aho2022.
+
+### Resources
+
+#### Percent land in farms
+
+Land in farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+
+#### Percent cropland
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories.
+
+#### Percent forestland
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent forestland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories.
+
+#### Percent shrubland
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent shrubland, we used the "Shrub/Scrub" category.
+
+#### Percent federally managed land
+
+We used the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset to represent federal lands [@blm_sma]. We classified the following management agency codes as federal land: BLM, BOR, COE, DOE, DOI, FAA, FHA, GSA, LU_DOI, LU_USDA, MIL, NPS, NWR, USDA, USFS. We then calculated the percent area covered by these management agencies in each county. This indicator was time invariable; federal lands are assumed to not be sold or acquired over the 40 year time period.
+
+#### Lake area
+
+Lake area data is from the Hydrosheds HydroLAKES product [v1.0, @hydrolakes]. We calculated the total area in square kilometers of lakes larger than 10 ha in each county. This indicator is time invariable; we assumed that lake area would not change since 1990.
+
+#### Miles of river
+
+We accessed river data from the WWF HydroSHEDS Free Flowing Rivers Network [v1.0, @hydrosheds] in Google Earth Engine. We filtered to rivers of order 7 or lower which have long-term average discharge >0.1 cubic meters per second. Then, we found the total length of rivers in each county and divided by the county area, so that river length units are in $km/km^2$. This indicator is time invariable; we assumed that river length would not change since 1990.
+
+#### Percent developed land
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent developed land, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories.
+
+#### Land in, nearby, and far from urban areas
+
+Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. We first downloaded population size and housing unit count data for census blocks, 1990-2020, within 150 miles of Idaho from IPUMS [@ipums]. Then, we designated any census blocks with housing density $\geq$425 $units/mi^2$ as initial urban core blocks. Then, we added adjacent census blocks with housing density $\geq$200 $units/mi^2$ to the urban cores, repeating this process until there were no census blocks with housing density $\geq$200 $units/mi^2$ adjacent to the urban cores. Finally, we filtered out any urban cores without a high density urban nucleus, defined as a census block with housing density $\geq$1,275 $units/mi^2$, and we filtered out any urban cores with $\leq$2,000 houses or $\leq$5,000 residents. After these urban areas were established, land in each county was classified as "within an urban area," "within 10 mi of an urban area," "within 20 mi of an urban area," increasing in units of 10 mi, with the final category being ">100 mi from an urban area." Then, we calculated the percent cover of each category in each county. This process was repeated for each year, as population growth shifted urban boundaries and created new urban areas. Then, these data were used in a principal component analysis. We retained the first two principal components, which explained 75.8% of the variance.
+
+#### Farm density
+
+Number of farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+
+#### Percent land in recreation areas
+
+We used data from the Protected Areas Database, which "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters" [@pad_us].
+
+The following land designations (column `Des_Tp`) were considered recreation lands to calculate percent recreation land in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Since sas some state parks were misclassified, these additional local designation (column `Loc_Ds`) terms related to recreation were added as well: State Park, Recreation Reservoir, National Recreation Trail, Recreation Area, National Recreation Area, National Monument, SREC, REC, SP, National Park, and Designated - Recreational. To capture time series data, we filtered data by date established and only included parks established before each time point 1990-2020. Parks without an establishment date were assumed to be established before 1990. We calculated the percent area covered by these recreation lands for each county and year.
+
+#### Distance to nearest national park
+
+We calculated the Euclidean distance from the edge of each county to the edge of the closest national park in the PAD-US data [@pad_us]. This indicator was time invariable, as all nearby national parks were established before 1990.
+
+#### Distance to nearest ski area
+
+We calculated the Euclidean distance from the edge of each county to the edge of the closest ski area in the PAD-US data [@pad_us]. This indicator was time invariable, as all nearby ski resorts were in use before 1990.
+
+#### Housing density
+
+Data for the number of houses in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Population and Housing [1990 CPH-2-14, @CofPopHous_1990]. We used total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+
+## Summary Statistics
+
+### Resources
 
 ```{r}
 #| include: false
@@ -704,7 +772,7 @@ Resource summary statistics for all counties.
 
 :::
 
-## Actors
+### Actors
 
 ```{r}
 #| include: false
@@ -813,6 +881,9 @@ urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
 Summary statistics for all study area counties. A selection of urbanicity statistics are reported (all commute types used by >10% of a county's workforce) as there were very many (25) commute type possibilities in the study area, and means are not reported as they were not representative of the overall data spread.
  
 :::
+
+\newpage
+## References
 
 ::: {#refs-data}
 :::
