@@ -24,9 +24,11 @@ nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 
 # load data
 
-aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
-  select(c("GEOID", "NAME")) %>%
-  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+# aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+#   select(c("GEOID", "NAME")) %>%
+#   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+
+aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_26.shp")
 ```
 
 
@@ -575,7 +577,7 @@ Annual land cover data from the National Land Cover Database (NLCD) was download
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent shrubland, we used the "Shrub/Scrub" category.
 
-#### Percent federally managed land
+#### Percent federally managed land {#sec-fedlands}
 
 We used the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset to represent federal lands [@blm_sma]. We classified the following management agency codes as federal land: BLM, BOR, COE, DOE, DOI, FAA, FHA, GSA, LU_DOI, LU_USDA, MIL, NPS, NWR, USDA, USFS. We then calculated the percent area covered by these management agencies in each county. This indicator was time invariable; federal lands are assumed to not be sold or acquired over the 40 year time period.
 
@@ -616,6 +618,29 @@ We calculated the Euclidean distance from the edge of each county to the edge of
 #### Housing density
 
 Data for the number of houses in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Population and Housing [1990 CPH-2-14, @CofPopHous_1990]. We used total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+
+#### Non-federal land near major roadway
+
+First, we downloaded primary and secondary road shapefiles from the US Census TIGER/Line shapefiles using the`tigris` package [v2.1, @tigris]. Primary roads "are generally divided limited-access highways within the Federal interstate highway system or under state management," and secondary roads are "main arteries, usually in the U.S. highway, state highway, or county highway system" [@tiger_line]. Then, we created a 10km buffer around the road shapefiles, cropping out federal lands described in @sec-fedlands. We then calculated the percent of the county covered by non-federal lands within 10 km of a primary or secondary road.
+
+#### Healthcare workers per 1000 residents
+
+We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total healthcare workers in each county for each year:
+
+- 1990: SIC codes 8010 (Offices and clinics of medical doctors), 8060 (Hospitals), and 8080	(Home health care services)
+- 2000-2020: NAICS codes 621111 (Offices of physicians exc mental health), 622 (Hospitals), and 621610 (Home health care services)
+
+Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and year.
+
+#### Average slope
+
+We downloaded elevation data from Amazon Web Services Terrain Tiles via the `elevatr` package [v0.99.0, @elevatr] at a resolution of 106.8872 meters. We calculated the slope from the elevation data and averaged the slope values within each county. This indicator is time invariant; we assume that the average slope will not change through time.
+
+#### Percent change in number of farms
+
+Number of farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+
+We calculated the five-year change in number of farms before each time point, then divided by the number of farms in the county five years previous to analyze the percent change in number of farms over five years.
 
 ## Summary Statistics
 
@@ -756,7 +781,7 @@ urb_dist_areas_r1 <- read.csv("data/clean_data_for_PCA/urb_dist_areas.csv") %>%
 |  Land in Farms Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$min, 0)`% | +`r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$max, 0)`%  |
 |  Cropland Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$max, 1)`%  |
 |  Forest Change (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$max, 1)`%  |
-|  Shrubland Change (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$max, 1)`%  |
+|  Shrubland Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$max, 1)`%  |
 |  Developed Land Gain (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$mean, 1)`% | +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$max, 1)`%  |
 |  Farms with Net Loss (% of all farms) |  `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
 |  Workers supporting agriculture, per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$max, 0)`  |

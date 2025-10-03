@@ -16,6 +16,21 @@
   url = {https://gbp-blm-egis.hub.arcgis.com/datasets/BLM-EGIS::blm-id-surface-management-agency/about}
 }
 
+@dataset{cencounts,
+  title = {Census {U.S.} {Decennial} {County} {Population} {Data}, 1900-1990},
+  author = {{National Bureau of Economic Research}},
+  year = 2007,
+  url = {https://www.nber.org/research/data/census-us-decennial-county-population-data-1900-1990}
+}
+
+@Manual{censusapi,
+    title = {{censusapi}: {Retrieve} {Data} from the {Census} {APIs}},
+    author = {Hannah Recht},
+    year = {2025},
+    note = {R package version 0.9.0},
+    url = {https://CRAN.R-project.org/package=censusapi},
+  }
+
 @dataset{CofAg_1992_landinfarms,
   author = {{United States Department of Agriculture}},
   title = {Census of {A}griculture {H}istorical {A}rchive, 1992, {I}daho, {C}hapter 2, {T}able 6. {Farms}, {Land} in {Farms}, {Value} of {Land} and {Buildings}, and {Land} {Use}: 1992
@@ -30,6 +45,15 @@ and 1987},
   year = {1992},
   url = {https://www2.census.gov/library/publications/decennial/1990/cph-2/cph-2-14.pdf}
 }
+
+@Manual{elevatr,
+    author = {Jeffrey Hollister and Tarak Shah and Jakub Nowosad and Alec L. Robitaille and Marcus W. Beck and Mike Johnson},
+    title = {{elevatr}: {Access} {Elevation} {Data} from {Various} {APIs}},
+    year = {2023},
+    note = {R package version 0.99.0},
+    doi = {10.5281/zenodo.8335450},
+    url = {https://github.com/jhollist/elevatr/},
+  }
 
 @Manual{exactextractr,
     title = {exactextractr: Fast Extraction from Raster Datasets using Polygons},
@@ -129,4 +153,20 @@ and 1987},
     number = {43},
     pages = {1686},
     doi = {10.21105/joss.01686},
+  }
+  
+@incollection{tiger_line,
+  author = {{U.S. Census Bureau}},
+  title = {4. {Geographic} {Shapefile} {Concepts} {Overview}},
+  booktitle = {{TIGER}/{Line} {Files} {Technical} {Documentation}},
+  year = 2024,
+  pages = {4-13 -- 4-48}
+}
+  
+@Manual{tigris,
+    title = {{tigris}: {Load} {Census} {TIGER}/{Line} {Shapefiles}},
+    author = {Kyle Walker},
+    year = {2024},
+    note = {R package version 2.1},
+    url = {https://CRAN.R-project.org/package=tigris},
   }
