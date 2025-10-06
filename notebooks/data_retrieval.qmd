@@ -97,11 +97,11 @@ NLCD data were downloaded from https://www.mrlc.gov/viewer/
 ```{r}
 #| label: "load NLCD data"
 
-file_list <- subset(unzip("../data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name,
-                    str_detect(unzip("../data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name, "tiff$"))
+file_list <- subset(unzip("../data/raw_data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name,
+                    str_detect(unzip("../data/raw_data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name, "tiff$"))
 file_list <- file_list[order(file_list)]
 
-nlcd_all_years_ID <- rast(paste0("/vsizip/../data/NLCD_LndCov_1985-2020.zip/", file_list))
+nlcd_all_years_ID <- rast(paste0("/vsizip/../data/raw_data/NLCD_LndCov_1985-2020.zip/", file_list))
 names(nlcd_all_years_ID) <- seq(1985,2020,5)
 
 # following code modified from @canderson156 at https://gis.stackexchange.com/questions/425821/calculating-proportion-of-a-polygon-covered-by-each-raster-category-using-r
@@ -226,7 +226,7 @@ Data from the Hydrosheds HydroLAKES product were downloaded from https://www.hyd
 ```{r}
 #| label: "percent open water"
 
-us_lakes <- st_read("/vsizip/../data/HydroLAKES_polys_v10_shp.zip/HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp") %>%
+us_lakes <- st_read("/vsizip/../data/raw_data/HydroLAKES_polys_v10_shp.zip/HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp") %>%
   filter(Country == "United States of America")
 
 lakes_area <- us_lakes %>%
@@ -260,7 +260,7 @@ WWF Hydrosheds data
 ```{r}
 #| label: "miles of river"
 
-rivers <- st_read("/vsizip/../data/ID_Rivers_ORD7.zip/ID_Rivers_ORD7.shp") %>%
+rivers <- st_read("/vsizip/../data/raw_data/ID_Rivers_ORD7.zip/ID_Rivers_ORD7.shp") %>%
   st_transform(st_crs(county_shapes)) %>%
   st_intersection(county_shapes) %>%
   mutate(length = st_length(.)) %>%
@@ -307,7 +307,7 @@ id_buff <- st_buffer(st_union(county_shapes), dist = units::set_units(150, "mi")
 #############
 # get urban populations
 
-censdata_files <- list.files(path = "../data/nhgis0006_csv/nhgis0006_csv", 
+censdata_files <- list.files(path = "../data/raw_data/nhgis0006_csv/nhgis0006_csv", 
                              pattern=".csv",
                              full.names = TRUE)
 censdata_list <- vector(mode = "list", length = length(censdata_files))
@@ -579,7 +579,7 @@ We also use Euclidean distance to calculate distance to national parks and ski a
 ```{r}
 #| label: "percent recreation lands"
 
-padus <- st_read("/vsizip/../data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
+padus <- st_read("/vsizip/../data/raw_data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
                  layer = "PADUS4_1Combined_Proclamation_Marine_Fee_Designation_Easement") %>%
   filter(State_Nm %in% c("ID", "WA", "OR", "WY", "UT", "NV", "MT")) %>%
   filter(st_is_valid(.))
@@ -1736,7 +1736,7 @@ We also use Euclidean distance to calculate distance to national parks and ski a
 ```{r}
 #| label: "percent recreation lands - RU"
 
-padus <- st_read("/vsizip/../data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
+padus <- st_read("/vsizip/../data/raw_data/PADUS4_1Geodatabase.zip/PADUS4_1Geodatabase.gdb", 
                  layer = "PADUS4_1Combined_Proclamation_Marine_Fee_Designation_Easement") %>%
   filter(State_Nm %in% c("ID", "WA", "OR", "WY", "UT", "NV", "MT")) %>%
   filter(st_is_valid(.))
@@ -2051,7 +2051,7 @@ Data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were download
 ```{r}
 #| label: "population density"
 
-pop1990 <- read.csv("../data/cencounts.csv") %>%
+pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
   select(pop1990, name) %>%
   filter(str_starts(name, "ID") & name != "ID Idaho") %>%
   mutate(name = str_remove(name, "ID "),
@@ -2113,7 +2113,7 @@ Population data sources same as above.
 ```{r}
 #| label: "population change"
 
-pop1980 <- read.csv("../data/cencounts.csv") %>%
+pop1980 <- read.csv("../data/raw_data/cencounts.csv") %>%
   select(pop1980, name) %>%
   filter(str_starts(name, "ID") & name != "ID Idaho") %>%
   mutate(name = str_remove(name, "ID "),
@@ -2643,7 +2643,7 @@ Age data downloaded from https://seer.cancer.gov/popdata/download.html.
 ```{r}
 #| label: "average age"
 
-age_raw <- read.table(file = gzfile("../data/id.1969_2023.singleages.through89.90plus.txt.gz"),
+age_raw <- read.table(file = gzfile("../data/raw_data/id.1969_2023.singleages.through89.90plus.txt.gz"),
                       sep = "\n", strip.white = TRUE)
 
 age_formatted <- age_raw %>%
@@ -2727,7 +2727,7 @@ a_data <- left_join(a_data, medinc, by = c("county", "year"))
 Raw unemployment data was downloaded from https://download.bls.gov/pub/time.series/la/ (`la.data.64.County`).
 
 ```{r}
-unemployment_raw <- read.table(file = gzfile("../data/la.data.64.County.txt.gz"),
+unemployment_raw <- read.table(file = gzfile("../data/raw_data/la.data.64.County.txt.gz"),
                                header = TRUE,
                                sep = "\t")
 
@@ -2754,10 +2754,10 @@ Data were downloaded from https://data.ers.usda.gov/reports.aspx?ID=4026: County
 ```{r}
 #| label: "education level"
 
-high_school <- readxl::read_excel("../data/EducationReport_HighSchool.xlsx",
+high_school <- readxl::read_excel("../data/raw_data/EducationReport_HighSchool.xlsx",
                                   skip=2) %>%
   mutate(edu_level = "High school")
-bachelors <- readxl::read_excel("../data/EducationReport_Bachelors.xlsx",
+bachelors <- readxl::read_excel("../data/raw_data/EducationReport_Bachelors.xlsx",
                                   skip=2) %>%
   mutate(edu_level = "Bachelors")
 edu_level <- rbind(high_school, bachelors) %>%
@@ -3172,7 +3172,7 @@ commutes_1990 <- read.table("https://www2.census.gov/programs-surveys/commuting/
   group_by(county, year, commute) %>%
   summarise(workers = sum(Workers))
 
-commutes_2000 <- readxl::read_xls("../data/2kresco_id.xls",
+commutes_2000 <- readxl::read_xls("../data/raw_data/2kresco_id.xls",
                                   range = "A5:K1388") %>%
   rowwise() %>%
   mutate(ResFIPS = paste0(`Res State`, `Res County`),
@@ -3197,7 +3197,7 @@ commutes_2000 <- readxl::read_xls("../data/2kresco_id.xls",
   group_by(county, year, commute) %>%
   summarise(workers = sum(Count))
 
-commutes_2010 <- readxl::read_xlsx("../data/table1 (2010).xlsx",
+commutes_2010 <- readxl::read_xlsx("../data/raw_data/table1 (2010).xlsx",
                                   range = "A6:J26342",
                                   col_names = c("Res_State_FIPS", "Res_County_FIPS", "Work_State_FIPS", "Work_County_FIPS", "Workers", "MOE", "Res_State", "Res_County", "Work_State", "Work_County")) %>%
   filter(Res_State == "Idaho") %>%
@@ -3224,7 +3224,7 @@ commutes_2010 <- readxl::read_xlsx("../data/table1 (2010).xlsx",
   group_by(county, year, commute) %>%
   summarise(workers = sum(Workers))
 
-commutes_2020 <- readxl::read_xlsx("../data/table1 (2020).xlsx",
+commutes_2020 <- readxl::read_xlsx("../data/raw_data/table1 (2020).xlsx",
                                   range = "A9:J23788",
                                   col_names = c("Res_State_FIPS", "Res_County_FIPS", "Res_State", "Res_County", "Work_State_FIPS", "Work_County_FIPS", "Work_State", "Work_County", "Workers", "MOE" )) %>%
   filter(Res_State == "Idaho") %>%
