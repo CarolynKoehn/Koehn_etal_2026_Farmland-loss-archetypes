@@ -28,7 +28,7 @@ nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 #   select(c("GEOID", "NAME")) %>%
 #   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
 
-aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_26.shp")
+aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_26.shp") %>% select(NAME)
 ```
 
 
@@ -220,7 +220,7 @@ clust_dat[["Actors"]] <- read.csv("data/model results/clust_dat_actors.csv") %>%
 
 resource_means <- clust_dat$Resource %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -230,7 +230,7 @@ resource_means <- clust_dat$Resource %>%
 
 actor_means <- clust_dat$Actors %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -654,7 +654,7 @@ r1 <- clust_dat[["Resource"]]
 
 r1_means <- r1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -807,7 +807,7 @@ a1 <- clust_dat[["Actors"]]
 
 a1_means <- a1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -940,7 +940,7 @@ clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv
 
 clust_dat_sc[["Resource"]] %>%
   st_drop_geometry() %>%
-  pivot_longer(cols = !c(county, year, cluster, GEOID),
+  pivot_longer(cols = !c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "value") %>%
   left_join(ci_clust[["Resource"]][,c("cluster", "input_data_name", "sig")]) %>%
@@ -982,7 +982,7 @@ r1 <- clust_dat[["Resource"]] %>%
 
 r1_means <- r1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1139,7 +1139,7 @@ r2 <- clust_dat[["Resource"]] %>%
 
 r2_means <- r2 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1295,7 +1295,7 @@ r3 <- clust_dat[["Resource"]] %>%
 
 r3_means <- r3 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1453,7 +1453,7 @@ r4 <- clust_dat[["Resource"]] %>%
 
 r4_means <- r4 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1610,7 +1610,7 @@ r5 <- clust_dat[["Resource"]] %>%
 
 r5_means <- r5 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1768,7 +1768,7 @@ Summary statistics for counties in archetype R5. Bolded cluster means are signif
 
 clust_dat_sc[["Actors"]] %>%
   st_drop_geometry() %>%
-  pivot_longer(cols = !c(county, year, cluster, GEOID),
+  pivot_longer(cols = !c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "value") %>%
   left_join(ci_clust[["Actors"]][,c("cluster", "input_data_name", "sig")]) %>%
@@ -1809,7 +1809,7 @@ a1 <- clust_dat[["Actors"]] %>%
 
 a1_means <- a1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1920,7 +1920,7 @@ a2 <- clust_dat[["Actors"]] %>%
 
 a2_means <- a2 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2026,7 +2026,7 @@ a3 <- clust_dat[["Actors"]] %>%
 
 a3_means <- a3 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2130,7 +2130,7 @@ a4 <- clust_dat[["Actors"]] %>%
 
 a4_means <- a4 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
+  pivot_longer(!c(county, year, cluster),#, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
