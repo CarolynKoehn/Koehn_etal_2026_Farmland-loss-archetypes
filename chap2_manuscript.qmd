@@ -28,7 +28,7 @@ nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 #   select(c("GEOID", "NAME")) %>%
 #   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
 
-aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_26.shp") %>% select(NAME)
+aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_26.shp", quiet=TRUE) %>% select(NAME)
 ```
 
 
@@ -630,6 +630,8 @@ We downloaded data from the County Business Patterns series from the U.S. Census
 - 1990: SIC codes 8010 (Offices and clinics of medical doctors), 8060 (Hospitals), and 8080	(Home health care services)
 - 2000-2020: NAICS codes 621111 (Offices of physicians exc mental health), 622 (Hospitals), and 621610 (Home health care services)
 
+We also downloaded data for public sector employees from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020]. We added local government employees in the "Health" and "Hospitals" categories.
+
 Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and year.
 
 #### Average slope
@@ -638,9 +640,89 @@ We downloaded elevation data from Amazon Web Services Terrain Tiles via the `ele
 
 #### Percent change in number of farms
 
-Number of farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+Number of farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
-We calculated the five-year change in number of farms before each time point, then divided by the number of farms in the county five years previous to analyze the percent change in number of farms over five years.
+We calculated the five-year percent change in number of farms before each time point. For example, for 2022: $ (Farms_{2022} - Farms_{2017}) / Farms_{2017} $
+
+#### Percent change of land in farms
+
+Land in farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We used the five-year change in the percent of all county land that was in farms.
+
+#### Percent change of cropland
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories. We used the five-year change in the percent of all county land that was in cropland.
+
+#### Percent change of forest
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories. We used the five-year change in the percent of all county land that was in forestland.
+
+#### Percent change of shrubland
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the "Shrub/Scrub category. We used the five-year change in the percent of all county land that was in shrubland.
+
+#### Percent change of developed land
+
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories. We used the five-year change in the percent of all county land that was in developed land.
+
+#### Percent farms with net loss
+
+Farms with net loss and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 4 [@CofAg_1992_netloss].
+
+#### Agriculture support jobs
+
+We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total agriculture support workers in each county for each year:
+
+- 1990: SIC codes 0710 (Soil Preparation Services), 0720 (Crop Services), 0761 (Farm Labor and Management Services), 0750 (Animal Services except veterinary)
+- 2000-2020: NAICS codes 115112 (Soil Preparation, Planting, and Cultivating), 115113 (Crop Harvesting Primarily by Machine), 115114 (Postharvest Crop Activities), 115115 (Farm Labor Contractors and Crew Leaders), 115116 (Farm Management Services), 115210 (Support Activities for Animal Production)
+
+We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
+
+Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of agriculture support workers by the total population count in each county and year.
+
+#### Hotel and restaurant jobs
+
+We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total hospitality workers in each county for each year:
+
+- 1990: SIC codes 7000 (Hotels and Other Lodging Places), 5800 (Eating and drinking places)
+- 2000-2020: NAICS code 72 (Accommodation and food services)
+
+Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of hospitality workers by the total population count in each county and year.
+
+#### Median home value
+
+Data for the median home value in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Housing [1990 CH-1-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for housing in December of each year [@cpiu_housing].
+
+#### Farm size
+
+Number of farms in each size class and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We found the percent of farms in each size category available for each year, and then simplified the data using principal component analysis. We retained the first two principal components, which explained 81.1% of the variance.
+
+### Actors
+
+#### Population density
+
+Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided by total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+
+#### Population change
+
+Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $ (population_{1990} - population_{1980}) / population_{1980} $.
+
+#### Percent employed in different industries
+
+We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We summed workers in the following categories based on which high-level SIC and NAICS codes were comparable:
+
+- Agriculture, Forestry, Fishing and Hunting: SIC code 7 (Agricultural Services, Forestry, and Fishing), NAICS code 11 (Agriculture, Forestry, Fishing and Hunting)
+- Mining, Quarrying, and Oil and Gas Extraction: SIC code 10 (Mining), NAICS code 21 (Mining, Quarrying, and Oil and Gas Extraction)
+- Construction: SIC code 15 (Construction), NAICS code 23 (Construction)
+- Manufacturing: SIC code 20 (Manufacturing), NAICS code "31-33" (Manufacturing)
+- Trucking and warehousing: SIC code 4200 (Trucking and warehousing), NAICS codes 484 (Truck Transportation) and 493 (Warehousing and Storage)
+- Wholesale Trade: SIC code 50 (Wholesale Trade), NAICS code 42 (Wholesale Trade)
+- Retail Trade: SIC code 52 (Retail Trade), NAICS code "44-45" (Retail Trade)
+- Finance, Insurance, and Real Estate: SIC code 60 (Finance, Insurance, and Real Estate), NAICS codes 52 (Finance and Insurance) and 531 (Real Estate)
+- Legal services: SIC code 8100 (Legal services), NAICS code 5411 (Legal Services)
+- Education and libraries: SIC code 8200 (Educational services), NAICS codes 61 (Educational Services) and 519120 (Libraries and Archives)
+- Health and social services: SIC codes 8000 (Health services) and 8300 (Social services), NAICS code 62 (Health Care and Social Assistance)
+- Accommodation and Food: SIC codes 7000 (Hotels and Other Lodging Places) and 5800 (Eating and drinking places), NAICS code 72 (Accommodation and Food Services)
+- Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction)
 
 ## Summary Statistics
 
