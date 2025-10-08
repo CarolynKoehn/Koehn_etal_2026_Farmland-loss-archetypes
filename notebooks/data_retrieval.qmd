@@ -880,6 +880,23 @@ County Business Patterns data was downloaded with the `censusapi` package. SIC a
 ```{r}
 #| label: "healthcare"
 
+public_employees_1993_2010 <- read_csv("../data/raw_data/employment/aspep_counties_1993_2016.csv") %>%
+  filter(state == "idaho" & year %in% c(1993, 2000, 2010)) %>%
+  filter(government_function %in% c("health", "hospitals")) %>%
+  group_by(fips_state_county, year) %>%
+  summarise(pub_health_workers = sum(full_time_employees, full_time_equivalent_employees, part_time_employees)) %>%
+  rowwise() %>%
+  mutate(year = ifelse(year == 1993, 1990, year))
+
+public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xlsx") %>%
+  filter(State == "Idaho" & `Type of Government` == "County" & `Government Function` %in% c("Health", "Hospitals")) %>%
+  group_by(`FIPS State`, `FIPS County`) %>%
+  summarise(pub_health_workers = sum(`Full-time Employees`, `Part-time Employees`)) %>%
+  mutate(year = 2020, 
+         GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
+  ungroup() %>%
+  select(GEOID, year, pub_health_workers)
+
 healthcare1990 <- rbind(
   getCensus(name = "cbp",
             vintage = 1990,
@@ -980,11 +997,16 @@ healthcare2020 <- getCensus(name = "cbp",
 #           "../data/API_data_download_backup/healthcare2020.csv",
 #           row.names = FALSE)
 
-healthworkers <- do.call(rbind, list(healthcare1990, healthcare2000, healthcare2010, healthcare2020)) %>%
+priv_healthworkers <- do.call(rbind, list(healthcare1990, healthcare2000, healthcare2010, healthcare2020))
+
+healthworkers <- full_join(priv_healthworkers, public_employees_1993_2010, by = c("GEOID" = "fips_state_county", "year" = "year")) %>%
+  full_join(public_employees_2020) %>%
+  group_by(GEOID, year) %>%
+  summarise(health_workers = sum(heath_workers, pub_health_workers, na.rm=TRUE)) %>%
   mutate(county = recode(GEOID, !!!GEOID_names))
 
 # get population (more info in actors section)
-pop1990 <- read.csv("../data/cencounts.csv") %>%
+pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
   select(pop1990, name) %>%
   filter(str_starts(name, "ID") & name != "ID Idaho") %>%
   mutate(name = str_remove(name, "ID "),
@@ -1017,7 +1039,7 @@ pop <- data.frame(county = c(pop1990$name,
 
 health_pop <- left_join(pop, healthworkers, by = c("county", "year")) %>%
   rowwise() %>%
-  mutate(healthworkers = ifelse(is.na(heath_workers), 0, heath_workers),
+  mutate(healthworkers = ifelse(is.na(health_workers), 0, health_workers),
          pop = as.integer(pop)) %>%
   mutate(healthworkers_per_1000 = healthworkers / (pop/1000))
 
@@ -2154,6 +2176,24 @@ County Business Patterns data was downloaded with the `censusapi` package. SIC a
 
 ```{r}
 #| label: "employment sectors"
+
+public_employees_1993_2010 <- read_csv("../data/raw_data/employment/aspep_counties_1993_2016.csv") %>%
+  filter(state == "idaho" & year %in% c(1993, 2000, 2010)) %>%
+  filter(government_function %in% c("health", "hospitals", "judicial & legal", "local libraries", "elementary and secondary - instruction", "elementary and secondary - other total", "housing & community development (local)", "parks & recreation", "welfare")) %>%
+  # group_by(fips_state_county, year) %>%
+  # summarise(pub_health_workers = sum(full_time_employees, full_time_equivalent_employees, part_time_employees)) %>%
+  # rowwise() %>%
+  # mutate(year = ifelse(year == 1993, 1990, year))
+
+public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xlsx") %>%
+  filter(State == "Idaho" & `Type of Government` == "County")
+#& `Government Function` %in% c("Health", "Hospitals")) %>%
+  # group_by(`FIPS State`, `FIPS County`) %>%
+  # summarise(pub_health_workers = sum(`Full-time Employees`, `Part-time Employees`)) %>%
+  # mutate(year = 2020, 
+  #        GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
+  # ungroup() %>%
+  # select(GEOID, year, pub_health_workers)
 
 employment1990 <- rbind(
   getCensus(name = "cbp",

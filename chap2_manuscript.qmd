@@ -630,7 +630,7 @@ We downloaded data from the County Business Patterns series from the U.S. Census
 - 1990: SIC codes 8010 (Offices and clinics of medical doctors), 8060 (Hospitals), and 8080	(Home health care services)
 - 2000-2020: NAICS codes 621111 (Offices of physicians exc mental health), 622 (Hospitals), and 621610 (Home health care services)
 
-We also downloaded data for public sector employees from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020]. We added local government employees in the "Health" and "Hospitals" categories.
+We also downloaded data for public sector employees from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020]. We added local government employees in the "Health" and "Hospitals" categories. Since the ASPEP began in 1993, we used data from 1993 for 1990.
 
 Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and year.
 
@@ -718,11 +718,20 @@ We downloaded data from the County Business Patterns series from the U.S. Census
 - Wholesale Trade: SIC code 50 (Wholesale Trade), NAICS code 42 (Wholesale Trade)
 - Retail Trade: SIC code 52 (Retail Trade), NAICS code "44-45" (Retail Trade)
 - Finance, Insurance, and Real Estate: SIC code 60 (Finance, Insurance, and Real Estate), NAICS codes 52 (Finance and Insurance) and 531 (Real Estate)
-- Legal services: SIC code 8100 (Legal services), NAICS code 5411 (Legal Services)
+- Legal: SIC code 8100 (Legal services), NAICS code 5411 (Legal Services)
 - Education and libraries: SIC code 8200 (Educational services), NAICS codes 61 (Educational Services) and 519120 (Libraries and Archives)
 - Health and social services: SIC codes 8000 (Health services) and 8300 (Social services), NAICS code 62 (Health Care and Social Assistance)
 - Accommodation and Food: SIC codes 7000 (Hotels and Other Lodging Places) and 5800 (Eating and drinking places), NAICS code 72 (Accommodation and Food Services)
 - Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction)
+
+We also used data from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020] to add public employees to the following categories:
+
+- Legal: ASPEP government function category "judicial & legal"
+- Education and libraries: ASPEP government function categories "local libraries", "elementary and secondary - instruction", and "elementary and secondary - other total"
+- Health and social services: ASPEP government function categories "health", "hospitals", "housing & community development (local)", and "public welfare"
+- Recreation: ASPEP goverment function category "parks & recreation"
+
+Since ASPEP data collection began in 1993, we used 1993 data for 1990. Finally, we used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state and federal government residing in each county.
 
 ## Summary Statistics
 
