@@ -724,14 +724,48 @@ We downloaded data from the County Business Patterns series from the U.S. Census
 - Accommodation and Food: SIC codes 7000 (Hotels and Other Lodging Places) and 5800 (Eating and drinking places), NAICS code 72 (Accommodation and Food Services)
 - Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction)
 
-We also used data from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020] to add public employees to the following categories:
+The County Business Patterns data did not include public sector employees or agricultural producers. We used data from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020] to add public employees to the following categories:
 
 - Legal: ASPEP government function category "judicial & legal"
 - Education and libraries: ASPEP government function categories "local libraries", "elementary and secondary - instruction", and "elementary and secondary - other total"
-- Health and social services: ASPEP government function categories "health", "hospitals", "housing & community development (local)", and "public welfare"
-- Recreation: ASPEP goverment function category "parks & recreation"
+- Health and social services: ASPEP government function categories "health", "hospitals", "housing & community development (local)", "welfare", and "public welfare"
+- Recreation: ASPEP government function category "parks & recreation"
 
-Since ASPEP data collection began in 1993, we used 1993 data for 1990. Finally, we used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state and federal government residing in each county.
+Since ASPEP data collection began in 1993, we used 1993 data for 1990. We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state and federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API with R package `rnassqs` [v0.6.1, @rnassqs] for 2002-2022 and the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 11 [@CofAg_1992_tenure].
+
+We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first two components, which explained 76.4% of the variance.
+
+#### Percent retired
+
+We defined retirees as residents over age 65 who were not in the labor force. Population counts and counts of people >65 not in the labor force for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Labor force data for 1990 were digitized from Table 144 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. Population count data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts].
+
+#### Average age
+
+Data on the weighted average age of residents in each county were downloaded from the @nih_age. 
+
+#### Median household income
+
+Data for the median household income in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from from Table 148 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for all items in the Western United States (series ID CUUR0400SA0) in December of each year [@cpiu_all].
+
+#### Unemployment rate
+
+We downloaded monthly unemployment rate data from @unemployment and used the mean unemployment rate across months for each county and year.
+
+#### Education level -- high school or Bachelor's degree
+
+We downloaded data on the percentage of residents whose highest level of education was high school or a Bachelor's degree from @education. We used the column "2008-2012" to represent 2010 and the column "2019-2023" to represent 2020.
+
+#### Racial composition
+
+Population counts for each race used by the US Census for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. We simplified these data with principle component analysis, retaining the first component which explained 95.3% of the variance.
+
+#### Hispanic ethnicity
+
+Population counts and ethnicity data for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990].
+
+#### Farm tenure
+
+Number of farms in each tenure class (full-owned, part-owned, and tenant) and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 11 [@CofAg_1992_tenure]. We found the percent of farms in each tenure category for each year, and then simplified the data using principal component analysis. We retained the first principal component, which explained 92.6% of the variance.
 
 ## Summary Statistics
 

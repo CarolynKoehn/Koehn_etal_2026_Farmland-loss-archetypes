@@ -28,7 +28,8 @@ census_api_key(Sys.getenv('CENSUS_API_KEY'))
 #   mutate(tot_area = st_area(.))
 
 # workaround when tigris is down
-county_shapes <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_fulldata.shp") %>%
+county_shapes <- st_read("/vsizip/R:/CarolynKoehn/Data_raw/US_county_2020.zip/US_county_2020.shp") %>%
+  filter(STATEFP == 16) %>%
   select(GEOID, NAME) %>%
   mutate(tot_area = st_area(.))
 
@@ -2177,24 +2178,6 @@ County Business Patterns data was downloaded with the `censusapi` package. SIC a
 ```{r}
 #| label: "employment sectors"
 
-public_employees_1993_2010 <- read_csv("../data/raw_data/employment/aspep_counties_1993_2016.csv") %>%
-  filter(state == "idaho" & year %in% c(1993, 2000, 2010)) %>%
-  filter(government_function %in% c("health", "hospitals", "judicial & legal", "local libraries", "elementary and secondary - instruction", "elementary and secondary - other total", "housing & community development (local)", "parks & recreation", "welfare")) %>%
-  # group_by(fips_state_county, year) %>%
-  # summarise(pub_health_workers = sum(full_time_employees, full_time_equivalent_employees, part_time_employees)) %>%
-  # rowwise() %>%
-  # mutate(year = ifelse(year == 1993, 1990, year))
-
-public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xlsx") %>%
-  filter(State == "Idaho" & `Type of Government` == "County")
-#& `Government Function` %in% c("Health", "Hospitals")) %>%
-  # group_by(`FIPS State`, `FIPS County`) %>%
-  # summarise(pub_health_workers = sum(`Full-time Employees`, `Part-time Employees`)) %>%
-  # mutate(year = 2020, 
-  #        GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
-  # ungroup() %>%
-  # select(GEOID, year, pub_health_workers)
-
 employment1990 <- rbind(
   getCensus(name = "cbp",
             vintage = 1990,
@@ -2560,6 +2543,65 @@ employment2020 <- getCensus(name = "cbp",
 #           "../data/API_data_download_backup/employment2020.csv",
 #           row.names = FALSE)
 
+public_employees_1993_2010 <- read_csv("../data/raw_data/employment/aspep_counties_1993_2016.csv") %>%
+  filter(state == "idaho" & year %in% c(1993, 2000, 2010)) %>%
+  filter(government_function %in% c("health", "hospitals", "judicial & legal", "local libraries", "elementary and secondary - instruction", "elementary and secondary - other total", "housing & community development (local)", "parks & recreation", "welfare")) %>%
+  mutate(Industry = ifelse(government_function == "judicial & legal", "Legal", NA),
+         Industry = ifelse(government_function %in% c("local libraries", "elementary and secondary - instruction", "elementary and secondary - other total"), "Education and Libraries", Industry),
+         Industry = ifelse(government_function %in% c("health", "hospitals", "housing & community development (local)", "welfare"), "Health and Social Services", Industry),
+         Industry = ifelse(government_function == "parks & recreation", "Recreation", Industry)) %>%
+  group_by(fips_state_county, year, Industry) %>%
+  summarise(employed = sum(full_time_employees, full_time_equivalent_employees, part_time_employees)) %>%
+  rowwise() %>%
+  mutate(year = ifelse(year == 1993, 1990, year)) %>%
+  rename("GEOID" = "fips_state_county")
+
+public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xlsx") %>%
+  filter(State == "Idaho" & !is.na(`FIPS County`)) %>%
+  filter(`Government Function` %in% c("Health", "Hospitals", "Judicial and Legal", "Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other", "Housing and Community Development", "Parks and Recreation", "Public Welfare")) %>%
+  mutate(Industry = ifelse(`Government Function` == "Judicial and Legal", "Legal", NA),
+         Industry = ifelse(`Government Function` %in% c("Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other"), "Education and Libraries", Industry),
+         Industry = ifelse(`Government Function` %in% c("Health", "Hospitals", "Housing and Community Development", "Public Welfare"), "Health and Social Services", Industry),
+         Industry = ifelse(`Government Function` == "Parks and Recreation", "Recreation", Industry)) %>%
+  group_by(`FIPS State`, `FIPS County`, Industry) %>%
+  summarise(employed = sum(`Full-time Employees`, `Part-time Employees`)) %>%
+  mutate(year = 2020,
+         GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
+  ungroup() %>%
+  select(GEOID, year, Industry, employed)
+
+fed_state <- readxl::read_xlsx("../data/raw_data/employment/allhlcn90.xlsx") %>%
+  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn00.xlsx")) %>%
+  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn10.xlsx")) %>%
+  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn20.xlsx")) %>%
+  filter(`St Name` == "Idaho" & Ownership %in% c("Federal Government", "State Government")) %>%
+  select(`Area\r\nCode`, Year, Ownership, `Annual Average Employment`) %>%
+  rename("GEOID" = "Area\r\nCode",
+         "year" = "Year",
+         "Industry" = "Ownership",
+         "employed" = "Annual Average Employment") %>%
+  mutate(year = as.integer(year))
+
+producers <- nassqs(list(state_alpha = "ID",
+                         agg_level_desc = "county",
+                         year = c(2002, 2012, 2022),
+                         short_desc = c("Operators, (all) - number of operators",
+                                        "Producers, (all) - number of producers"))) %>%
+  group_by(county_name, year) %>%
+  summarise(producers = sum(Value)) %>%
+  mutate(county = str_to_title(county_name))
+producers1990 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  rowwise() %>%
+  mutate(producers = sum(Num_operators_prim_occ_farming, Num_operators_prim_occ_not_farming))
+producers <- data.frame(county = c(producers$county,
+                                   producers1990$County),
+                        year = c(producers$year,
+                                 producers1990$Year),
+                        Industry = "Agriculture, Forestry, Fishing and Hunting",
+                        employed = c(producers$producers,
+                                     producers1990$producers)) %>%
+  mutate(year = as.integer(year)-2)
+
 employment_codes <- tibble(sector = c("Total",
                                       "Agriculture, Forestry, Fishing and Hunting",
                                       "Mining, Quarrying, and Oil and Gas Extraction",
@@ -2571,7 +2613,7 @@ employment_codes <- tibble(sector = c("Total",
                                       "Retail Trade",
                                       "Finance, Insurance, and Real Estate",
                                       "Finance, Insurance, and Real Estate",
-                                      "Legal Services",
+                                      "Legal",
                                       "Education and Libraries",
                                       "Education and Libraries",
                                       "Education and Libraries",
@@ -2595,36 +2637,52 @@ names(recode_naic) <- recode_naic_df$naics
 
 employment1990_clean <- employment1990 %>%
   mutate(GEOID = paste0(state, county),
-         county = recode(GEOID, !!!GEOID_names),
          year=1990,
          Industry = recode(SIC, !!!recode_sic)) %>%
-  group_by(county, year, Industry) %>%
+  group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
+  rbind(filter(public_employees_1993_2010, year == 1990)) %>%
+  rbind(filter(fed_state, year == 1990)) %>%
+  rbind(filter(producers, year == 1990)) %>%
+  mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(employed)) %>%
   pivot_wider(id_cols = c("county", "year"),
               names_from = "Industry",
               values_from = "employed") %>%
-  filter(county != 16999) %>%
+  filter(county != 16999 & county != 16000) %>%
+  select(-Total) %>%
   replace(is.na(.), 0) %>%
+  ungroup() %>%
+  mutate(Total = rowSums(.[3:ncol(.)])) %>%
   rowwise() %>%
-  mutate(across(c(where(is.numeric)),
+  mutate(across(!c(county, year),
                 ~.x/Total * 100)) %>%
   select(-Total)
 
 employment2000_clean <- employment2000 %>%
   mutate(GEOID = paste0(state, county),
-         county = recode(GEOID, !!!GEOID_names),
          year=2000,
          NAICS1997 = str_remove_all(NAICS1997, " "),
          Industry = recode_factor(NAICS1997, !!!recode_naic)) %>%
-  group_by(county, year, Industry) %>%
+  group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
+  rbind(filter(public_employees_1993_2010, year == 2000)) %>%
+  rbind(filter(fed_state, year == 2000)) %>%
+  rbind(filter(producers, year == 2000)) %>%
+  mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(employed)) %>%
   pivot_wider(id_cols = c("county", "year"),
               names_from = "Industry",
               values_from = "employed") %>%
-  filter(county != 16999) %>%
+  filter(county != 16999 & county != 16000) %>%
+  select(-Total) %>%
   replace(is.na(.), 0) %>%
+  ungroup() %>%
+  mutate(Total = rowSums(.[3:ncol(.)])) %>%
   rowwise() %>%
-  mutate(across(c(where(is.numeric)),
+  mutate(across(!c(county, year),
                 ~.x/Total * 100)) %>%
   select(-Total)
 
@@ -2632,19 +2690,27 @@ employment_industries <- rbind(employment1990_clean, employment2000_clean)
 
 employment2010_clean <- employment2010 %>%
   mutate(GEOID = paste0(state, county),
-         county = recode(GEOID, !!!GEOID_names),
          year=2010,
          NAICS2007 = str_remove_all(NAICS2007, " "),
          Industry = recode_factor(NAICS2007, !!!recode_naic)) %>%
-  group_by(county, year, Industry) %>%
+  group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
+  rbind(filter(public_employees_1993_2010, year == 2010)) %>%
+  rbind(filter(fed_state, year == 2010)) %>%
+  rbind(filter(producers, year == 2010)) %>%
+  mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(employed)) %>%
   pivot_wider(id_cols = c("county", "year"),
               names_from = "Industry",
               values_from = "employed") %>%
-  filter(county != 16999) %>%
+  filter(county != 16999 & county != 16000) %>%
+  select(-Total) %>%
   replace(is.na(.), 0) %>%
+  ungroup() %>%
+  mutate(Total = rowSums(.[3:ncol(.)])) %>%
   rowwise() %>%
-  mutate(across(c(where(is.numeric)),
+  mutate(across(!c(county, year),
                 ~.x/Total * 100)) %>%
   select(-Total)
 
@@ -2652,20 +2718,28 @@ employment_industries <- rbind(employment_industries, employment2010_clean)
 
 employment2020_clean <- employment2020 %>%
   mutate(GEOID = paste0(state, county),
-         county = recode(GEOID, !!!GEOID_names),
          year=2020,
          NAICS2017 = str_remove_all(NAICS2017, " "),
          Industry = recode_factor(NAICS2017, !!!recode_naic)) %>%
   filter(Industry %in% employment_codes$sector) %>%
-  group_by(county, year, Industry) %>%
+  group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
+  rbind(public_employees_2020) %>%
+  rbind(filter(fed_state, year == 2020)) %>%
+  rbind(filter(producers, year == 2020)) %>%
+  mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
+  group_by(county, year, Industry) %>%
+  summarise(employed = sum(employed)) %>%
   pivot_wider(id_cols = c("county", "year"),
               names_from = "Industry",
               values_from = "employed") %>%
-  filter(county != 16999) %>%
+  filter(county != 16999 & county != 16000) %>%
+  select(-Total) %>%
   replace(is.na(.), 0) %>%
+  ungroup() %>%
+  mutate(Total = rowSums(.[3:ncol(.)])) %>%
   rowwise() %>%
-  mutate(across(c(where(is.numeric)),
+  mutate(across(!c(county, year),
                 ~.x/Total * 100)) %>%
   select(-Total)
 
@@ -2676,11 +2750,10 @@ summary(employ_pca)
 #biplot(employ_pca)
 
 # join components explaining >75% of variance
-a_data <- cbind(employment_industries, employ_pca$x[,1:3]) %>%
-  select(county, year, PC1, PC2, PC3) %>%
+a_data <- cbind(employment_industries, employ_pca$x[,1:2]) %>%
+  select(county, year, PC1, PC2) %>%
   rename("emply_pc1" = "PC1",
-         "emply_pc2" = "PC2",
-         "emply_pc3" = "PC3") %>%
+         "emply_pc2" = "PC2") %>%
   right_join(a_data, by=c("county", "year"))
 ```
 
