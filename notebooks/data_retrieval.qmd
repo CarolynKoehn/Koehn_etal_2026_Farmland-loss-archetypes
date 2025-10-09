@@ -3264,7 +3264,7 @@ a_data <- left_join(a_data, hired_clean, by = c("county", "year"))
 
 Use RUCA counts instead? https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes and paper that uses it: https://doi.org/10.1111/ruso.70012
 
-RUCA codes are a proxy for social isolation
+RUCA codes are a proxy for geographic isolation
 
 RUCA codes are not comparable across years.
 
