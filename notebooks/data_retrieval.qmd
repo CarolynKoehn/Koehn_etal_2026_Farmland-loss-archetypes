@@ -881,130 +881,173 @@ County Business Patterns data was downloaded with the `censusapi` package. SIC a
 ```{r}
 #| label: "healthcare"
 
-public_employees_1993_2010 <- read_csv("../data/raw_data/employment/aspep_counties_1993_2016.csv") %>%
-  filter(state == "idaho" & year %in% c(1993, 2000, 2010)) %>%
-  filter(government_function %in% c("health", "hospitals")) %>%
-  group_by(fips_state_county, year) %>%
-  summarise(pub_health_workers = sum(full_time_employees, full_time_equivalent_employees, part_time_employees)) %>%
-  rowwise() %>%
-  mutate(year = ifelse(year == 1993, 1990, year))
+loc_emp_1997_labs <- read.table("../data/raw_data/employment/97CEMPID.DAT",
+                                sep = ";", comment.char = "", quote = "") %>%
+  filter(str_starts(V1, "13")) %>%
+  mutate(id = substr(V1, 1, 14),
+         GEOID = substr(V1, 110, 114)) %>%
+  select(-V1)
+pub_health_1997 <- read_table("../data/raw_data/employment/97CEMPST.DAT",
+                           na = "999999999",
+                           col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  filter(str_starts(id, "13")) %>%
+  left_join(loc_emp_1997_labs) %>%
+  filter(gov_func_code %in% c("032", "040") & GEOID != "16   ") %>%
+  group_by(GEOID) %>%
+  summarise(pub_health_workers = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  mutate(year = 1997)
 
-public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xlsx") %>%
+loc_emp_2002_labs <- read.table("../data/raw_data/employment/02cempid.dat",
+                                sep = ";", comment.char = "", quote = "") %>%
+  filter(str_starts(V1, "13")) %>%
+  mutate(id = substr(V1, 1, 14),
+         GEOID = substr(V1, 110, 114)) %>%
+  select(-V1)
+pub_health_2002 <- read_table("../data/raw_data/employment/02cempst.dat",
+                           col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  filter(str_starts(id, "13")) %>%
+  left_join(loc_emp_2002_labs) %>%
+  filter(gov_func_code %in% c("032", "040") & GEOID != "16   ") %>%
+  group_by(GEOID) %>%
+  summarise(pub_health_workers = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  mutate(year = 2002)
+
+loc_emp_2012_labs <- read.table("../data/raw_data/employment/12cempid.dat",
+                                sep = ";", comment.char = "", quote = "") %>%
+  filter(str_starts(V1, "13")) %>%
+  mutate(id = substr(V1, 1, 14),
+         GEOID = substr(V1, 110, 114)) %>%
+  select(-V1)
+pub_health_2012 <- read_table("../data/raw_data/employment/12cempst.dat",
+                           col_names = c("id", "gov_func_code", "full_time_emp", "full_time_emp_flag", "full_time_payroll", "full_time_payroll_flag", "part_time_emp", "part_time_emp_flag", "part_time_payroll", "part_time_payroll_flag", "part_time_hours", "part_time_hours_flag", "full_time_equivalent_emp")) %>%
+  filter(str_starts(id, "13")) %>%
+  left_join(loc_emp_2012_labs) %>%
+  filter(gov_func_code %in% c("032", "040") & GEOID != "16   ") %>%
+  group_by(GEOID) %>%
+  summarise(pub_health_workers = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  mutate(year = 2012)
+
+pub_health_2022 <- readxl::read_xlsx("../data/raw_data/employment/22emp.xlsx",
+                                  col_types = c("text", "text", "text", "text", "numeric", "skip", "skip", "skip", "numeric", "skip", "skip", "skip", "text", "skip", "text", "text", "text", "skip", "skip", "skip", "skip", "skip", "skip")) %>%
   filter(State == "Idaho" & `Type of Government` == "County" & `Government Function` %in% c("Health", "Hospitals")) %>%
   group_by(`FIPS State`, `FIPS County`) %>%
   summarise(pub_health_workers = sum(`Full-time Employees`, `Part-time Employees`)) %>%
-  mutate(year = 2020, 
+  mutate(year = 2022, 
          GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
   ungroup() %>%
   select(GEOID, year, pub_health_workers)
 
-healthcare1990 <- rbind(
+healthcare1997 <- rbind(
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8010"), # 8010  Offices and clinics of medical doctors
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8060"), # 8060  Hospitals
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8080") # 8080	Home health care services
 ) %>%
   mutate(GEOID = paste0(state, county),
-         year = 1990) %>%
+         year = 1997) %>%
   group_by(GEOID, year) %>%
   summarise(heath_workers = sum(EMP))
 
-healthcare2000 <- rbind(
+healthcare2002 <- rbind(
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = "621111"), # 621111  Offices of physicians (exc mental health) 
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 622), # 622///  Hospitals 
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 621610) # 621610  Home health care services
 ) %>%
   mutate(GEOID = paste0(state, county),
-         year = 2000) %>%
+         year = 2002) %>%
   group_by(GEOID, year) %>%
   summarise(heath_workers = sum(EMP))
 
-healthcare2010 <- rbind(
+healthcare2012 <- rbind(
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = "621111"),
+            naics2012 = "621111"),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 622),
+            naics2012 = 622),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 621610)
+            naics2012 = 621610)
 ) %>%
   mutate(GEOID = paste0(state, county),
-         year = 2010) %>%
+         year = 2012) %>%
   group_by(GEOID, year) %>%
   summarise(heath_workers = sum(EMP))
 
-healthcare2020 <- getCensus(name = "cbp", 
-                            vintage=2020,
+healthcare2022 <- getCensus(name = "cbp", 
+                            vintage=2022,
                   vars = c("EMP", "NAICS2017"),
                   region = "county:*",
                   regionin = "state:16") %>%
   filter(NAICS2017 %in% c("621111", "622", "621610")) %>%
   mutate(GEOID = paste0(state, county),
-         year = 2020) %>%
+         year = 2022) %>%
   group_by(GEOID, year) %>%
   summarise(heath_workers = sum(EMP))
 
 # save a backup copy
-# write.csv(healthcare1990,
+# write.csv(healthcare1997,
 #           "../data/API_data_download_backup/healthcare1990.csv",
 #           row.names = FALSE)
-# write.csv(healthcare2000,
+# write.csv(healthcare2002,
 #           "../data/API_data_download_backup/healthcare2000.csv",
 #           row.names = FALSE)
-# write.csv(healthcare2010,
+# write.csv(healthcare2012,
 #           "../data/API_data_download_backup/healthcare2010.csv",
 #           row.names = FALSE)
-# write.csv(healthcare2020,
+# write.csv(healthcare2022,
 #           "../data/API_data_download_backup/healthcare2020.csv",
 #           row.names = FALSE)
 
-priv_healthworkers <- do.call(rbind, list(healthcare1990, healthcare2000, healthcare2010, healthcare2020))
+priv_healthworkers <- do.call(rbind, list(healthcare1997, healthcare2002, healthcare2012, healthcare2022))
 
-healthworkers <- full_join(priv_healthworkers, public_employees_1993_2010, by = c("GEOID" = "fips_state_county", "year" = "year")) %>%
-  full_join(public_employees_2020) %>%
-  group_by(GEOID, year) %>%
-  summarise(health_workers = sum(heath_workers, pub_health_workers, na.rm=TRUE)) %>%
-  mutate(county = recode(GEOID, !!!GEOID_names))
+healthworkers <- full_join(priv_healthworkers, pub_health_1997, by = c("GEOID", "year")) %>%
+  full_join(pub_health_2002, by = c("GEOID", "year")) %>%
+  full_join(pub_health_2012, by = c("GEOID", "year")) %>%
+  full_join(pub_health_2022, by = c("GEOID", "year")) %>%
+  ungroup() %>%
+  mutate(health_workers = rowSums(.[3:ncol(.)], na.rm=TRUE)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names),
+         year = ifelse(year==1997, 1990, year-2)) %>%
+  select(county, year, health_workers)
 
 # get population (more info in actors section)
 pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
@@ -2805,6 +2848,7 @@ a_data <- cbind(employment_industries, employ_pca$x[,1:3]) %>%
   rename("emply_pc1" = "PC1",
          "emply_pc2" = "PC2",
          "emply_pc3" = "PC3") %>%
+  mutate(year = ifelse(year == 1997, 1990, year-2)) %>%
   right_join(a_data, by=c("county", "year"))
 ```
 
