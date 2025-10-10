@@ -2178,385 +2178,440 @@ County Business Patterns data was downloaded with the `censusapi` package. SIC a
 ```{r}
 #| label: "employment sectors"
 
-employment1990 <- rbind(
+employment1997 <- rbind(
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "00"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "07"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "10"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "15"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "20"),
   # getCensus(name = "cbp",
-  #           vintage = 1990,
+  #           vintage = 1997,
   #           vars = c("EMP", "SIC_TTL"),
   #           region = "county:*",
   #           regionin = "state:16",
   #           sic = "40"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "4200"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "50"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "52"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "60"),
   # getCensus(name = "cbp",
-  #           vintage = 1990,
+  #           vintage = 1997,
   #           vars = c("EMP", "SIC_TTL"),
   #           region = "county:*",
   #           regionin = "state:16",
   #           sic = "70")
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8100"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8200"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8000"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "8300"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "7000"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "5800"),
   getCensus(name = "cbp",
-            vintage = 1990,
+            vintage = 1997,
             vars = c("EMP", "SIC_TTL"),
             region = "county:*",
             regionin = "state:16",
             sic = "7900")
 )
 
-employment2000 <- rbind(
+employment2002 <- rbind(
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = "00"),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 11),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 21),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 23),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = "31-33"),
   # getCensus(name = "cbp", 
-  #           vintage=2000,
+  #           vintage=2002,
   #           vars = c("EMP", "NAICS1997"),
   #           region = "county:*",
   #           regionin = "state:16",
   #           naics1997 = "48-49"),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 484),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 493),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 42),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = "44-45"),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 52),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 531),
   getCensus(name = "cbp", 
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 5411),
   getCensus(name = "cbp",
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 61),
   getCensus(name = "cbp",
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 514120),
   getCensus(name = "cbp",
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 62),
   getCensus(name = "cbp",
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 72),
   getCensus(name = "cbp",
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 71),
   getCensus(name = "cbp",
-            vintage=2000,
+            vintage=2002,
             vars = c("EMP", "NAICS1997"),
             region = "county:*",
             regionin = "state:16",
             naics1997 = 611620)
 )
 
-employment2010 <- rbind(
+employment2012 <- rbind(
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = "00"),
+            naics2012 = "00"),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 11),
+            naics2012 = 11),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 21),
+            naics2012 = 21),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 23),
+            naics2012 = 23),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = "31-33"),
+            naics2012 = "31-33"),
   # getCensus(name = "cbp", 
-  #           vintage=2010,
-  #           vars = c("EMP", "NAICS2007"),
+  #           vintage=2012,
+  #           vars = c("EMP", "NAICS2012"),
   #           region = "county:*",
   #           regionin = "state:16",
-  #           naics2007 = "48-49"),
+  #           naics2012 = "48-49"),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 484),
+            naics2012 = 484),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 493),
+            naics2012 = 493),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 42),
+            naics2012 = 42),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = "44-45"),
+            naics2012 = "44-45"),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 52),
+            naics2012 = 52),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 531),
+            naics2012 = 531),
   getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 5411),
+            naics2012 = 5411),
   getCensus(name = "cbp",
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 61),
+            naics2012 = 61),
   getCensus(name = "cbp",
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 519120),
+            naics2012 = 519120),
   getCensus(name = "cbp",
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 62),
+            naics2012 = 62),
   getCensus(name = "cbp",
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 72),
+            naics2012 = 72),
   getCensus(name = "cbp",
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 71),
+            naics2012 = 71),
   getCensus(name = "cbp",
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
+            vintage=2012,
+            vars = c("EMP", "NAICS2012"),
             region = "county:*",
             regionin = "state:16",
-            naics2007 = 611620)
+            naics2012 = 611620)
 )
 
-employment2020 <- getCensus(name = "cbp", 
-                            vintage=2020,
+employment2022 <- getCensus(name = "cbp", 
+                            vintage=2022,
                   vars = c("EMP", "NAICS2017"),
                   region = "county:*",
                   regionin = "state:16")
 
 # save a backup copy
-# write.csv(employment1990,
-#           "../data/API_data_download_backup/employment1990.csv",
+# write.csv(employment1997,
+#           "../data/API_data_download_backup/employment1997.csv",
 #           row.names = FALSE)
-# write.csv(employment2000,
-#           "../data/API_data_download_backup/employment2000.csv",
+# write.csv(employment2002,
+#           "../data/API_data_download_backup/employment2002.csv",
 #           row.names = FALSE)
-# write.csv(employment2010,
-#           "../data/API_data_download_backup/employment2010.csv",
+# write.csv(employment2012,
+#           "../data/API_data_download_backup/employment2012.csv",
 #           row.names = FALSE)
-# write.csv(employment2020,
-#           "../data/API_data_download_backup/employment2020.csv",
+# write.csv(employment2022,
+#           "../data/API_data_download_backup/employment2022.csv",
 #           row.names = FALSE)
 
-public_employees_1993_2010 <- read_csv("../data/raw_data/employment/aspep_counties_1993_2016.csv") %>%
-  filter(state == "idaho" & year %in% c(1993, 2000, 2010)) %>%
-  filter(government_function %in% c("health", "hospitals", "judicial & legal", "local libraries", "elementary and secondary - instruction", "elementary and secondary - other total", "housing & community development (local)", "parks & recreation", "welfare")) %>%
-  mutate(Industry = ifelse(government_function == "judicial & legal", "Legal", NA),
-         Industry = ifelse(government_function %in% c("local libraries", "elementary and secondary - instruction", "elementary and secondary - other total"), "Education and Libraries", Industry),
-         Industry = ifelse(government_function %in% c("health", "hospitals", "housing & community development (local)", "welfare"), "Health and Social Services", Industry),
-         Industry = ifelse(government_function == "parks & recreation", "Recreation", Industry)) %>%
-  group_by(fips_state_county, year, Industry) %>%
-  summarise(employed = sum(full_time_employees, full_time_equivalent_employees, part_time_employees)) %>%
-  rowwise() %>%
-  mutate(year = ifelse(year == 1993, 1990, year)) %>%
-  rename("GEOID" = "fips_state_county")
+loc_emp_1997_labs <- read.table("../data/raw_data/employment/97CEMPID.DAT",
+                                sep = ";", comment.char = "", quote = "") %>%
+  filter(str_starts(V1, "13")) %>%
+  mutate(id = substr(V1, 1, 14),
+         GEOID = substr(V1, 110, 114)) %>%
+  select(-V1)
+loc_emp_1997 <- read_table("../data/raw_data/employment/97CEMPST.DAT",
+                           na = "999999999",
+                           col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  filter(str_starts(id, "13")) %>%
+  left_join(loc_emp_1997_labs) %>%
+  filter(gov_func_code %in% c("025", "079", "032", "040", "061", "050", "012", "112", "052") & GEOID != "16   ") %>%
+  mutate(gov_func = factor(gov_func_code, 
+                           levels = c("025", "079", "032", "040", "061", "050", "012", "112", "052"),
+                           labels = c("Judicial & Legal", "Public Welfare", "Health", "Hospitals", "Parks & Recreation", "Housing & Community Development", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other", "Libraries"))) %>%
+  mutate(Industry = ifelse(gov_func == "Judicial & Legal", "Legal", NA),
+         Industry = ifelse(gov_func %in% c("Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other"), "Education and Libraries", Industry),
+         Industry = ifelse(gov_func %in% c("Health", "Hospitals", "Housing & Community Development", "Public Welfare"), "Health and Social Services", Industry),
+         Industry = ifelse(gov_func == "Parks & Recreation", "Recreation", Industry)) %>%
+  group_by(GEOID, Industry) %>%
+  summarise(employed = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  mutate(year = 1997)
 
-public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xlsx") %>%
+loc_emp_2002_labs <- read.table("../data/raw_data/employment/02cempid.dat",
+                                sep = ";", comment.char = "", quote = "") %>%
+  filter(str_starts(V1, "13")) %>%
+  mutate(id = substr(V1, 1, 14),
+         GEOID = substr(V1, 110, 114)) %>%
+  select(-V1)
+loc_emp_2002 <- read_table("../data/raw_data/employment/02cempst.dat",
+                           col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  filter(str_starts(id, "13")) %>%
+  left_join(loc_emp_2002_labs) %>%
+  filter(gov_func_code %in% c("025", "079", "032", "040", "061", "050", "012", "112", "052") & GEOID != "16   ") %>%
+  mutate(gov_func = factor(gov_func_code, 
+                           levels = c("025", "079", "032", "040", "061", "050", "012", "112", "052"),
+                           labels = c("Judicial & Legal", "Public Welfare", "Health", "Hospitals", "Parks & Recreation", "Housing & Community Development", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other", "Libraries"))) %>%
+  mutate(Industry = ifelse(gov_func == "Judicial & Legal", "Legal", NA),
+         Industry = ifelse(gov_func %in% c("Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other"), "Education and Libraries", Industry),
+         Industry = ifelse(gov_func %in% c("Health", "Hospitals", "Housing & Community Development", "Public Welfare"), "Health and Social Services", Industry),
+         Industry = ifelse(gov_func == "Parks & Recreation", "Recreation", Industry)) %>%
+  group_by(GEOID, Industry) %>%
+  summarise(employed = sum(full_time_emp, part_time_emp)) %>%
+  mutate(year = 2002)
+
+loc_emp_2012_labs <- read.table("../data/raw_data/employment/12cempid.dat",
+                                sep = ";", comment.char = "", quote = "") %>%
+  filter(str_starts(V1, "13")) %>%
+  mutate(id = substr(V1, 1, 14),
+         GEOID = substr(V1, 110, 114)) %>%
+  select(-V1)
+loc_emp_2012 <- read_table("../data/raw_data/employment/12cempst.dat",
+                           col_names = c("id", "gov_func_code", "full_time_emp", "full_time_emp_flag", "full_time_payroll", "full_time_payroll_flag", "part_time_emp", "part_time_emp_flag", "part_time_payroll", "part_time_payroll_flag", "part_time_hours", "part_time_hours_flag", "full_time_equivalent_emp")) %>%
+  filter(str_starts(id, "13")) %>%
+  left_join(loc_emp_2012_labs) %>%
+  filter(gov_func_code %in% c("025", "079", "032", "040", "061", "050", "012", "112", "052") & GEOID != "16   ") %>%
+  mutate(gov_func = factor(gov_func_code, 
+                           levels = c("025", "079", "032", "040", "061", "050", "012", "112", "052"),
+                           labels = c("Judicial & Legal", "Public Welfare", "Health", "Hospitals", "Parks & Recreation", "Housing & Community Development", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other", "Libraries"))) %>%
+  mutate(Industry = ifelse(gov_func == "Judicial & Legal", "Legal", NA),
+         Industry = ifelse(gov_func %in% c("Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other"), "Education and Libraries", Industry),
+         Industry = ifelse(gov_func %in% c("Health", "Hospitals", "Housing & Community Development", "Public Welfare"), "Health and Social Services", Industry),
+         Industry = ifelse(gov_func == "Parks & Recreation", "Recreation", Industry)) %>%
+  group_by(GEOID, Industry) %>%
+  summarise(employed = sum(full_time_emp, part_time_emp)) %>%
+  mutate(year = 2012)
+
+loc_emp_2022 <- readxl::read_xlsx("../data/raw_data/employment/22emp.xlsx",
+                                  col_types = c("text", "text", "text", "text", "numeric", "skip", "skip", "skip", "numeric", "skip", "skip", "skip", "text", "skip", "text", "text", "text", "skip", "skip", "skip", "skip", "skip", "skip")) %>%
   filter(State == "Idaho" & !is.na(`FIPS County`)) %>%
   filter(`Government Function` %in% c("Health", "Hospitals", "Judicial and Legal", "Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other", "Housing and Community Development", "Parks and Recreation", "Public Welfare")) %>%
   mutate(Industry = ifelse(`Government Function` == "Judicial and Legal", "Legal", NA),
@@ -2565,15 +2620,15 @@ public_employees_2020 <- readxl::read_xlsx("../data/raw_data/employment/20emp.xl
          Industry = ifelse(`Government Function` == "Parks and Recreation", "Recreation", Industry)) %>%
   group_by(`FIPS State`, `FIPS County`, Industry) %>%
   summarise(employed = sum(`Full-time Employees`, `Part-time Employees`)) %>%
-  mutate(year = 2020,
+  mutate(year = 2022,
          GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
   ungroup() %>%
   select(GEOID, year, Industry, employed)
 
-fed_state <- readxl::read_xlsx("../data/raw_data/employment/allhlcn90.xlsx") %>%
-  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn00.xlsx")) %>%
-  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn10.xlsx")) %>%
-  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn20.xlsx")) %>%
+fed_state <- readxl::read_xlsx("../data/raw_data/employment/allhlcn97.xlsx") %>%
+  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn02.xlsx")) %>%
+  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn12.xlsx")) %>%
+  rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn22.xlsx")) %>%
   filter(`St Name` == "Idaho" & Ownership %in% c("Federal Government", "State Government")) %>%
   select(`Area\r\nCode`, Year, Ownership, `Annual Average Employment`) %>%
   rename("GEOID" = "Area\r\nCode",
@@ -2584,23 +2639,18 @@ fed_state <- readxl::read_xlsx("../data/raw_data/employment/allhlcn90.xlsx") %>%
 
 producers <- nassqs(list(state_alpha = "ID",
                          agg_level_desc = "county",
-                         year = c(2002, 2012, 2022),
-                         short_desc = c("Operators, (all) - number of operators",
-                                        "Producers, (all) - number of producers"))) %>%
+                         year = c(1997, 2002, 2012, 2022),
+                         short_desc = c("Operators, principal, primary occupation, (excl farming) - number of operators",
+                                        "Operators, principal, primary occupation, farming - number of operators",
+                                        "Producers, primary occupation, (excl farming) - number of producers",
+                                        "Producers, primary occupation, farming - number of producers"))) %>%
   group_by(county_name, year) %>%
-  summarise(producers = sum(Value)) %>%
-  mutate(county = str_to_title(county_name))
-producers1990 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
-  rowwise() %>%
-  mutate(producers = sum(Num_operators_prim_occ_farming, Num_operators_prim_occ_not_farming))
-producers <- data.frame(county = c(producers$county,
-                                   producers1990$County),
-                        year = c(producers$year,
-                                 producers1990$Year),
-                        Industry = "Agriculture, Forestry, Fishing and Hunting",
-                        employed = c(producers$producers,
-                                     producers1990$producers)) %>%
-  mutate(year = as.integer(year)-2)
+  summarise(employed = sum(Value)) %>%
+  mutate(county = str_to_title(county_name),
+         Industry = "Agriculture, Forestry, Fishing and Hunting",
+         year = as.integer(year)) %>%
+  ungroup() %>%
+  select(-county_name)
 
 employment_codes <- tibble(sector = c("Total",
                                       "Agriculture, Forestry, Fishing and Hunting",
@@ -2635,15 +2685,15 @@ recode_naic_df <- unique(employment_codes[, c("sector", "naics")])
 recode_naic <- recode_naic_df$sector
 names(recode_naic) <- recode_naic_df$naics
 
-employment1990_clean <- employment1990 %>%
+employment1997_clean <- employment1997 %>%
   mutate(GEOID = paste0(state, county),
-         year=1990,
+         year=1997,
          Industry = recode(SIC, !!!recode_sic)) %>%
   group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
-  rbind(filter(public_employees_1993_2010, year == 1990)) %>%
-  rbind(filter(fed_state, year == 1990)) %>%
-  rbind(filter(producers, year == 1990)) %>%
+  rbind(loc_emp_1997) %>%
+  rbind(filter(fed_state, year == 1997)) %>%
+  rbind(filter(producers, year == 1997)) %>%
   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
   group_by(county, year, Industry) %>%
   summarise(employed = sum(employed)) %>%
@@ -2660,16 +2710,16 @@ employment1990_clean <- employment1990 %>%
                 ~.x/Total * 100)) %>%
   select(-Total)
 
-employment2000_clean <- employment2000 %>%
+employment2002_clean <- employment2002 %>%
   mutate(GEOID = paste0(state, county),
-         year=2000,
+         year=2002,
          NAICS1997 = str_remove_all(NAICS1997, " "),
          Industry = recode_factor(NAICS1997, !!!recode_naic)) %>%
   group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
-  rbind(filter(public_employees_1993_2010, year == 2000)) %>%
-  rbind(filter(fed_state, year == 2000)) %>%
-  rbind(filter(producers, year == 2000)) %>%
+  rbind(loc_emp_2002) %>%
+  rbind(filter(fed_state, year == 2002)) %>%
+  rbind(filter(producers, year == 2002)) %>%
   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
   group_by(county, year, Industry) %>%
   summarise(employed = sum(employed)) %>%
@@ -2686,18 +2736,18 @@ employment2000_clean <- employment2000 %>%
                 ~.x/Total * 100)) %>%
   select(-Total)
 
-employment_industries <- rbind(employment1990_clean, employment2000_clean)
+employment_industries <- rbind(employment1997_clean, employment2002_clean)
 
-employment2010_clean <- employment2010 %>%
+employment2012_clean <- employment2012 %>%
   mutate(GEOID = paste0(state, county),
-         year=2010,
-         NAICS2007 = str_remove_all(NAICS2007, " "),
-         Industry = recode_factor(NAICS2007, !!!recode_naic)) %>%
+         year=2012,
+         NAICS2007 = str_remove_all(NAICS2012, " "),
+         Industry = recode_factor(NAICS2012, !!!recode_naic)) %>%
   group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
-  rbind(filter(public_employees_1993_2010, year == 2010)) %>%
-  rbind(filter(fed_state, year == 2010)) %>%
-  rbind(filter(producers, year == 2010)) %>%
+  rbind(loc_emp_2012) %>%
+  rbind(filter(fed_state, year == 2012)) %>%
+  rbind(filter(producers, year == 2012)) %>%
   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
   group_by(county, year, Industry) %>%
   summarise(employed = sum(employed)) %>%
@@ -2714,19 +2764,19 @@ employment2010_clean <- employment2010 %>%
                 ~.x/Total * 100)) %>%
   select(-Total)
 
-employment_industries <- rbind(employment_industries, employment2010_clean)
+employment_industries <- rbind(employment_industries, employment2012_clean)
 
-employment2020_clean <- employment2020 %>%
+employment2022_clean <- employment2022 %>%
   mutate(GEOID = paste0(state, county),
-         year=2020,
+         year=2022,
          NAICS2017 = str_remove_all(NAICS2017, " "),
          Industry = recode_factor(NAICS2017, !!!recode_naic)) %>%
   filter(Industry %in% employment_codes$sector) %>%
   group_by(GEOID, year, Industry) %>%
   summarise(employed = sum(EMP)) %>%
-  rbind(public_employees_2020) %>%
-  rbind(filter(fed_state, year == 2020)) %>%
-  rbind(filter(producers, year == 2020)) %>%
+  rbind(loc_emp_2022) %>%
+  rbind(filter(fed_state, year == 2022)) %>%
+  rbind(filter(producers, year == 2022)) %>%
   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
   group_by(county, year, Industry) %>%
   summarise(employed = sum(employed)) %>%
@@ -2743,17 +2793,18 @@ employment2020_clean <- employment2020 %>%
                 ~.x/Total * 100)) %>%
   select(-Total)
 
-employment_industries <- rbind(employment_industries, employment2020_clean)
+employment_industries <- rbind(employment_industries, employment2022_clean)
 
 employ_pca <- prcomp(employment_industries[,-c(1:2)])
 summary(employ_pca)
 #biplot(employ_pca)
 
-# join components explaining >75% of variance
-a_data <- cbind(employment_industries, employ_pca$x[,1:2]) %>%
-  select(county, year, PC1, PC2) %>%
+# join components explaining >70% of variance
+a_data <- cbind(employment_industries, employ_pca$x[,1:3]) %>%
+  select(county, year, PC1, PC2, PC3) %>%
   rename("emply_pc1" = "PC1",
-         "emply_pc2" = "PC2") %>%
+         "emply_pc2" = "PC2",
+         "emply_pc3" = "PC3") %>%
   right_join(a_data, by=c("county", "year"))
 ```
 
