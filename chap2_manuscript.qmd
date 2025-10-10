@@ -198,8 +198,8 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
 
-  scale_y_discrete(limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "urb_dist_pc1", "urb_dist_pc2", "farms_per_acre", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "cropland_change", "forest_change", "developed_change", "perc_farms_w_net_loss", "avg_slope")),
-                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Distance from Urban (PC1)", "Distance from Urban (PC2)", "Farm Density", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Average Slope"))) +
+  scale_y_discrete(limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "percent_developed", "urb_dist_pc1", "urb_dist_pc2", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "med_home_val_in_2020_USD")),
+                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Developed Land", "Distance from Urban (PC1)", "Distance from Urban (PC2)", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Agriculture Support Jobs", "Home Value"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "") +
   theme_bw() +
   theme(text = element_text(size = 14),
@@ -280,8 +280,8 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
   geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
-  scale_y_discrete(limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "perc_hispanic", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
-                   labels = rev(c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Hispanic Residents", "Farms with Net Loss", "Hired Ag Workers", "Urbanicity (PC1)", "Urbanicity (PC2)"))) +
+  scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc1", "med_income_in_2020_USD", "High.school", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
+                   labels = rev(c("Population Density", "Employment Sectors (PC1)", "Median Income", "Residents with High School Education", "Hired Ag Workers", "Urbanicity (PC1)", "Urbanicity (PC2)"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
   theme_bw() +
   theme(text = element_text(size = 14),
@@ -563,7 +563,7 @@ For all indicators that were simplified to principal components with principal c
 
 #### Percent land in farms
 
-Land in farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+Land in farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
 #### Percent cropland
 
@@ -599,7 +599,7 @@ Since the definition of urban area changed for the 2020 census, we recreate urba
 
 #### Farm density
 
-Number of farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+Number of farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
 #### Percent land in recreation areas
 
@@ -617,20 +617,20 @@ We calculated the Euclidean distance from the edge of each county to the edge of
 
 #### Housing density
 
-Data for the number of houses in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Population and Housing [1990 CPH-2-14, @CofPopHous_1990]. We used total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+Data for the number of houses in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Population and Housing [1990 CPH-2-14, @CofPopHous_1990]. We used total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
 #### Non-federal land near major roadway
 
-First, we downloaded primary and secondary road shapefiles from the US Census TIGER/Line shapefiles using the`tigris` package [v2.1, @tigris]. Primary roads "are generally divided limited-access highways within the Federal interstate highway system or under state management," and secondary roads are "main arteries, usually in the U.S. highway, state highway, or county highway system" [@tiger_line]. Then, we created a 10km buffer around the road shapefiles, cropping out federal lands described in @sec-fedlands. We then calculated the percent of the county covered by non-federal lands within 10 km of a primary or secondary road.
+First, we downloaded primary and secondary road shapefiles from the US Census TIGER/Line shapefiles [@tiger_line] using the`tigris` package [v2.1, @tigris]. Primary roads "are generally divided limited-access highways within the Federal interstate highway system or under state management," and secondary roads are "main arteries, usually in the U.S. highway, state highway, or county highway system" [@tiger_line_docs]. Then, we created a 10km buffer around the road shapefiles, cropping out federal lands described in @sec-fedlands. We then calculated the percent of the county covered by non-federal lands within 10 km of a primary or secondary road.
 
 #### Healthcare workers per 1000 residents
 
-We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total healthcare workers in each county for each year:
+We downloaded data for public sector health workers from the Census of Governments [@aspep1997; @aspep2002; @aspep2012; @aspep2022]. We added local government employees in the "Health" and "Hospitals" categories. Because the first available dataset from the Census of Governments is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 employment data for 1990, 2002 employment data for 2000, 2012 employment data for 2010, and 2022 employment data for 2020.
 
-- 1990: SIC codes 8010 (Offices and clinics of medical doctors), 8060 (Hospitals), and 8080	(Home health care services)
-- 2000-2020: NAICS codes 621111 (Offices of physicians exc mental health), 622 (Hospitals), and 621610 (Home health care services)
+We downloaded data for private sector health workers from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total healthcare workers in each county for each year:
 
-We also downloaded data for public sector employees from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020]. We added local government employees in the "Health" and "Hospitals" categories. Since the ASPEP began in 1993, we used data from 1993 for 1990.
+- 1997: SIC codes 8010 (Offices and clinics of medical doctors), 8060 (Hospitals), and 8080	(Home health care services)
+- 2002-2022: NAICS codes 621111 (Offices of physicians exc mental health), 622 (Hospitals), and 621610 (Home health care services)
 
 Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and year.
 
@@ -708,7 +708,9 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Percent employed in different industries
 
-We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We summed workers in the following categories based on which high-level SIC and NAICS codes were comparable:
+Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020.
+
+We downloaded data for private sector jobs from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We summed jobs in the following categories based on which high-level SIC and NAICS codes were comparable:
 
 - Agriculture, Forestry, Fishing and Hunting: SIC code 7 (Agricultural Services, Forestry, and Fishing), NAICS code 11 (Agriculture, Forestry, Fishing and Hunting)
 - Mining, Quarrying, and Oil and Gas Extraction: SIC code 10 (Mining), NAICS code 21 (Mining, Quarrying, and Oil and Gas Extraction)
@@ -724,16 +726,16 @@ We downloaded data from the County Business Patterns series from the U.S. Census
 - Accommodation and Food: SIC codes 7000 (Hotels and Other Lodging Places) and 5800 (Eating and drinking places), NAICS code 72 (Accommodation and Food Services)
 - Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction)
 
-The County Business Patterns data did not include public sector employees or agricultural producers. We used data from the Annual Survey of Public Employment & Payroll [@aspep_old; @aspep2020] to add public employees to the following categories:
+The County Business Patterns data does not include public sector employees or agricultural producers. We used data from the Annual Survey of Public Employment & Payroll [@aspep1997; @aspep2002; @aspep2012; @aspep2022] to add public employees to the following categories:
 
-- Legal: ASPEP government function category "judicial & legal"
-- Education and libraries: ASPEP government function categories "local libraries", "elementary and secondary - instruction", and "elementary and secondary - other total"
-- Health and social services: ASPEP government function categories "health", "hospitals", "housing & community development (local)", "welfare", and "public welfare"
-- Recreation: ASPEP government function category "parks & recreation"
+- Legal: ASPEP government function category "Judicial & Legal"
+- Education and libraries: ASPEP government function categories "Libraries", "Education - Elementary and Secondary Instructional", and "Education - Elementary and Secondary Other"
+- Health and social services: ASPEP government function categories "Health", "Hospitals", Housing & Community Development", and "Public Welfare"
+- Recreation: ASPEP government function category "Parks & Recreation"
 
-Since ASPEP data collection began in 1993, we used 1993 data for 1990. We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state and federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API with R package `rnassqs` [v0.6.1, @rnassqs] for 2002-2022 and the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 11 [@CofAg_1992_tenure].
+We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state and federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022.
 
-We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first two components, which explained 76.4% of the variance.
+We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first three components, which explained 73.1% of the variance.
 
 #### Percent retired
 
@@ -985,15 +987,21 @@ urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
 |----------|---|---|---|---|
 |  Population density (persons per $km^2$) |  `r round(subset(a1_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)` | `r round(subset(a1_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a1_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a1_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Population change |  +`r round(subset(a1_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a1_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a1_means, var_name_clean == "Population Change")$max, 0)`%  |
-|  Jobs in education, health, hospitality, business, and other services |  `r round(mean(subset(emply_a1, industry == "Services")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Services")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Services")$perc_workers), 0)`%  |
-|  Jobs in manufacturing |  `r round(mean(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in agriculture, forestry, fishing, or hunting |  `r round(mean(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`%  |
-|  Jobs in wholesale trade |  `r round(mean(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`% |
+|  Jobs in health and social services |  `r round(mean(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
+|  Jobs in education and libraries |  `r round(mean(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
+|  Jobs in manufacturing |  `r round(mean(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in accommodation and food |  `r round(mean(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
 |  Jobs in construction |  `r round(mean(subset(emply_a1, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Construction")$perc_workers), 0)`%  |
-|  Jobs in transportation, public utilities |  `r round(mean(subset(emply_a1, industry == "Transportation.and.Public.Utilities")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Transportation.and.Public.Utilities")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Transportation.and.Public.Utilities")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Transportation.and.Public.Utilities")$perc_workers), 0)`%  |
-|  Jobs in finance, insurance, and real estate |  `r round(mean(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 1)`% | `r round(median(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 1)`%  |  `r round(min(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 1)`% | `r round(max(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 1)`%  |
-|  Jobs in mining, quarrying, oil and gas extraction |  `r round(mean(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 1)`% | `r round(median(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 1)`%  |  `r round(min(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 1)`% | `r round(max(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 1)`%  |
-|  Jobs in agriculture, forestry, fishing, or hunting |  `r round(mean(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 1)`% | `r round(median(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 1)`%  |  `r round(min(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 1)`%  |
+|  Jobs in federal government |  `r round(mean(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`%  |
+|  Jobs in wholesale trade |  `r round(mean(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Wholesale.Trade")$perc_workers), 0)`% |
+|  Jobs in state government |  `r round(mean(subset(emply_a1, industry == "State.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "State.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "State.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "State.Government")$perc_workers), 0)`%  |
+|  Jobs in finance, insurance, and real estate |  `r round(mean(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |
+|  Jobs in trucking and warehousing |  `r round(mean(subset(emply_a1, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |
+|  Jobs in recreation |  `r round(mean(subset(emply_a1, industry == "Recreation")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Recreation")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Recreation")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Recreation")$perc_workers), 0)`%  |
+|  Jobs in mining, quarrying, oil and gas extraction |  `r round(mean(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |
+|  Jobs in legal services |  `r round(mean(subset(emply_a1, industry == "Legal")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Legal")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Legal")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Legal")$perc_workers), 0)`%  |
 |  Percent retirees |  `r round(subset(a1_means, var_name_clean == "Retirees")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Retirees")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Retirees")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Retirees")$max, 0)`%  |
 |  Average age |  `r round(subset(a1_means, var_name_clean == "Average Age")$mean, 0)` | `r round(subset(a1_means, var_name_clean == "Average Age")$median, 0)`  |  `r round(subset(a1_means, var_name_clean == "Average Age")$min, 0)` | `r round(subset(a1_means, var_name_clean == "Average Age")$max, 0)`  |
 |  Median income |  \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
