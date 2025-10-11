@@ -315,7 +315,8 @@ Counties in A4 are "small town" counties (contain an urban area with population 
 #| fig-cap: "Cluster assignments for each county and year in the study area. One map is shown for resource clusters (plot a) since no counties transitioned between resource clusters over the study period. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
-  mutate(cluster = factor(cluster,
+  mutate(year = ifelse(year == 1990, 1990, "2000-2020"),
+    cluster = factor(cluster,
                           levels = c("R1", "R2", "R3", "R4", "R5"),
                           labels = c("R1:\nEasily developed land with accessible urban and natural amenties",
                                      "R2:\nSomewhat isolated counties with forest and mountain amenities",
@@ -324,7 +325,7 @@ resource_map <- clust_dat[["Resource"]] %>%
                                      "R5:\nRural agriculture as natural amenity"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
-  # facet_wrap(vars(year)) +
+  facet_wrap(vars(year)) +
   scale_fill_manual(name = "", values = rev(viridis::turbo(5, begin=0.075, end=0.8)),
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
   theme_void() +
@@ -336,15 +337,16 @@ resource_map <- clust_dat[["Resource"]] %>%
 
 actor_map <- clust_dat[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A2", "A3", "A4"),
+                          levels = c("A1", "A2", "A3", "A4", "A5"),
                           labels = c("A1:\nHigh population growth with wealthier, highly educated residents",
                                      "A2:\nMore social isolation, less economic opportunity",
                                      "A3:\nSmall cities",
-                                     "A4:\nSmall town counties grow as quickly as small cities"))) %>%
+                                     "A4:\nSmall town counties grow as quickly as small cities",
+                                     "A5"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year)) +
-  scale_fill_manual(name = "", values = rev(viridis::viridis(4)),
+  scale_fill_manual(name = "", values = rev(viridis::viridis(5)),
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
   theme_void() +
   theme(legend.position="bottom",
