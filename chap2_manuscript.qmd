@@ -680,7 +680,7 @@ We calculated the five-year percent change in number of farms before each time p
 
 #### Percent change of land in farms
 
-Land in farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We used the five-year change in the percent of all county land that was in farms.
+Land in farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We used the five-year change in the percent of all county land that was in farms.
 
 #### Percent change of cropland
 
@@ -700,27 +700,27 @@ Annual land cover data from the National Land Cover Database (NLCD) was download
 
 #### Percent farms with net loss
 
-Farms with net loss and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 4 [@CofAg_1992_netloss].
+Farms with net loss and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 4 [@CofAg_1992_netloss].
 
 #### Agriculture support jobs
 
-We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total agriculture support workers in each county for each year:
+We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total agriculture support workers in each county for each year:
 
 - 1990: SIC codes 0710 (Soil Preparation Services), 0720 (Crop Services), 0761 (Farm Labor and Management Services), 0750 (Animal Services except veterinary)
 - 2000-2020: NAICS codes 115112 (Soil Preparation, Planting, and Cultivating), 115113 (Crop Harvesting Primarily by Machine), 115114 (Postharvest Crop Activities), 115115 (Farm Labor Contractors and Crew Leaders), 115116 (Farm Management Services), 115210 (Support Activities for Animal Production)
 
-We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
+We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
 
-Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of agriculture support workers by the total population count in each county and year.
+Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of agriculture support workers by the total population count in each county and year.
 
 #### Hotel and restaurant jobs
 
-We downloaded data from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total hospitality workers in each county for each year:
+We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total hospitality workers in each county for each year:
 
 - 1990: SIC codes 7000 (Hotels and Other Lodging Places), 5800 (Eating and drinking places)
 - 2000-2020: NAICS code 72 (Accommodation and food services)
 
-Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of hospitality workers by the total population count in each county and year.
+Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of hospitality workers by the total population count in each county and year.
 
 #### Median home value
 
