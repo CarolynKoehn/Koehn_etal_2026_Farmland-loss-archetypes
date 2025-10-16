@@ -2,7 +2,7 @@
 title: "Data-driven archetypes of farmland change: Preliminary results"
 author: Carolyn Koehn
 abstract: |
-  Approximately 1.5 million km$^2$ of global land was converted from agriculture to highly developed areas between 1992 and 2018. The processes leading to this conversion are variable, but most farmland protection policy focuses on controlling urban sprawl. A better understanding of the multiple contexts in which farmland loss occurs can inform the development of more diverse policies for agricultural land protection. We used an interdisciplinary archetypes approach that identifies recurring patterns of variables in social-ecological systems across different spaces and time periods. We combined finite Gaussian mixture model cluster analysis and qualitative case studies to find recurring patterns of change over time in 26 counties in southern Idaho's Snake River Plain, a region of the western United States [US] with both high agricultural production and high population growth where agricultural lands are at risk of conversion. We chose data linked to second-tier variables in the resource and actors subsystems in Ostrom’s social-ecological systems framework. Specifically, we calculated descriptive metrics for 1990, 2000, 2010, and 2020 from the US Census, land use/land cover spatial data, and the US Census of Agriculture. We found that these 26 counties over 4 time points clustered into 5 resource clusters and 5 actors clusters. Resource clusters were strongly driven by developed, crop-, and federal lands, housing density, and land near major roadways, whereas actor clusters were strongly driven by degree of geographic isolation and population density. We then selected 4(?) counties from the full pool of counties to do qualitative case study analysis and link those insights with the results of the data driven clusters. Through combined quantitative and qualitative approaches, we found that agricultural land loss occurs in multiple contexts, including urban sprawl and in more rural areas with recreation access. We reveal spatially distant counties in the same archetype that may be able to share successful farmland protection policies, as well as neighboring counties in different archetypes that will likely require different policy pathways to protect farmland. We intentionally used publicly available data so that this approach could be applied to many areas grappling with agricultural land loss.
+  Approximately 1.5 million km$^2$ of land globally was converted from agriculture to highly developed areas between 1992 and 2018. The processes leading to this conversion are variable, but most farmland protection policy focuses on controlling urban sprawl. A better understanding of the multiple contexts in which farmland loss occurs can inform the development of more diverse policies for agricultural land protection. We used a mixed methods archetypes approach that identifies recurring patterns of variables in social-ecological systems across different spaces and time periods. We combined finite Gaussian mixture model cluster analysis and qualitative case studies and interview data to find recurring patterns of change over time in 26 counties in southern Idaho's Snake River Plain, a region of the western United States [US] with both high agricultural production and high population growth where agricultural lands are at risk of conversion. We used data linked to resource and actor variables in a commonly used social-ecological systems framework. Specifically, we calculated descriptive metrics for 1990, 2000, 2010, and 2020 from the US Census, land use/land cover spatial data, and the US Census of Agriculture. We found that these 26 counties over 4 time points clustered into 5 resource clusters and 5 actors clusters. Resource clusters were strongly driven by developed, crop-, and federal lands, housing density, and land near major roadways, whereas actor clusters were strongly driven by degree of geographical isolation and population density. We then selected 4(?) counties from the full pool of counties to do qualitative case study analysis and link those insights with the results of the quantitatively derived clusters. Through combined quantitative and qualitative approaches, we found that agricultural land loss occurs in multiple contexts, including along the rural-urban interface and in more rural areas with recreation access. We reveal spatially distant counties in the same archetype that may be able to share successful farmland protection policies, as well as neighboring counties in different archetypes that will likely require different policy pathways to protect farmland. We intentionally used publicly available data so that this approach could be applied to many areas grappling with agricultural land loss.
 date: last-modified
 number-sections: true
 ---
@@ -34,7 +34,7 @@ aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyAre
 
 # Introduction
 
-Approximately 1.5 million km$^2$ of land has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social well-being [@smith2001]. In order to protect high quality agricultural lands, it is critical to understand the multiple pathways that those lands are converted to other uses. There are three recurring patterns of farmland loss that have been described separately in a number of case studies: urban/suburban sprawl, amenity migration, and agricultural industrialization.
+Approximately 1.5 million km$^2$ of land globally has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections for future agricultural land loss are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social and community well-being [@smith2001]. In order to protect high quality agricultural lands, it is critical to understand the multiple pathways by which those lands are converted to other uses. There are three recurring patterns of farmland loss that have been described separately in a number of case studies: urban/suburban sprawl, amenity migration, and agricultural industrialization.
 
 Urban sprawl is a widely recognized pathway to agricultural land loss. As the population in urban centers grows, there is increased need for housing. While cities may create denser housing in the urban center to accommodate a larger population, they often expand outwards onto marginal lands as affluent, car-owning residents seek spacious suburban neighborhoods [@dieleman2004]. As suburbs encroach on agricultural land, farmland fragmentation makes farming more difficult and encourages further development [@latruffe2014; @qiu2015; @freedgood2020]. As near-urban farmlands rise in value, the number of senior producers far exceeds the number of young producers, and as demographic and culture changes make farming less appealing, the sale of agricultural lands to urban developers is an attractive offer [@kuethe2014; @freedgood2020; @sheridan2007]. High quality croplands are especially susceptible to urban sprawl as both farming and housing development are easiest on flat lands with more access to freshwater [@halperin2023; @bren2017]. Urban and suburban sprawl are a prominent cause of agricultural lands loss and are present in many land use change models focused on agricultural lands [@xie2023; @chen2020; @haney2015].
 
@@ -42,7 +42,7 @@ Industrial expansion is seen as a vehicle for economic growth and it has manifes
 
 Amenity migration, the migration of affluent urban populations to rural areas for specific lifestyle amenities, is a pathway to rural land change, including agricultural land loss [@abrams2012]. Rural sprawl associated with amenity migration is less dense than urban sprawl, resulting in larger areas of land affected, but with less intensity [@radeloff2005]. Amenity migrants with agricultural estates do not rely on agricultural production as a means of income, and may engage in some form of farming (including hobby farms), lease lands to local producers, or use their lands for non-production uses like recreation and conservation [@abrams2012; @abrams2013]. Local jobs are primarily low-wage service jobs, and this combined with rising property values can push low income households farther out of the high-amenity community [@sherman2018; @loeffler2007; @abrams2012]. Thus, agricultural producers in high amenity communities may face rising costs and falling off-farm wages, the need to lease land, and the fragmentation of agricultural lands by migrant estates and commuter roads. Amenity migration is a distinct pathway to agricultural land loss that differs in cause and effects from urban sprawl and industrial expansion, and requires different policy and planning approaches to address.
 
-Since agricultural land conversion occurs via different processes in different contexts, farmland loss may be best described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019]. The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, will require context-specific policies to control farmland conversion, and places with similar patterns of farmland loss may share successful policies. However, to our knowledge, multiple archetypes of farmland loss have not been identified in a generalized yet spatially and temporally explicit manner across a single study region. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
+Since agricultural land conversion occurs via different processes in different contexts, farmland loss may be well described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019]. The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, require context-specific policies to manage farmland conversion, and places with similar patterns of farmland loss may share successful policies. However, to our knowledge, multiple archetypes of farmland loss have not been identified in a generalized yet spatially and temporally explicit manner across a single study region. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
 
 The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. We hypothesize that land use change is occurring due to urban/suburban sprawl, amenity migration, and agricultural industrialization in different areas across the region. This research will aid in identifying where distinct processes of land use change are occurring, contributing to a diverse toolbox for agricultural lands protection in diverse localities. We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. Our research questions were:
 
@@ -174,7 +174,7 @@ ci_clust[["Actors"]] <- read.csv("data/model results/ci_clust_actors.csv")
 ```{r}
 #| label: fig-R-CIs
 #| message: false
-#| fig-cap: "Characteristics of each Resource cluster. The means for each variable in each cluster are estimated by the 8-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Characteristics of each Resource cluster. The means for each variable in each cluster are estimated by the 5-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
 #| fig-height: 7.5
 #| fig-width: 8
 
@@ -245,28 +245,28 @@ Characteristic resources of R1 are crop- and developed land, high access to high
 
 #### Cluster R2: Risk of amenity migration -- Access to mountain recreation and urban amenities
 
-Characteristic resources of R2 are high presence of forestland and more steep lands (@fig-R-CIs). These counties are closer to ski areas and have a higher presence of recreation land, have an average presence of lakes and rivers, and support more jobs in hospitality (@suppfigb-R-ranges, @supptblb-data-r2). There is little developed or urban land, and both housing and farm density are low. However, most of the land in these counties lie within 50 miles of an urban area and its amenities, and access to major roadways is average for the study area (@supptblb-data-r2). These counties tend to have higher home values compared to other clusters (@supptblb-data-r2), indicating the appeal of the natural amenities and non-urban nature of these counties. Despite this appeal, cropland loss and developed land gain are fairly low compared to other clusters.
+Characteristic resources of R2 are a greater presence of forestland and more steep lands (@fig-R-CIs). These counties are closer to ski areas and have a higher presence of recreation land, have an average presence of lakes and rivers, and support more jobs in hospitality (@suppfigb-R-ranges, @supptblb-data-r2). There is little developed or urban land, and both housing and farm density are low. However, most of the land in these counties lie within 50 miles of an urban area and its amenities, and access to major roadways is average for the study area (@supptblb-data-r2). These counties have higher home values compared to other clusters (@supptblb-data-r2), indicating the appeal of the natural amenities and non-urban nature of these counties. Rates of cropland loss and developed land gain are fairly low compared to other clusters.
 
 <!--  Many R2 counties are large (@fig-resource-cluster-map), and data on the large areas of isolated lands can mask the presence and growth of developed areas (e.g. the city of Twin Falls in Twin Falls county). -->
 
 #### Cluster R3: Risk of amenity migration and industrial agriculture -- Flat land near natural and urban amenities
 
-Like R2, R3 is closer to national parks and ski areas, and is closer to urban areas while not containing much urban or developed land. Its unique characteristics are low forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and developed land gain is low. These counties tend to have lower home values (@supptblb-data-r3), showing less housing demand than R2.
+Like R2, R3 is closer to national parks and ski areas, and is closer to urban areas while not containing much urban or developed land. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain is low. These counties tend to have lower home values than R2 (@supptblb-data-r3).
 
 #### Cluster R4: Very isolated counties with few natural amenities
 
-The unique characteristics of R4 are its high shrubland cover, low cropland cover, high amount of federal land, high distance from urban areas, and low access to highways (@fig-R-CIs). Natural amenities are also few, with less river miles, fairly low lake area, average presence of recreation and forest land, and high distances to a ski areas (@suppfigb-R-ranges). Similar to R3, R4 has more large farms and less farms operating at a loss. The low cropland cover of R4 indicates that agriculture in these counties is more focused on livestock grazing (@supptblb-data-r4). R4 has low cropland loss and developed land gain, and it is also losing less farms than other counties (@suppfigb-R-ranges).
+The unique characteristics of R4 are more shrubland cover, less cropland cover, a greater amount of federal land, greater distance from urban areas, and less access to highways (@fig-R-CIs). Natural amenities are also few, with less river miles, minimal lake area, average presence of recreation and forest land, and long distances to a ski areas (@suppfigb-R-ranges). Similar to R3, R4 has more large farms and less farms operating at a loss. The low cropland cover of R4 indicates that agriculture in these counties is more focused on livestock grazing (@supptblb-data-r4). R4 has low rates of cropland loss and developed land gain, and it is also losing fewer farms than other counties (@suppfigb-R-ranges).
 
 #### Cluster R5: Risk of amenity migration and industrialized agriculture -- Rural agriculture as natural amenity
 
-Cluster R5 has a lower presence of natural land covers like forest and shrublands, and average cover of cropland and developed land (@fig-R-CIs). Though there are many rivers, access to other natural amenities such as ski areas, national parks, lakes, forests, and recreation lands are low (@suppfigb-R-ranges). Like R2 and R3, there is not much urban land in these counties, but almost all of their lands are within 50 miles of an urban area (@supptblb-data-r5). Cropland loss is low, while developed land gain and farm loss are average for the study area (@fig-R-CIs).
+Cluster R5 has less presence of natural land covers like forest and shrublands, and average cover of cropland and developed land (@fig-R-CIs). Though there are many rivers, access to other natural amenities such as ski areas, national parks, lakes, forests, and recreation lands are low (@suppfigb-R-ranges). Like R2 and R3, there is not much urban land in these counties, but almost all of their lands are within 50 miles of an urban area (@supptblb-data-r5). Rates of cropland loss are low, while developed land gain and farm loss are average for the study area (@fig-R-CIs).
 
 ### Actors Clusters
 
 ```{r}
 #| label: fig-A-CIs
 #| message: false
-#| fig-cap: "Characteristics of each Actors cluster. The means for each variable in each cluster are estimated by the 4-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Characteristics of each Actors cluster. The means for each variable in each cluster are estimated by the 5-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
 #| fig-height: 6
 #| fig-width: 7.5
 
@@ -290,11 +290,11 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
 
 #### Cluster A1: High population growth in metropolitan counties
 
-The defining characteristics of A1 are its high population density, low employment in agriculture, and metropolitan workforce, with most people living and working in the same metropolitan county, or living in Canyon County and commuting to nearby Boise for work (@fig-A-CIs, @supptblb-data-a1). A1 also has high population growth, higher incomes, and a higher percentage of residents with a Bachelor's degree (@suppfigb-A-ranges). Despite a lower proportion of residents in agricultural production, the number of hired workers is fairly high for the study area, indicating the high production needs of the farms that remain in these counties (@fig-A-CIs). A1 also has the highest share of farms that are fully owned by the producer, as well as a higher percentage of farms operating at a loss, indicating that farming in these counties is financially difficult, and renting land to expand farming operations is especially challenging.
+The defining characteristics of A1 are its high population density, low employment in agriculture, and metropolitan workforce, with most people living and working in the same metropolitan county, or living in Canyon County and commuting to nearby Boise for work (@fig-A-CIs, @supptblb-data-a1). A1 also has high population growth, higher incomes, and a higher percentage of residents with a Bachelor's degree (@suppfigb-A-ranges). Despite a lower proportion of residents in agricultural production, the number of hired agricultural workers is fairly high for the study area, indicating the high production needs of the farms that remain in these counties (@fig-A-CIs). A1 also has the highest share of farms that are fully owned by the producer, as well as a higher percentage of farms operating at a loss. These farm labor, tenure, and profit rates indicate that farming in these counties is financially difficult, and renting land to expand farming operations is especially challenging.
 
 #### Cluster A2: Rural counties with less agriculture
 
-A2 and A5 are very similar in that they are rural counties, meaning they do not contain an urban area with more than 5,000 residents, with low population density, moderate population growth, and less residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a2). A2 is differentiated by less workers in agriculture, more people commuting to more urban counties, and slightly higher incomes compared to the rural counties in A5 (@supptblb-data-a2, @suppfigb-A-ranges).
+A2 and A5 are very similar in that they are rural counties, meaning they do not contain an urban area with more than 5,000 residents, with low population density, moderate population growth, and fewer residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a2). A2 is differentiated by fewer workers in agriculture, more people commuting to more urban counties, and slightly higher incomes compared to the rural counties in A5 (@supptblb-data-a2, @suppfigb-A-ranges).
 
 #### Cluster A3: Small cities 
 
@@ -302,18 +302,18 @@ Cluster A3's unique characteristic is that all its counties are micropolitan (co
 
 #### Cluster A4: Small town counties grow as quickly as small cities
 
-Counties in A4 are "small town" counties (contain an urban area with population 5,000-9,999), have low population density, and are fairly geographically isolated with most workers living and working in the same county or another small town county (@fig-A-CIs, @supptblb-data-a4). In many ways, A4 is similar to A2, with similar employment in agriculture, lower incomes, and less people with a Bachelor's degree (@fig-A-CIs). Population growth rates are similar in A2, A3, and A4, and this population growth fuels transitions between clusters.
+Counties in A4 are "small town" counties (contain an urban area with population 5,000-9,999), have low population density, and are fairly geographically isolated with most workers living and working in the same county or another small town county (@fig-A-CIs, @supptblb-data-a4). In many ways, A4 is similar to A2, with similar employment in agriculture, lower incomes, and fewer people with a Bachelor's degree (@fig-A-CIs). Population growth rates are similar in A2, A3, and A4, and this population growth fuels transitions to more urbanized clusters.
 
-#### Cluster A5: More geographic isolation, less economic opportunity
+#### Cluster A5: More geographical isolation, less economic opportunity
 
-Like A2, A5 has rural counties with low population density, moderate population growth, and less residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a5). However, more residents of A5 counties are working in agriculture, and less commute to more urban areas (@supptblb-data-a5). A5 has lower incomes and hires less agricultural workers compared to other clusters (@suppfigb-A-ranges).
+Like A2, A5 has rural counties with low population density, moderate population growth, and less residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a5). However, compared to A2, more residents of A5 counties are working in agriculture, and less commute to more urbanized areas (@supptblb-data-a5). A5 has lower incomes and hires fewer agricultural workers compared to other clusters (@suppfigb-A-ranges).
 
 ## Cluster Transitions
 
 ```{r}
 #| label: fig-cluster-maps
-#| fig-width: 7
-#| fig-height: 8
+#| fig-width: 13
+#| fig-height: 7
 #| fig-cap: "Cluster assignments for each county and year in the study area. One map is shown for resource clusters (plot a) since no counties transitioned between resource clusters over the study period. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
@@ -332,7 +332,8 @@ resource_map <- clust_dat[["Resource"]] %>%
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
   theme_void() +
   theme(legend.position="bottom",
-        legend.spacing.x = unit(0, 'cm'))+
+        legend.spacing.x = unit(0, 'cm'),
+        text = element_text(size=14))+
   guides(fill = guide_legend(label.position = "bottom",
                              keywidth = 5.5))
 
@@ -344,7 +345,7 @@ actor_map <- clust_dat[["Actors"]] %>%
                                      "A2:\nRural counties with less agriculture",
                                      "A3:\nSmall cities",
                                      "A4:\nSmall town counties grow as quickly as small cities",
-                                     "A5: More geographic isolation, less economic opportunity"))) %>%
+                                     "A5: More geographical isolation, less economic opportunity"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year)) +
@@ -352,16 +353,41 @@ actor_map <- clust_dat[["Actors"]] %>%
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
   theme_void() +
   theme(legend.position="bottom",
-        legend.spacing.x = unit(0, 'cm'))+
+        legend.spacing.x = unit(0, 'cm'),
+        text = element_text(size=14))+
   guides(fill = guide_legend(label.position = "bottom",
                              keywidth = 5.5))
 
-resource_map + actor_map + plot_layout(ncol = 1) + plot_annotation(tag_levels = "a")
+# association table
+county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county", "year", "cluster")]),
+                           st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
+                           by = c("county", "year"),
+                           suffix = c(".R", ".A"))
+
+assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$cluster.A)),
+       aes(x=Var1, y=Var2, fill=Freq, label=Freq)) +
+  geom_tile(show.legend = FALSE) +
+  geom_text() +
+  scale_x_discrete(position = "top",
+                   name = "Resource Cluster") +
+  scale_y_discrete(name = "Actor Cluster") +
+  scale_fill_gradient(low = "white", high = "mediumorchid") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        text = element_text(size=14))
+
+design <- "
+  12
+  32
+"
+
+resource_map + actor_map + assoc_tbl + plot_layout(design = design) + plot_annotation(tag_levels = "a")
 ```
 
 There was one resource transition over the study period: Power County transitioned from R2 (Access to mountain recreation and urban amenities) to R3 (Flat land near natural and urban amenities) in 2000. This can be attributed to a lower percentage of resident employed in hospitality, as well as less large farms and less cropland loss after 2000.
 
-Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural archetype is A5 (more geographic isolation, less economic opportunity). From A5, counties transition to A2 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A4 (small town counties grow as quickly as small cities), if population growth occurs in such a way to create a concentration of population that creates an urban area. A2 may further transition to A4 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A4 counties transition to A3 (small cities) once enough population growth has occurred to reclassify the small towns in A4 counties to the micropolitan areas of A3 counties. Finally, A3 counties may transition to metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county.
+Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural archetype is A5 (more geographical isolation, less economic opportunity). From A5, counties transition to A2 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A4 (small town counties grow as quickly as small cities), if population growth occurs in such a way to create a concentration of population that creates an urban area. A2 may further transition to A4 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A4 counties transition to A3 (small cities) once enough population growth has occurred to reclassify the small towns in A4 counties to the micropolitan areas of A3 counties. Finally, A3 counties may transition to metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county.
 
 ```{r}
 #| label: fig-RA-assoc
@@ -372,6 +398,11 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                            st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
                            by = c("county", "year"),
                            suffix = c(".R", ".A"))
+
+ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$cluster.A)),
+       aes(x=Var1, y=Var2, fill=Freq, label=Freq)) +
+  geom_tile() +
+  geom_label()
 
 barcodes <- bind_rows(clust_dat) %>%
   select(county, year, cluster) %>%
@@ -2077,7 +2108,7 @@ The counties in A1 are Ada and Canyon (2010-2020).
 |  Live and work in same metropolitan county (% of workers) |  **`r round(mean(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |
 |  Live metropolitan, commute to a bigger metropolitan area (% of workers) |  **`r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |
 
-Summary statistics for counties in archetype A1. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographic isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A1 are metropolitan (contain an urban area with population >50,000).
+Summary statistics for counties in archetype A1. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A1 are metropolitan (contain an urban area with population >50,000).
 
 :::
 
@@ -2189,7 +2220,7 @@ The counties in A2 are Fremont, Gooding, Jefferson, Minidoka, Gem (1990), Owyhee
 |  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%  |
 |  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
 
-Summary statistics for counties in archetype A2. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographic isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A2 are "rural" counties (do not contain an urban area).
+Summary statistics for counties in archetype A2. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A2 are "rural" counties (do not contain an urban area).
 
 :::
 
