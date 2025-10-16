@@ -724,27 +724,27 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Median home value
 
-Data for the median home value in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Housing [1990 CH-1-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for housing in December of each year [@cpiu_housing].
+Data for the median home value in each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Housing [1990 CH-1-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for housing in December of each year [@cpiu_housing].
 
 #### Farm size
 
-Number of farms in each size class and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We found the percent of farms in each size category available for each year, and then simplified the data using principal component analysis. We retained the first two principal components, which explained 81.1% of the variance.
+Number of farms in each size class and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We found the percent of farms in each size category available for each year, and then simplified the data using principal component analysis. We retained the first two principal components, which explained 81.1% of the variance.
 
 ### Actors
 
 #### Population density
 
-Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided by total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
+Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided by total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
 #### Population change
 
-Population counts for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $ (population_{1990} - population_{1980}) / population_{1980} $.
+Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $ (population_{1990} - population_{1980}) / population_{1980} $.
 
 #### Percent employed in different industries
 
 Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020.
 
-We downloaded data for private sector jobs from the County Business Patterns series from the U.S. Census Bureau using the `censusapi` package [v0.9.0, @censusapi]. We summed jobs in the following categories based on which high-level SIC and NAICS codes were comparable:
+We downloaded data for private sector jobs from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We summed jobs in the following categories based on which high-level SIC and NAICS codes were comparable:
 
 - Agriculture, Forestry, Fishing and Hunting: SIC code 7 (Agricultural Services, Forestry, and Fishing), NAICS code 11 (Agriculture, Forestry, Fishing and Hunting)
 - Mining, Quarrying, and Oil and Gas Extraction: SIC code 10 (Mining), NAICS code 21 (Mining, Quarrying, and Oil and Gas Extraction)
@@ -764,24 +764,24 @@ The County Business Patterns data does not include public sector employees or ag
 
 - Legal: ASPEP government function category "Judicial & Legal"
 - Education and libraries: ASPEP government function categories "Libraries", "Education - Elementary and Secondary Instructional", and "Education - Elementary and Secondary Other"
-- Health and social services: ASPEP government function categories "Health", "Hospitals", Housing & Community Development", and "Public Welfare"
+- Health and social services: ASPEP government function categories "Health", "Hospitals", "Housing & Community Development", and "Public Welfare"
 - Recreation: ASPEP government function category "Parks & Recreation"
 
-We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state and federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022.
+We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state or federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022 since the County Business Patterns data did not include agricultural production.
 
 We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first three components, which explained 73.1% of the variance.
 
 #### Percent retired
 
-We defined retirees as residents over age 65 who were not in the labor force. Population counts and counts of people >65 not in the labor force for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Labor force data for 1990 were digitized from Table 144 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. Population count data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts].
+We defined retirees as residents over age 65 who were not in the labor force. Population counts and counts of people >65 not in the labor force for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Labor force data for 1990 were digitized from Table 144 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. Population count data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts].
 
 #### Average age
 
-Data on the weighted average age of residents in each county were downloaded from the @nih_age. 
+Data on the weighted average age of residents in each county from 1969-2023 were downloaded from the @nih_age. 
 
 #### Median household income
 
-Data for the median household income in each county for 2000-2020 was downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from from Table 148 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for all items in the Western United States (series ID CUUR0400SA0) in December of each year [@cpiu_all].
+Data for the median household income in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from from Table 148 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for all items in the Western United States (series ID CUUR0400SA0) in December of each year [@cpiu_all].
 
 #### Unemployment rate
 
@@ -793,15 +793,15 @@ We downloaded data on the percentage of residents whose highest level of educati
 
 #### Racial composition
 
-Population counts for each race used by the US Census for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. We simplified these data with principle component analysis, retaining the first component which explained 95.3% of the variance.
+Population counts for each race used by the US Census for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020_dhc] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. We simplified these data with principle component analysis, retaining the first component which explained 95.3% of the variance.
 
 #### Hispanic ethnicity
 
-Population counts and ethnicity data for each county for 2000-2020 were downloaded via the Census API using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990].
+Population counts and ethnicity data for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020_dhc] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990].
 
 #### Farm tenure
 
-Number of farms in each tenure class (full-owned, part-owned, and tenant) and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 11 [@CofAg_1992_tenure]. We found the percent of farms in each tenure category for each year, and then simplified the data using principal component analysis. We retained the first principal component, which explained 92.6% of the variance.
+Number of farms in each tenure class (full-owned, part-owned, and tenant) and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 11 [@CofAg_1992_tenure]. We found the percent of farms in each tenure category for each year, and then simplified the data using principal component analysis. We retained the first principal component, which explained 92.6% of the variance.
 
 ## Summary Statistics
 
