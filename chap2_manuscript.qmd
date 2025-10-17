@@ -65,7 +65,7 @@ The localized and overall effects of industrial expansion have not been included
 
 ## Data Selection
 
-We linked data available from 1990-2020 to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009] based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
+We linked data available from 1990-2020 to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009] based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
 
 ::: {#tbl-datasel-R}
 
@@ -87,7 +87,7 @@ We linked data available from 1990-2020 to second-tier variables in Ostrom's soc
 | | | Distance to nearest ski area | PAD-US |
 | | Urban / Residential | Number houses per unit area | US Decennial Census |
 | | | Percent non-federal land within 10km of a major roadway | US Decennial Census, PAD-US |
-| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP) |
+| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP), US Census of Governments |
 | RS9 -- Location | All | Average slope | OpenTopography |
 | RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | US Census of Agriculture |
 | | | Percent change of land area in farms | US Census of Agriculture |
@@ -97,7 +97,7 @@ We linked data available from 1990-2020 to second-tier variables in Ostrom's soc
 | | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD |
 | RU4 -- Economic Value | Agriculture | Percent farms with net loss | US Census of Agriculture |
 | | | Agriculture support jobs per 1000 residents | US Census of Agriculture |
-| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | US Census CBP |
+| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | CBP |
 | | Urban / Residential | Median home value | US Decennial Census |
 | RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres)* | US Census of Agriculture |
 
@@ -111,28 +111,32 @@ Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's
 |--|--|---|---|
 | A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census |
 | | | Percent population change (10 year period) | US Decennial Census |
-| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | US Census CBP |
+| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | CBP, Census of Governments, US Census of Agriculture |
 | | | Percent population 65+ and not in labor force | US Decennial Census |
 | | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program |
 | | | Median household income | US Decennial Census |
 | | | Unemployment rate | US Bureau of Labor Statistics |
-| | | Percent population with high school, Bachelor's degree | USDA Economic Research Service (ERS) |
+| | | Percent population with high school, Bachelor's degree | USDA Economic Research Service |
 | | | Racial composition of population* | US Decennial Census |
 | | | Percent population with Hispanic ethnicity | US Decennial Census |
 | | Agriculture | Percent farms full- or part-owned, or tenant operated* | US Census of Agriculture |
 | | | Percent farms with net loss | US Census of Agriculture |
 | | | Number of hired workers | US Census of Agriculture |
-| A4 -- Location | All | Geographical isolation* | US Census |
+| A4 -- Location | All | Geographical isolation* | IPUMS, US Decennial Census |
 
 Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors. * indicates that principal components were used to reduce dimensions.
 
 :::
 
-I scaled these data by mean normalization (divided by the range), so that all variables had a mean of 0 and range of [-1, 1]. In clustering, dividing by the range (scaling) is preferable to dividing by the standard deviation (normalization) to preserve possible cluster structure in the data [@hennig2016].
+## Gaussian Mixed Model Clustering
 
-## Clustering - will be expanded in next draft
+### Model Selection
 
-### Algorithmic Variable Selection
+There are three components to model selection in Gaussian-based cluster modelling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019], which is important in this analysis as we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters if we reduce the number of dimensions since certain cluster shapes and increasing numbers of clusters require more parameters [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about a social-ecological agricultural system, we decided to remove redundant indicators in order to test more clustering configurations.
+
+[Describe clustvarsel methods]
+
+<!-- Variable selection is a crucial task in unsupervised classification because irrelevant or noise variables
 
 Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected. 
 
@@ -152,7 +156,11 @@ Since this clustering finds local maxima, it is sensitive to its initialization.
 
 5 clusters was the best fit for the resource data. 4 clusters was the best fit for the actors data.
 
-The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima.
+The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima. -->
+
+## Qualitative Analysis
+
+- need to meet with social science team to identify methods
 
 # Preliminary Results
 
