@@ -130,33 +130,25 @@ Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's s
 
 ## Gaussian Mixed Model Clustering
 
+We ran two separate cluster analyses, one with the resource variables and one with the actor variables, in order to characterize the resource and actor subsystems of the counties separately.
+
 ### Model Selection
 
 There are three components to model selection in Gaussian-based cluster modelling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019], which is important in this analysis as we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters if we reduce the number of dimensions since certain cluster shapes and increasing numbers of clusters require more parameters [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about a social-ecological agricultural system, we decided to remove redundant indicators in order to test more clustering configurations.
 
-[Describe clustvarsel methods]
+We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable identified with BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, @clustvarsel). 
 
-<!-- Variable selection is a crucial task in unsupervised classification because irrelevant or noise variables
+The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented in R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes, though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >3 groups.
 
-Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected. 
+Because clustering models are sensitive to their initialization, we ran each model 200 times with random initializations. We selected the best model structure of the 200 runs using BIC, and the log likelihoods for the 200 runs of both models indicated no evidence of alternative local solutions [@bauer2021].
 
-I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal (this method is recommended in the clustering textbook I used - will cite).
+### Selected Model Structures
 
-I tested for a range of 1-5 possible clusters. It's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006].
+After variable selection, we removed (1) agriculture support jobs, (2) shrubland change, (3) lake area, and (4) land in farms from the resource model. The optimal number of clusters was 5, and the optimal cluster shape was VEV [ellipsoidal, with variable volume, equal shape, and variable orientation in dimensional space, @scrucca2023].
 
-From the Resource clusters, the following variables were removed: workers supporting agriculture and hospitality, recreation and developed land, farm size, change in shrublands and land in farms, and median home value.
+After variable selection, we removed most indicators from the actors model, retaining (1) population density, (2) the first principal component of employment, (3) number of hired agricultural workers, and (4) the first two principal components for geographical isolation. The optimal number of clusters was 5, and the optimal cluster shape was EVV [ellipsoidal, with equal volume, variable shape, and variable orientation in dimensional space, @scrucca2023].
 
-From the Actors clusters, the following variables were removed: number hired workers.
-
-### Gaussian Model-Based Clustering
-
-To select a model, which includes selecting the number of groups and the shape, I used BIC to test 14 different model shapes and 1-5 possible clusters.
-
-Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
-
-5 clusters was the best fit for the resource data. 4 clusters was the best fit for the actors data.
-
-The log likelihood values from the bootstrapping process indicate that there are no competing models, so the final models are very likely to be the global as well as local maxima. -->
+To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
 ## Qualitative Analysis
 
@@ -167,6 +159,8 @@ The log likelihood values from the bootstrapping process indicate that there are
 ## Cluster Descriptions
 
 ### Resource Clusters
+
+The most influential variables in the resource model were: (1) developed land, (2) housing density, (3) non-federal land near major roadways, and (4) federal land (@suppfigb-R-influential).
 
 ```{r}
 #| label: "get CIs"
@@ -270,6 +264,8 @@ The unique characteristics of R4 are more shrubland cover, less cropland cover, 
 Cluster R5 has less presence of natural land covers like forest and shrublands, and average cover of cropland and developed land (@fig-R-CIs). Though there are many rivers, access to other natural amenities such as ski areas, national parks, lakes, forests, and recreation lands are low (@suppfigb-R-ranges). Like R2 and R3, there is not much urban land in these counties, but almost all of their lands are within 50 miles of an urban area (@supptblb-data-r5). Rates of cropland loss are low, while developed land gain and farm loss are average for the study area (@fig-R-CIs).
 
 ### Actors Clusters
+
+The most influential variables in the resource model were: (1) geographic isolation and (2) population density (@suppfigb-A-influential).
 
 ```{r}
 #| label: fig-A-CIs
@@ -713,7 +709,7 @@ We downloaded elevation data from Terrain Tiles [@aws_terrain] via the `elevatr`
 
 Number of farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
-We calculated the five-year percent change in number of farms before each time point. For example, for 2022: $ (Farms_{2022} - Farms_{2017}) / Farms_{2017} $
+We calculated the five-year percent change in number of farms before each time point. For example, for 2022: $(Farms_{2022} - Farms_{2017}) / Farms_{2017}$
 
 #### Percent change of land in farms
 
@@ -1131,6 +1127,34 @@ Summary statistics for all study area counties. A selection of geographical isol
 Medians and ranges from county data for each archetype, including data indicators that were removed during variable selection, are reported here. For medians and ranges for each data indicator across the study area, see Appendix A.
 
 ## Resource Archetypes
+
+::: {#suppfigb-R-influential}
+
+```{r}
+#| label: suppfigb-R-influential
+#| message: false
+
+var_labs <- data.frame(indicator = rev(c("percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "rivers_km_per_km2", "percent_developed", "urb_dist_pc1", "urb_dist_pc2", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "avg_slope", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "developed_change", "perc_farms_w_net_loss", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2")),
+                   pretty_label = rev(c("Cropland", "Forest", "Shrubland", "Federal Land", "Length of Rivers", "Developed Land", "Distance from Urban (PC1)", "Distance from Urban (PC2)", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Land Near Highways", "Healthcare Workers", "Average Slope", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Hospitality Jobs", "Home Value", "Farm Size (PC1)", "Farm Size (PC2)")))
+
+read.csv("data/model results/drmod_resource.csv") %>%
+  left_join(var_labs) %>%
+  arrange(influence) %>%
+  mutate(pretty_label = factor(pretty_label, 
+                            levels = rev(pretty_label))) %>%
+  mutate(relative_influence = influence / sum(influence)) %>%
+  ggplot(aes(x = pretty_label, y = relative_influence)) +
+  geom_col() +
+  scale_x_discrete(guide = guide_axis(angle=90), name = "Indicator") +
+  scale_y_continuous(name = "Relative Influence", expand = expansion(add=0),
+                     limits = c(0,0.2)) +
+  theme_classic()
+  
+```
+
+we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Then, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
+
+:::
 
 ::: {#suppfigb-R-ranges}
 
@@ -1969,6 +1993,33 @@ Summary statistics for counties in archetype R5. Bolded cluster means are signif
 
 ## Actors Archetypes
 
+::: {#suppfigb-A-influential}
+
+```{r}
+#| label: suppfigb-A-influential
+#| message: false
+
+var_labs <- data.frame(indicator = rev(c("pop_per_acre", "emply_pc1", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
+                   pretty_label = rev(c("Population Density", "Employment Sectors (PC1)", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)")))
+
+read.csv("data/model results/drmod_actors.csv") %>%
+  left_join(var_labs) %>%
+  arrange(influence) %>%
+  mutate(pretty_label = factor(pretty_label, 
+                            levels = rev(pretty_label))) %>%
+  mutate(relative_influence = influence / sum(influence)) %>%
+  ggplot(aes(x = pretty_label, y = relative_influence)) +
+  geom_col() +
+  scale_x_discrete(guide = guide_axis(angle=90), name = "Indicator") +
+  scale_y_continuous(name = "Relative Influence", expand = expansion(add=0),
+                     limits = c(0,0.4)) +
+  theme_classic()
+  
+```
+
+we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Then, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
+
+:::
 
 ::: {#suppfigb-A-ranges}
 
