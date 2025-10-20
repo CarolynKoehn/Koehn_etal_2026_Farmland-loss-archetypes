@@ -32,9 +32,9 @@ aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyAre
 ```
 
 
-# Introduction
+# Introduction -- not yet revised
 
-Approximately 1.5 million km$^2$ of land globally has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections for future agricultural land loss are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social and community well-being [@smith2001]. In order to protect high quality agricultural lands, it is critical to understand the multiple pathways by which those lands are converted to other uses. There are three recurring patterns of farmland loss that have been described separately in a number of case studies: urban/suburban sprawl, amenity migration, and agricultural industrialization.
+Approximately 1.5 million km$^2$ of land globally has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections for future agricultural land loss are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social and community well-being [@smith2001]. The focus on urban sprawl in farmland loss predictions leads to a mismatch between the identification of threatened farmlands, policy implemented to protect farmland, and actual farmland conversion. In order to protect high quality agricultural lands, it is critical to understand the multiple pathways by which those lands are converted to other uses and where they are occurring. There are three recurring patterns of farmland loss that have been described separately in a number of case studies: urban/suburban sprawl, amenity migration, and agricultural industrialization.
 
 Urban sprawl is a widely recognized pathway to agricultural land loss. As the population in urban centers grows, there is increased need for housing. While cities may create denser housing in the urban center to accommodate a larger population, they often expand outwards onto marginal lands as affluent, car-owning residents seek spacious suburban neighborhoods [@dieleman2004]. As suburbs encroach on agricultural land, farmland fragmentation makes farming more difficult and encourages further development [@latruffe2014; @qiu2015; @freedgood2020]. As near-urban farmlands rise in value, the number of senior producers far exceeds the number of young producers, and as demographic and culture changes make farming less appealing, the sale of agricultural lands to urban developers is an attractive offer [@kuethe2014; @freedgood2020; @sheridan2007]. High quality croplands are especially susceptible to urban sprawl as both farming and housing development are easiest on flat lands with more access to freshwater [@halperin2023; @bren2017]. Urban and suburban sprawl are a prominent cause of agricultural lands loss and are present in many land use change models focused on agricultural lands [@xie2023; @chen2020; @haney2015].
 
@@ -251,7 +251,7 @@ Characteristic resources of R2 are a greater presence of forestland and more ste
 
 <!--  Many R2 counties are large (@fig-resource-cluster-map), and data on the large areas of isolated lands can mask the presence and growth of developed areas (e.g. the city of Twin Falls in Twin Falls county). -->
 
-#### Cluster R3: Risk of amenity migration and industrial agriculture -- Flat land near natural and urban amenities
+#### Cluster R3: Risk of urban sprawl, amenity migration, and/or industrial agriculture -- Flat land near natural and urban amenities
 
 Like R2, R3 is closer to national parks and ski areas, and is closer to urban areas while not containing much urban or developed land. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain is low. These counties tend to have lower home values than R2 (@supptblb-data-r3).
 
@@ -432,12 +432,12 @@ ggplot(county_clusts, aes(x=cluster.A)) +
 
 Here I'd like to qualitatively explain how the dynamics of certain counties fit their archetypes. Here are some possibilities:
 
-- Ada/Canyon counties: R1 (easily developed land with accessible urban and natural amenities) and A1 (high population growth with wealthier, highly educated residents) -- classic case of urban sprawl
-- Teton County: R1 (easily developed land with accessible urban and natural amenities) and A2 (more social isolation, less economic opportunity) $\rightarrow$ A1 (high population growth with wealthier, highly educated residents) -- "discovery" of natural amenities, inflow of wealthy immigrants
-- Blaine County: R2 (somewhat isolated counties with forest and mountain amenities) and A1 (high population growth with wealthier, highly educated residents) -- history of wealth creates "mimicry" of more isolated counties
-- Twin Falls County: R4 (industrial agriculture) and A3 (small cities): city built around processing agricultural products, resource cluster indicates that its not as at risk for urban sprawl? (investigate this claim) / its neighbor Jerome County: R1 (easily developed land with accessible urban and natural amenities) and A4 (small town counties grow as quickly as small cities) $\rightarrow$ A3 (small cities) --  flat land that has been used for agriculture at risk of conversion to urban
+- Ada/Canyon counties: R1 (flat land with accessible urban amenities) and A1 (high population growth in metropolitan counties) –- classic case of urban sprawl
+- 	Teton County: R2 (access to mountain recreation and urban amenities) and A5 (more social isolation, less economic opportunity) $\rightarrow$ A2 (rural counties with less agriculture) -– “discovery” of natural amenities, inflow of wealthy immigrants, yet retaining a rural nature
+- Blaine County: R2 (access to mountain recreation and urban amenities) and A5 (more social isolation, less economic opportunity) $\rightarrow$ A4 (small town counties grow as quickly as small cities) – history of wealth creates “mimicry” of more isolated counties, bifurcated nature may mask social dynamics
+- 	Twin Falls County: R3 (flat land near natural and urban amenities) and A3 (small cities): city built around processing agricultural products / its neighbor Jerome County: R5 (rural agriculture as natural amenity) and A4 (small town counties grow as quickly as small cities) $\rightarrow$ A3 (small cities) – flat land that has been used for agriculture at risk of conversion to urban
 
-Some combination of these case studies can tie back to the archetypes I laid out in the intro, but add more information about them.
+These case studies can tie back to the phenomena I laid out in the intro: urban sprawl, amenity migration, industrial ag.
 
 # Main Takeaways
 
@@ -447,11 +447,14 @@ R1, the cluster losing the most cropland and land in farms and gaining the most 
 
 ## Building block archetypes for the resources and actors of a county as well as its history give us the fuller picture
 
+I'd like to argue that resource archetypes indicate risk of certain causes of farmland loss, and actor archetypes are how we see those disparate causes play out.
+
+<!--
 - Ada and Blaine have the same actors
 - Ada and Jerome have the same resource system
 - Ada and Teton have the same actors and resource system in 2020
 
-Yet despite sharing similarities, farmland loss and farmland protection is manifested differently in each county. It's important to consider resources, actors, and history when planning for farmland protection. Dynamic archetype analysis (finding archetypes through time) is a useful tool for this. Also, longitudinally comparable datasets are important for this work, but in this analysis, we've laid the blueprint to use public data in this way for any region in the US.
+Yet despite sharing similarities, farmland loss and farmland protection is manifested differently in each county. It's important to consider resources, actors, and history when planning for farmland protection. Dynamic archetype analysis (finding archetypes through time) is a useful tool for this. Also, longitudinally comparable datasets are important for this work, but in this analysis, we've laid the blueprint to use public data in this way for any region in the US. -->
 
 ## Archetype analysis links spatially disparate but thematically similar counties
 
