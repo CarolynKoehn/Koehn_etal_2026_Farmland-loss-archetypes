@@ -36,9 +36,13 @@ aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyAre
 
 Approximately 1.5 million km$^2$ of land globally has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections for future agricultural land loss are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [@xie2023; @chen2020; @haney2015]. However, there are other pathways to agricultural land conversion, such as housing development in rural settlements and increased construction of commodity processing and transportation facilities, that are rarely addressed alongside urban sprawl in land use change literature (for exceptions, see @ju2018 and @jiang2019). Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social and community well-being [@smith2001]. The focus on urban sprawl in farmland loss predictions leads to a mismatch between the identification of threatened farmlands, policy implemented to protect farmland, and actual farmland conversion. For example, urban growth boundaries are effective in containing development in some small cities but ineffective in others [@dempsey2013]. In order to protect high quality agricultural lands, it is critical to understand the multiple pathways by which those lands are converted to other uses and where they are occurring. There are three recurring patterns of farmland loss that have been described separately in a number of case studies: urban/suburban sprawl, amenity migration, and agricultural industrialization.
 
-Urban sprawl is a widely recognized phenomena that leads to agricultural land loss. As the population in urban centers grows, there is increased need for housing. While cities may create denser housing in the urban center to accommodate a larger population, they often expand outwards as spacious suburban neighborhoods [@dieleman2004]. As suburbs encroach on agricultural land, farmland fragmentation makes farming more difficult and encourages further development [@latruffe2014; @qiu2015; @freedgood2020]. Rising land values near urban areas are a critical barrier to entry for young farmers, which is particularly problematic in the context of a nationwide aging farming population looking to retire [@kuethe2014; @sheridan2007]. Farmland fragmentation and rising land values create a higher likelihood that near-urban farmlands will be sold for development rather than continuing in agriculture. High quality croplands are especially susceptible to urban sprawl as both farming and housing development are easiest on flat lands with more access to freshwater [@halperin2023; @bren2017]. There are also a number of adaptations that farmers in urbanizing areas have deployed to prevent farmland loss with varying success, including building social capital with non-farmers, diversifying operations, succession planning, and utilizing policy instruments like agricultural easements and zoning [@sharp2003; @inwood2012; @bengston2004]. Urban and suburban sprawl are a prominent force in agricultural land loss and are accounted for in many land use change models focused on agricultural lands [@xie2023; @chen2020; @haney2015].
+Urban sprawl is a widely recognized cause of agricultural land loss. As the population in urban centers grows, there is increased need for housing. While cities may create denser housing in the urban center to accommodate a larger population, they often expand outwards as spacious suburban neighborhoods [@dieleman2004]. As suburbs encroach on agricultural land, farmland fragmentation makes farming more difficult and encourages further development [@latruffe2014; @qiu2015; @freedgood2020]. Rising land values near urban areas are a critical barrier to entry for young farmers, which is particularly problematic in the context of a nationwide aging farming population looking to retire [@kuethe2014; @sheridan2007]. Farmland fragmentation and rising land values create a higher likelihood that near-urban farmlands will be sold for development rather than continuing in agriculture. High quality croplands are especially susceptible to urban sprawl as both farming and housing development are easiest on flat lands with more access to freshwater [@halperin2023; @bren2017]. Demographically, urbanized areas have higher population density and diversified employment opportunities compared to more rural areas, and suburban areas in particular are linked to higher education quality and lower levels of poverty [@dumont2023; @burdick2017]. There are a number of adaptations that farmers in urbanizing areas have deployed to prevent farmland loss with varying success, including building social capital with non-farmers, diversifying operations, succession planning, and utilizing policy instruments like agricultural easements and zoning [@sharp2003; @inwood2012; @bengston2004]. Urban and suburban sprawl are a prominent force in agricultural land loss and are accounted for in many land use change models focused on agricultural lands [@xie2023; @chen2020; @haney2015].
 
-Industrial expansion is seen as a vehicle for economic growth and it has manifested diversely in different global regions. Across Asia, conversion of agricultural land to industry use precedes urban sprawl or occurs alongside urban sprawl [@azadi2011; @tuyen2013; @zhou2020]. In Europe, a large portion of manufacturing was shifted to rural areas in the late 1970s [@keeble1983]. In the United States, supply-oriented food manufacturing (e.g. cheese manufacturing) is likely to occur in rural agricultural areas with sufficient infrastructure and labor availability [@lambert2009]. Additionally, manufacturing facilities tend to agglomerate around certain urban or local economies so that the presence of one manufacturing facility is correlated with the presence of more [@lambert2009]. Besides conversion of agricultural land for manufacturing facilities, these factories attract non-local workers who will need housing, yet their settlement patterns may be different from those of urban migrants. For example, rural industrial restructuring is linked with Hispanic growth [@lichter2012]. Thus, the industrial expansion pathway to agricultural land loss manifests in a different manner than agricultural conversion due to urban sprawl. 
+Industrial development is another driver of agricultural land loss, but agricultural change in the industrial context manifests differently than in urban sprawl. Across Asia, conversion of agricultural land to industry use precedes urban sprawl or occurs alongside urban sprawl [@azadi2011; @tuyen2013; @zhou2020]. In Europe, a large portion of manufacturing was shifted to rural areas in the late 1970s [@keeble1983]. In the United States, food manufacturing occurs in both urban and rural areas, especially those with access to raw materials (e.g. milk), labor availability, and sufficient infrastructure, including interstates, water, and electricity [@lambert2009; @compton2018]. Additionally, the presence of one manufacturing facility is correlated with the presence of other facilities, as well as with associated commodity production [@lambert2009]. Besides conversion of agricultural land for manufacturing facilities, these factories attract non-local workers who will need housing, yet their settlement patterns may be different from those of urban sprawl populations. For example, rural industrial restructuring is linked with Hispanic growth [@lichter2012], and food processors are more likely to select sites with higher unemployment rates and more people with a high school diploma [@lambert2009]. [[adaptations]]. [[conclusion sentence]].
+<!-- adaptation = commodities for industrial -->
+<!-- P.B. Nelson, A. Wei Lee, L. Nelson
+Linking baby boomer and Hispanic migration streams into rural America–A multi-scaled approach
+Popul. Space Place, 15 (2009), pp. 277-293 -->
 
 Amenity migration, the migration of affluent urban populations to rural areas for specific lifestyle amenities, is a pathway to rural land change, including agricultural land loss [@abrams2012]. Rural sprawl associated with amenity migration is less dense than urban sprawl, resulting in larger areas of land affected, but with less intensity [@radeloff2005]. Amenity migrants with agricultural estates do not rely on agricultural production as a means of income, and may engage in some form of farming (including hobby farms), lease lands to local producers, or use their lands for non-production uses like recreation and conservation [@abrams2012; @abrams2013]. Local jobs are primarily low-wage service jobs, and this combined with rising property values can push low income households farther out of the high-amenity community [@sherman2018; @loeffler2007; @abrams2012]. Thus, agricultural producers in high amenity communities may face rising costs and falling off-farm wages, the need to lease land, and the fragmentation of agricultural lands by migrant estates and commuter roads. Amenity migration is a distinct pathway to agricultural land loss that differs in cause and effects from urban sprawl and industrial expansion, and requires different policy and planning approaches to address.
 
@@ -134,11 +138,11 @@ We ran two separate cluster analyses, one with the resource variables and one wi
 
 ### Model Selection
 
-There are three components to model selection in Gaussian-based cluster modelling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019], which is important in this analysis as we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters if we reduce the number of dimensions since certain cluster shapes and increasing numbers of clusters require more parameters [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about a social-ecological agricultural system, we decided to remove redundant indicators in order to test more clustering configurations.
+There are three components to model selection in Gaussian-based cluster modeling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019]. Dimension reduction is important in this analysis because we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters that require more parameters if we reduce the number of dimensions [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about a social-ecological agricultural system, we decided to remove redundant indicators in order to test more clustering configurations.
 
-We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable identified with BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, @clustvarsel). 
+We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable, as identified by BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, see @clustvarsel for a full description of the backward stepwise greedy search). 
 
-The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented in R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes, though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >3 groups.
+The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented with R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes (see @scrucca2023 for a description of all possible shapes), though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >3 groups.
 
 Because clustering models are sensitive to their initialization, we ran each model 200 times with random initializations. We selected the best model structure of the 200 runs using BIC, and the log likelihoods for the 200 runs of both models indicated no evidence of alternative local solutions [@bauer2021].
 
@@ -318,7 +322,7 @@ Like A2, A5 has rural counties with low population density, moderate population 
 #| label: fig-cluster-maps
 #| fig-width: 13
 #| fig-height: 7
-#| fig-cap: "Cluster assignments for each county and year in the study area. One map is shown for resource clusters (plot a) since no counties transitioned between resource clusters over the study period. For names of counties in each cluster, see the corresponding sections in Appendix B."
+#| fig-cap: "Cluster assignments for each county and year in the study area. Plot a depicts the resource clusters, with one county changing its cluster assignment over the 40 year period. Plot b dipicts the actors clusters, where many more changes occurred across the study period. Plot c is a matrix showing the resource-actor archetype combinations and the number of county-years that fell into each combination. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
   mutate(year = ifelse(year == 1990, 1990, "2000-2020"),
@@ -332,8 +336,9 @@ resource_map <- clust_dat[["Resource"]] %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year)) +
-  scale_fill_manual(name = "", values = rev(viridis::turbo(5, begin=0.075, end=0.8)),
+  scale_fill_manual(name = NULL, values = rev(viridis::turbo(5, begin=0.075, end=0.8)),
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
+  labs(x=NULL, y=NULL) +
   theme_void() +
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'),
@@ -353,8 +358,9 @@ actor_map <- clust_dat[["Actors"]] %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   facet_wrap(vars(year)) +
-  scale_fill_manual(name = "", values = rev(viridis::viridis(5)),
+  scale_fill_manual(name = NULL, values = rev(viridis::viridis(5)),
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
+  labs(x=NULL, y=NULL) +
   theme_void() +
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'),
@@ -375,7 +381,7 @@ assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$c
   scale_x_discrete(position = "top",
                    name = "Resource Cluster") +
   scale_y_discrete(name = "Actor Cluster") +
-  scale_fill_gradient(low = "white", high = "mediumorchid") +
+  scale_fill_gradient(low = "white", high = "mediumslateblue") +
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.ticks = element_blank(),
@@ -383,50 +389,16 @@ assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$c
 
 design <- "
   12
+  12
   32
 "
 
-resource_map + actor_map + assoc_tbl + plot_layout(design = design) + plot_annotation(tag_levels = "a")
+resource_map + actor_map + free(assoc_tbl) + plot_layout(design = design) + plot_annotation(tag_levels = "a")
 ```
 
-There was one resource transition over the study period: Power County transitioned from R2 (Access to mountain recreation and urban amenities) to R3 (Flat land near natural and urban amenities) in 2000. This can be attributed to a lower percentage of resident employed in hospitality, as well as less large farms and less cropland loss after 2000.
+There was one resource transition in the study period: Power County transitioned from R2 (Access to mountain recreation and urban amenities) to R3 (Flat land near natural and urban amenities) in 2000. This can be attributed to a lower percentage of residents employed in hospitality, as well as less large farms and less cropland loss after 2000.
 
-Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural archetype is A5 (more geographical isolation, less economic opportunity). From A5, counties transition to A2 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A4 (small town counties grow as quickly as small cities), if population growth occurs in such a way to create a concentration of population that creates an urban area. A2 may further transition to A4 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A4 counties transition to A3 (small cities) once enough population growth has occurred to reclassify the small towns in A4 counties to the micropolitan areas of A3 counties. Finally, A3 counties may transition to metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county.
-
-```{r}
-#| label: fig-RA-assoc
-#| fig-cap: "Actors clusters present in each Resource cluster."
-#| eval: false
- 
-county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county", "year", "cluster")]),
-                           st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
-                           by = c("county", "year"),
-                           suffix = c(".R", ".A"))
-
-ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$cluster.A)),
-       aes(x=Var1, y=Var2, fill=Freq, label=Freq)) +
-  geom_tile() +
-  geom_label()
-
-barcodes <- bind_rows(clust_dat) %>%
-  select(county, year, cluster) %>%
-  group_by(county, geometry, year) %>%
-  mutate(yearcode = paste0(cluster, collapse = "")) %>%
-  select(-cluster) %>%
-  unique() %>%
-  pivot_wider(id_cols = c(county, geometry),
-              names_from = year,
-              values_from = yearcode) %>%
-  select(county, `1990`, `2000`, `2010`, `2020`, geometry) %>%
-  rowwise() %>%
-  mutate(barcode = paste(c_across(`1990`:`2020`), collapse = "-"))
-
-ggplot(county_clusts, aes(x=cluster.A)) +
-  geom_bar() +
-  facet_wrap(vars(cluster.R)) +
-  labs(x = "Actors Cluster", y="Count") +
-  theme_bw()
-```
+Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural and isolated archetype is A5 (more geographical isolation, less economic opportunity). From A5, counties transition to A2 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A4 (small town counties grow as quickly as small cities), if population growth is concentrated and creates an urban area. A2 may further transition to A4 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A4 counties transition to A3 (small cities) once enough population growth has occurred to reclassify the small towns in A4 counties to the micropolitan areas of A3 counties. Finally, A3 counties may become metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county.
 
 ## Case Studies
 
@@ -434,8 +406,11 @@ Here I'd like to qualitatively explain how the dynamics of certain counties fit 
 
 - Ada/Canyon counties: R1 (flat land with accessible urban amenities) and A1 (high population growth in metropolitan counties) –- classic case of urban sprawl
 - 	Teton County: R2 (access to mountain recreation and urban amenities) and A5 (more social isolation, less economic opportunity) $\rightarrow$ A2 (rural counties with less agriculture) -– “discovery” of natural amenities, inflow of wealthy immigrants, yet retaining a rural nature
-- Blaine County: R2 (access to mountain recreation and urban amenities) and A5 (more social isolation, less economic opportunity) $\rightarrow$ A4 (small town counties grow as quickly as small cities) – history of wealth creates “mimicry” of more isolated counties, bifurcated nature may mask social dynamics
+- Blaine County: R2 (access to mountain recreation and urban amenities) and A5 (more social isolation, less economic opportunity) $\rightarrow$ A4 (small town counties grow as quickly as small cities) – history of wealth creates “mimicry” of more isolated counties, bifurcated nature may mask social dynamics (cite Haley)
 - 	Twin Falls County: R3 (flat land near natural and urban amenities) and A3 (small cities): city built around processing agricultural products / its neighbor Jerome County: R5 (rural agriculture as natural amenity) and A4 (small town counties grow as quickly as small cities) $\rightarrow$ A3 (small cities) – flat land that has been used for agriculture at risk of conversion to urban
+  * some qualitative evidence to cite: plans for airport in Burley, additional LDS temple
+  * bring back the idea of co-location of ag manufacturing with commodity production
+- I would love to also talk about north of TV counties like Gem, since David showed a lot of interest in what's going on there, but this feels like more than I should take on
 
 These case studies can tie back to the phenomena I laid out in the intro: urban sprawl, amenity migration, industrial ag.
 
@@ -458,11 +433,21 @@ Yet despite sharing similarities, farmland loss and farmland protection is manif
 
 ## Archetype analysis links spatially disparate but thematically similar counties
 
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, Teton and Ada counties share a resource archetype, and Teton transitioned to the same actor archetype as Ada, alerting us that Teton might soon experience similar levels of urban growth to Ada county.
+This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, the R5 (rural ag as amenity) counties north of the TV and around Jerome
+
+## Building middle range theories?
+
+J.K. Brueckner, D.A. Fansler. The economics of urban sprawl: Theory and evidence on the spatial size of cities. The Review of Economics and Statistics, 65 (3) (1983), pp. 479-482
+
+Wei, Y. D., & Ewing, R. (2018). Urban expansion, sprawl and inequality. Landscape and urban planning, 177, 259-265.
+
+P. Mieszkowski, E.S. Mills. The causes of metropolitan suburbanization. Journal of Economic Perspectives, 7 (3) (1993), pp. 135-147
 
 ## Limitations
 
-Some discussion of using counties as a base spatial unit is warranted, especially because some counties are really big. For example, I'd say Twin Falls has traits of R1 and R4 in different locations, but at the county level some of these characteristics are masked.
+Some discussion of using counties as a base spatial unit is warranted, especially because some counties are really big. For example, bifurcated nature of Blaine County, urban sprawl reaching Owyhee masked by lots of public lands
+
+--> From Gwénaëlle: "the twin falls by the highway is a whole world different than the one south by nevada border, the same goes with jerome - development is only occurring right by the highway - this also explains why owyhee is a tricky county because it's so large and different but still geographically close to the sprawl of the treasure valley - this is where social science can provide nuance and contextualize the similarities and differences"
 
 <!--
 ## NCP Outcomes of Archetypes
