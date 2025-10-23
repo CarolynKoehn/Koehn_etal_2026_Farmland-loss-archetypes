@@ -42,13 +42,13 @@ Industrial development is another driver of agricultural land loss, but agricult
 
 Amenity migration, the migration of urban dwellers to rural areas for specific lifestyle amenities, is a pathway to rural land change including agricultural land loss [@abrams2012]. Rural sprawl associated with amenity migration is less dense than urban sprawl, resulting in larger areas of land affected, but with less intensity [@radeloff2005]. Amenity migrants with agricultural estates do not rely on agricultural production as a means of income; though they may engage in some form of farming (including hobby farms) or lease lands to local producers, they may also use their lands exclusively for non-production uses like recreation and conservation [@abrams2012; @abrams2013; @matarrita2025]. Local jobs are primarily low-wage service jobs, and this combined with rising property values can push low income households farther out of the high-amenity community [@sherman2018; @loeffler2007; @abrams2012]. Thus, agricultural producers may face rising land costs and falling off-farm wages, the need to lease land, and the fragmentation of agricultural lands by migrant estates and commuter roads, but they also may find a receptive collaborators in amenity migrants who want to keep lands in agriculture [@matarrita2025; @abrams2013]. Amenity migration is a distinct pathway to agricultural land loss that differs in cause and effects from urban sprawl and industrial expansion, and requires different policy and planning approaches to address.
 
-Since agricultural land conversion occurs via different processes in different contexts, farmland loss may be well described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019]. The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, are distinct phenomena that require context-specific policies to manage farmland conversion. However, to our knowledge, multiple archetypes of farmland loss have not been identified in a generalized yet spatially and temporally explicit manner across a single study region. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
+Since agricultural land conversion occurs via different processes in different contexts, farmland loss may be well described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019]. The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, are distinct phenomena that require context-specific policies to manage farmland conversion. Yet the spatial distribution of these phenomena, including potential overlaps, and their progression through time have not been analyzed in a formal archetype analysis. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
 
 The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. We hypothesize that land use change is occurring due to urban/suburban sprawl, amenity migration, and agricultural industrialization in different areas across the region. This research will aid in identifying where distinct processes of land use change are occurring, contributing to a diverse toolbox for agricultural lands protection in diverse localities. We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. Our research questions were:
 
 1. Are there identifiable archetypes of social-ecological subsystems (resource and actors) in Idaho's Snake River Plain?
 2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-3. What is the relationship between these archetypes and farmland loss?
+3. What is the relationship between these archetypes and farmland loss, and do the archetypes identify cases of urban sprawl, amenity migration, and industrialization?
 4. Are there counties that have shifted archetypes through time, and what are their characteristics?
 
 <!-- 
@@ -65,7 +65,7 @@ The localized and overall effects of industrial expansion have not been included
 
 ## Data Selection
 
-We linked data available from 1990-2020 to second-tier variables in Ostrom's social-ecological systems framework [@ostrom2009] based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
+The social-ecological systems [SES] framework first published in 2007 by Elinor Ostrom is a conceptual framework that provides a list of variables that may affect the outcome of a SES [@ostrom2009; @partelow2018]. For comparative analysis of multiple case studies, the focus of archetype analysis, it provides structure and variables for comparison [@oberlack2016; @partelow2018]. The framework introduces variables describing four major subsystems in a SES: resource systems, resource units, governance systems, and actors, as well as variables describing the interactions of these systems, the related ecosystem, and the social, economic, and political setting [@ostrom2009]. Readily-available public data can describe some of these systems comprehensively, and while it is difficult to quantify indicators for others [@partelow2018]. We chose to focus on three subsystems that are easily described by quantitative public data: the resource system and resource units, which we combine into a single resource model, and the actors. We linked data available from 1990-2020 to second-tier variables in these subsystems of the SES framework based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found, but it is common to analyze subsets of SES variables in the SES literature [@partelow2018]. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
 
 ::: {#tbl-datasel-R}
 
@@ -196,7 +196,7 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
        data = ci_clust$Resource) +
   geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
   geom_point(show.legend = FALSE) +
-  geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
+  geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
 
@@ -255,7 +255,7 @@ Characteristic resources of R2 are a greater presence of forestland and more ste
 
 Like R2, R3 is closer to national parks and ski areas, and is closer to urban areas while not containing much urban or developed land. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain is low. These counties tend to have lower home values than R2 (@supptblb-data-r3).
 
-#### Cluster R4: Very isolated counties with few natural amenities
+#### Cluster R4: Low risk of farmland loss -- Very isolated counties with few natural amenities
 
 The unique characteristics of R4 are more shrubland cover, less cropland cover, a greater amount of federal land, greater distance from urban areas, and less access to highways (@fig-R-CIs). Natural amenities are also few, with less river miles, minimal lake area, average presence of recreation and forest land, and long distances to a ski areas (@suppfigb-R-ranges). Similar to R3, R4 has more large farms and less farms operating at a loss. The low cropland cover of R4 indicates that agriculture in these counties is more focused on livestock grazing (@supptblb-data-r4). R4 has low rates of cropland loss and developed land gain, and it is also losing fewer farms than other counties (@suppfigb-R-ranges).
 
@@ -281,7 +281,7 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig),
        data = ci_clust$Actors) +
   geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
   geom_point(show.legend = FALSE) +
-  geom_errorbar(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
+  geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
   scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc1", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
