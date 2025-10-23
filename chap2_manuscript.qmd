@@ -319,7 +319,7 @@ Like A2, A5 has rural counties with low population density, moderate population 
 #| label: fig-cluster-maps
 #| fig-width: 13
 #| fig-height: 7
-#| fig-cap: "Cluster assignments for each county and year in the study area. Plot a depicts the resource clusters, with one county changing its cluster assignment over the 40 year period. Plot b dipicts the actors clusters, where many more changes occurred across the study period. Plot c is a matrix showing the resource-actor archetype combinations and the number of county-years that fell into each combination. For names of counties in each cluster, see the corresponding sections in Appendix B."
+#| fig-cap: "Cluster assignments for each county and year in the study area. Plot a depicts the resource clusters, with one county changing its cluster assignment over the 40 year period. Plot b depicts the actors clusters, where many more changes occurred across the study period. Plot c is a matrix showing the resource-actor archetype combinations and the number of county-years that fell into each combination. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
   mutate(year = ifelse(year == 1990, 1990, "2000-2020"),
@@ -433,7 +433,7 @@ This analysis recontextualizes counties in the study area, allowing us to link c
 
 ## Building middle range theories
 
-I'm thinking of linking known middle range theories (briefly referred to in my first introduction paragraph) to different archtypes since the aim of archetype analysis is to build toward middle range theory. This could also be done in the case studies section, or perhaps it's too much to take on in a single section of this discussion.
+I'm thinking of linking known middle range theories (briefly referred to in my first introduction paragraph) to different archetypes since the aim of archetype analysis is to build toward middle range theory. This could also be done in the case studies section, or perhaps it's too much to take on in a single section of this discussion.
 
 Possible references:
 
