@@ -151,6 +151,8 @@ After variable selection, we removed most indicators from the actors model, reta
 
 To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
+<!-- For identifying most influential, consider methods from Pacheco-Romero, M., Vallejos, M., Paruelo, J. M., Alcaraz-Segura, D., Torres-García, M. T., Salinas-Bonillo, M. J., & Cabello, J. (2022). A data-driven methodological routine to identify key indicators for social-ecological system archetype mapping. Environmental Research Letters, 17(4), 045019. -->
+
 ## Qualitative Analysis
 
 - need to meet with social science team to identify methods
