@@ -47,10 +47,10 @@ Since agricultural land conversion occurs via different processes in different c
 
 The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. We hypothesize that land use change is occurring due to urban/suburban sprawl, amenity migration, and agricultural industrialization in different areas across the region. This research will aid in identifying where distinct processes of land use change are occurring, contributing to a diverse toolbox for agricultural lands protection in diverse localities. We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. Our research questions were:
 
-1. Are there identifiable archetypes of social-ecological subsystems (resource and actors) in Idaho's Snake River Plain?
-2. What are those archetypes, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-3. What is the relationship between these archetypes and farmland loss, and do the archetypes identify cases of urban sprawl, amenity migration, and industrialization?
-4. Are there counties that have shifted archetypes through time, and what are their characteristics?
+1. Are there identifiable archetypes of social-ecological subsystems (resource and actors) in Idaho's Snake River Plain, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
+2. What is the relationship between these archetypes and farmland loss, and do the archetypes identify cases of urban sprawl, amenity migration, and industrialization?
+3. Are there counties that have shifted archetypes through time, and what are their characteristics?
+4. How are actors' reflections on agricultural change related to the archetypes of counties that have undergone an archetype shift?
 
 <!-- 
 
