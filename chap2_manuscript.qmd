@@ -7,6 +7,8 @@ date: last-modified
 number-sections: true
 ---
 
+<!-- after render: (1) resize landscape figure, (2) appendix numbering -->
+
 ```{r}
 #| label: setup
 
@@ -315,7 +317,7 @@ Counties in A4 are "small town" counties (contain an urban area with population 
 
 Like A2, A5 has rural counties with low population density, moderate population growth, and less residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a5). However, compared to A2, more residents of A5 counties are working in agriculture, and less commute to more urbanized areas (@supptblb-data-a5). A5 has lower incomes and hires fewer agricultural workers compared to other clusters (@suppfigb-A-ranges).
 
-## Cluster Transitions
+::: {.landscape}
 
 ```{r}
 #| label: fig-cluster-maps
@@ -341,9 +343,10 @@ resource_map <- clust_dat[["Resource"]] %>%
   theme_void() +
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'),
-        text = element_text(size=14))+
+        strip.text.x = element_text(size=14, face="bold"),
+        legend.text = element_text(size=10, face="bold")) +
   guides(fill = guide_legend(label.position = "bottom",
-                             keywidth = 5.5))
+                             keywidth = 4))
 
 
 actor_map <- clust_dat[["Actors"]] %>%
@@ -363,7 +366,8 @@ actor_map <- clust_dat[["Actors"]] %>%
   theme_void() +
   theme(legend.position="bottom",
         legend.spacing.x = unit(0, 'cm'),
-        text = element_text(size=14))+
+        strip.text.x = element_text(size=14, face="bold"),
+        legend.text = element_text(size=10, face="bold"))+
   guides(fill = guide_legend(label.position = "bottom",
                              keywidth = 5.5))
 
@@ -376,7 +380,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
 assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$cluster.A)),
        aes(x=Var1, y=Var2, fill=Freq, label=Freq)) +
   geom_tile(show.legend = FALSE) +
-  geom_text() +
+  geom_text(fontface="bold") +
   scale_x_discrete(position = "top",
                    name = "Resource Cluster") +
   scale_y_discrete(name = "Actor Cluster") +
@@ -384,7 +388,7 @@ assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$c
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.ticks = element_blank(),
-        text = element_text(size=14))
+        text = element_text(size=14, face="bold"))
 
 design <- "
   12
@@ -394,6 +398,10 @@ design <- "
 
 resource_map + actor_map + free(assoc_tbl) + plot_layout(design = design) + plot_annotation(tag_levels = "a")
 ```
+
+:::
+
+## Cluster Transitions
 
 There was one resource transition in the study period: Power County transitioned from R2 (Access to mountain recreation and urban amenities) to R3 (Flat land near natural and urban amenities) in 2000. This can be attributed to a lower percentage of residents employed in hospitality, as well as less large farms and less cropland loss after 2000.
 
