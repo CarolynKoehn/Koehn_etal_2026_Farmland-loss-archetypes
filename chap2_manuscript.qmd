@@ -19,6 +19,7 @@ library(sf)
 library(terra)
 library(patchwork)
 library(rnassqs)
+library(ggpattern)
 
 # set API keys
 readRenviron(".Renviron")
@@ -323,80 +324,100 @@ Like A2, A5 has rural counties with low population density, moderate population 
 #| label: fig-cluster-maps
 #| fig-width: 13
 #| fig-height: 7
-#| fig-cap: "Cluster assignments for each county and year in the study area. Plot a depicts the resource clusters, with one county changing its cluster assignment over the 40 year period. Plot b depicts the actors clusters, where many more changes occurred across the study period. Plot c is a matrix showing the resource-actor archetype combinations and the number of county-years that fell into each combination. For names of counties in each cluster, see the corresponding sections in Appendix B."
+#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R3 in 1990 and R2 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R3-A2, or small cities with access to mountain recreation and urban amenities, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
-  mutate(year = ifelse(year == 1990, 1990, "2000-2020"),
-    cluster = factor(cluster,
-                          levels = c("R1", "R2", "R3", "R4", "R5"),
-                          labels = c("R1:\nFlat land with accessible urban amenities",
-                                     "R2:\nAccess to mountain recreation and urban amenities",
-                                     "R3:\nFlat land near natural and urban amenities",
-                                     "R4:\nVery isolated counties with few natural amenities",
-                                     "R5:\nRural agriculture as natural amenity"))) %>%
+  mutate(cluster = factor(cluster,
+                          levels = c("R1", "R3", "R2", "R5", "R4"),
+                          labels = c("R1: Flat land with accessible urban amenities",
+                                     "R2: Flat land near natural and urban amenities",
+                                     "R3: Access to mountain recreation and urban amenities",
+                                     "R4: Rural agriculture as natural amenity",
+                                     "R5: Very isolated counties with few natural amenities"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
-  facet_wrap(vars(year)) +
+  geom_sf_pattern(data = subset(clust_dat[["Resource"]], county=="Power"),
+                  pattern = 'stripe', pattern_density = 0.75,
+                  fill = rev(viridis::turbo(5, begin=0.075, end=0.8))[3],
+                  pattern_fill=rev(viridis::turbo(5, begin=0.075, end=0.8))[2],
+                  pattern_size=0.1,
+                  show.legend = FALSE) +
   scale_fill_manual(name = NULL, values = rev(viridis::turbo(5, begin=0.075, end=0.8)),
                     labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
   labs(x=NULL, y=NULL) +
   theme_void() +
-  theme(legend.position="bottom",
-        legend.spacing.x = unit(0, 'cm'),
-        strip.text.x = element_text(size=14, face="bold"),
-        legend.text = element_text(size=10, face="bold")) +
-  guides(fill = guide_legend(label.position = "bottom",
-                             keywidth = 4))
+  theme(legend.position="right",
+        legend.key.spacing.y = unit(10, 'pt'),
+        text = element_text(size=14, face = "bold"),
+        plot.background = element_rect(fill=NA, color="black"),
+        plot.margin = margin(t=1, r=4, b=0, l=8))
 
 
-actor_map <- clust_dat[["Actors"]] %>%
+actor_map_data <- clust_dat[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A2", "A3", "A4", "A5"),
-                          labels = c("A1:\nHigh population growth in metropolitan counties",
-                                     "A2:\nRural counties with less agriculture",
-                                     "A3:\nSmall cities",
-                                     "A4:\nSmall town counties grow as quickly as small cities",
+                          levels = c("A1", "A3", "A4", "A2", "A5"),
+                          labels = c("A1: High population growth in metropolitan counties",
+                                     "A2: Small cities",
+                                     "A3: Small town counties grow as quickly as small cities",
+                                     "A4: Rural counties with less agriculture",
                                      "A5: More geographical isolation, less economic opportunity"))) %>%
-  ggplot(aes(fill = cluster)) +
+  arrange(county, year) %>%
+  mutate(cluster_prev = dplyr::lag(cluster),
+         changed = ifelse(year==1990 | cluster==cluster_prev, "no", "yes"))
+
+actor_map <- ggplot(actor_map_data, aes(fill = cluster)) +
   geom_sf() +
-  facet_wrap(vars(year)) +
+  geom_sf(data=subset(actor_map_data, changed=="yes"), color="#f08080", linewidth=1.1, fill=NA, show.legend=FALSE) +
+  facet_wrap(vars(year), nrow=1) +
   scale_fill_manual(name = NULL, values = rev(viridis::viridis(5)),
-                    labels = function(x) str_wrap(x, width = 20, whitespace_only = FALSE)) +
+                    labels = function(x) str_wrap(x, width = 35, whitespace_only = FALSE)) +
   labs(x=NULL, y=NULL) +
   theme_void() +
   theme(legend.position="bottom",
-        legend.spacing.x = unit(0, 'cm'),
+        legend.key.spacing.x = unit(20, "pt"),
+        legend.key.justification = "center",
+        legend.key.width = unit(100, "pt"),
+        text = element_text(size=14, face = "bold"),
         strip.text.x = element_text(size=14, face="bold"),
-        legend.text = element_text(size=10, face="bold"))+
-  guides(fill = guide_legend(label.position = "bottom",
-                             keywidth = 5.5))
+        plot.background = element_rect(fill=NA, color="black"),
+        plot.margin = margin(t=4, r=0, b=8, l=8))+
+  guides(fill = guide_legend(label.position = "bottom"))
 
 # association table
 county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county", "year", "cluster")]),
                            st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
                            by = c("county", "year"),
-                           suffix = c(".R", ".A"))
+                           suffix = c(".R", ".A")) %>%
+  mutate(cluster.R = factor(cluster.R,
+                            levels = c("R1", "R3", "R2", "R5", "R4"),
+                            labels = c("R1", "R2", "R3", "R4", "R5")),
+         cluster.A = factor(cluster.A,
+                            levels = c("A1", "A3", "A4", "A2", "A5"),
+                            labels = c("A1", "A2", "A3", "A4", "A5")))
 
-assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.R, county_clusts$cluster.A)),
+assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.A, county_clusts$cluster.R)),
        aes(x=Var1, y=Var2, fill=Freq, label=Freq)) +
   geom_tile(show.legend = FALSE) +
   geom_text(fontface="bold") +
-  scale_x_discrete(position = "top",
-                   name = "Resource Cluster") +
-  scale_y_discrete(name = "Actor Cluster") +
-  scale_fill_gradient(low = "white", high = "mediumslateblue") +
+  scale_x_discrete(position = "top", 
+                   name = "Actor Cluster") +
+  scale_y_discrete(name = "Resource Cluster", limits=rev) +
+  scale_fill_gradient(low = "white", high = "#6D6DEE") +
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.ticks = element_blank(),
-        text = element_text(size=14, face="bold"))
+        text = element_text(size=14, face = "bold"),
+        plot.background = element_rect(fill=NA, color="black"))
 
 design <- "
-  12
-  12
-  32
+  11111
+  11111
+  22333
+  22333
+  22333
 "
 
-resource_map + actor_map + free(assoc_tbl) + plot_layout(design = design) + plot_annotation(tag_levels = "a")
+actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot_annotation(tag_levels = "a")
 ```
 
 :::
