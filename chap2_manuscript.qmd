@@ -444,11 +444,15 @@ Popul. Space Place, 15 (2009), pp. 277-293 -->
 
 ## Archetype analysis links spatially and temporally disparate but thematically similar counties
 
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors.
+This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. 
+
+Dynamic archetype analysis (finding archetypes through time) is an especially useful tool for considering multifaceted SES dynamics through time. Longitudinally comparable datasets are important for this work, but in this analysis, we've laid the blueprint to use public data in this way for any region in the US.
 
 ## Multiple archetypes display risks of farmland loss
 
-## Insights from integrating qualitative data
+I'd like to argue that resource archetypes indicate risk of certain causes/phenomena of farmland loss (i.e. urban sprawl, amenity migration, industrialization), and actor archetypes are how we see those phenomena play out.
+
+## Qualitative data enriches quantitative archetypes
 
 ## Building middle range theories
 
