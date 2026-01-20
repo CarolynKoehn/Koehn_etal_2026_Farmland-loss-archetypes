@@ -2700,13 +2700,11 @@ producers <- nassqs(list(state_alpha = "ID",
                                         "Operators, principal, primary occupation, farming - number of operators",
                                         "Producers, primary occupation, (excl farming) - number of producers",
                                         "Producers, primary occupation, farming - number of producers"))) %>%
-  group_by(county_name, year) %>%
+  mutate(GEOID = paste0(state_fips_code, county_code)) %>%
+  group_by(GEOID, year) %>%
   summarise(employed = sum(Value)) %>%
-  mutate(county = str_to_title(county_name),
-         Industry = "Agriculture, Forestry, Fishing and Hunting",
-         year = as.integer(year)) %>%
-  ungroup() %>%
-  select(-county_name)
+  mutate(Industry = "Agriculture, Forestry, Fishing and Hunting",
+         year = as.integer(year))
 
 employment_codes <- tibble(sector = c("Total",
                                       "Agriculture, Forestry, Fishing and Hunting",
@@ -2829,6 +2827,33 @@ names(recode_naic22) <- recode_naic22_df$naics22
 #   select(-Total)
 # 
 # employment_industries <- rbind(employment_industries, employment2012_clean)
+
+## TO DO: add total employed
+cbp_totals <- employment %>%
+  mutate(county = str_pad(county, width=3, side="left", pad="0"),
+         GEOID = paste0(state, county)) %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(emp)) %>%
+  rbind(employment2022 %>%
+          filter(NAICS2017 == "00") %>%
+          mutate(GEOID = paste0(state, county),
+                 year=2022) %>%
+          rename("total_employed" = "EMP") %>%
+          select(GEOID, year, total_employed))
+loc_emp_totals <- rbind(loc_emp_1997, loc_emp_2002, loc_emp_2012, loc_emp_2022) %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(employed))
+fed_state_totals <- fed_state %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(employed))
+producers_totals <- producers %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(employed))
+
+employment_totals <- rbind(cbp_totals, loc_emp_totals, fed_state_totals, producers_totals) %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(total_employed)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names))
 
 employment_clean <- employment %>%
   mutate(county = str_pad(county, width=3, side="left", pad="0"),
