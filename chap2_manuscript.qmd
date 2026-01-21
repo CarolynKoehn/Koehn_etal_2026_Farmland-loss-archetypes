@@ -444,17 +444,24 @@ Popul. Space Place, 15 (2009), pp. 277-293 -->
 
 ## Archetype analysis links spatially and temporally disparate but thematically similar counties
 
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, Twin Falls County and Bonneville County are both R2-A2 -- small cities with flat land near natural and urban amenities. Their archetypes suggest that they will face similar agricultural changes and risks of farmland conversion. Indeed, both the major cities in these counties, Twin Falls and Idaho Falls respectively, are hot-spots for farmland loss in Idaho [@ellis2024]. These counties may also be able to learn from each other's farmland protection interventions. For example, [intervention].
+This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, Twin Falls County and Bingham County are both R2-A2 by 2020 -- small cities with flat land near natural and urban amenities. Their archetypes suggest that they will face similar agricultural changes and risks of farmland conversion. Indeed, [????]. These counties may also be able to learn from each other's farmland protection interventions. For example, [intervention].
+
+- quote from land trust?
 
 Archetype analysis also revealed gaps in our knowledge that can be used for future studies of community change. In the beginning of this study, we hypothesized that we would identify archetypes related to three major phenomena that lead to farmland conversion -- urban sprawl, agricultural industrialization, and amenity migration -- and we conducted interviews and qualitative analysis in a selection of counties where these processes were occurring. However, the archetype analysis also revealed the R4 (rural agriculture as natural amenity) group of counties that we had not identified as a separate group of counties that required qualitative data collection. [Local knowledge suggests... David's assessment?] This type of county will require further study to understand its unique dynamics of agricultural change.
 
 Dynamic archetype analysis (finding archetypes through time) is an especially useful tool for considering multifaceted SES dynamics through time. Dynamic archetypes have been used to study the effect of uniform, multi-country policy on agricultural change [@orozco2024]; however, our study is located in a place and time where farmland protection policy is primarily enacted at the local level [CITE]. Absent major policy change, we were able to build a proposed timeline of actor archetype transitions that we would expect to occur by observing all the transitions that took place in our study period. By using this timeline, we propose likely future scenarios that each county may face, which can inform proactive policy design. Longitudinally comparable datasets are important for this work. In this analysis, we've laid the blueprint to use public data in this way for any region in the US.
+
+- Right to farm act Idaho and LLUPA act relied on to protect agriculture
 
 ## Multiple archetypes display risks of farmland loss
 
 I'd like to argue that resource archetypes indicate risk of certain causes/phenomena of farmland loss (i.e. urban sprawl, amenity migration, industrialization), and actor archetypes are how we see those phenomena play out.
 
 ## Qualitative data enriches quantitative archetypes
+
+- validation
+- It is our opinion that the qualitative data enhances our archetype analysis by providing further contextualisation and validation of findings. -- Gwenaelle
 
 ## Building middle range theories
 
