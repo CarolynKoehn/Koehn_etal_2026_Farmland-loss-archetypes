@@ -16,3 +16,4 @@ _freeze/*
 data/API_data_download_backup/*
 data/raw_data*
 data/urb_areas_thresholded*
+**/*.quarto_ipynb

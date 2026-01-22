@@ -442,11 +442,9 @@ Popul. Space Place, 15 (2009), pp. 277-293 -->
 
 # Discussion
 
-## Archetype analysis links spatially and temporally disparate but thematically similar counties
+## Archetype analysis links spatially and temporally separated but thematically similar counties
 
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, Twin Falls County and Bingham County are both R2-A2 by 2020 -- small cities with flat land near natural and urban amenities. The archetype shift in Bingham County occurred between 2000-2010, indicating that they will face similar agricultural changes and risks of farmland conversion to Twin Falls, but at a delayed rate. Indeed, [????]. Bingham County may be able to learn from farmland protection interventions in Twin Falls. Unfortunately, our qualitative data suggests that farmland protection has been extremely limited in Twin Falls. Instead of suggesting transferable policies, we propose that Bingham County should consider its possible "no policy implemented" future may look similar to Twin Falls, and decide if they would like to implement policies that guide their county's future in a different direction.
-
-- quote from land trust?
+This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially separated but have similar resources and actors. For example, Twin Falls County and Bingham County are both R2-A2 by 2020 -- small cities with flat land near natural and urban amenities. The archetype shift in Bingham County occurred between 2000-2010, indicating that they will face similar agricultural changes and risks of farmland conversion to Twin Falls, but at a delayed rate. Indeed, [connecting example]. Bingham County may be able to learn from farmland protection interventions in Twin Falls. Unfortunately, our qualitative data suggests that farmland protection has been extremely limited in Twin Falls. Instead of suggesting transferable policies, we propose that Bingham County should consider its possible "no policy implemented" future may look similar to Twin Falls, and decide if they would like to implement policies that guide their county's future in a different direction. Another example is Teton County and Minidoka County, which are both in actor archetype A4 -- rural counties with less agriculture. Though they are in different resource archetypes, they are both dealing with agricultural and community change stemming from population growth. One example of this is new Latter-Day Saints temples under construction or newly completed in counties neighboring both Teton and Minidoka [cite]. Our qualitative data revealed that producers and old newcomers are allied in advocating for farmland protection in Teton County, and since Minidoka County is in a similar actor archetype, a similar alliance might be pursued there as well.
 
 Archetype analysis also revealed gaps in our knowledge that can be used for future studies of community change. In the beginning of this study, we hypothesized that we would identify archetypes related to three major phenomena that lead to farmland conversion -- urban sprawl, agricultural industrialization, and amenity migration -- and we conducted interviews and qualitative analysis in a selection of counties where these processes were occurring. However, the archetype analysis also revealed the R4 (rural agriculture as natural amenity) group of counties that we had not identified as a separate group of counties that required qualitative data collection. [Local knowledge suggests... David's assessment?] This type of county will require further study to understand its unique dynamics of agricultural change.
 
@@ -900,7 +898,7 @@ r1 <- clust_dat[["Resource"]]
 
 r1_means <- r1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1053,7 +1051,7 @@ a1 <- clust_dat[["Actors"]]
 
 a1_means <- a1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1265,7 +1263,7 @@ r1 <- clust_dat[["Resource"]] %>%
 
 r1_means <- r1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1424,7 +1422,7 @@ r3 <- clust_dat[["Resource"]] %>%
 
 r3_means <- r3 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1584,7 +1582,7 @@ r2 <- clust_dat[["Resource"]] %>%
 
 r2_means <- r2 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1744,7 +1742,7 @@ r5 <- clust_dat[["Resource"]] %>%
 
 r5_means <- r5 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -1904,7 +1902,7 @@ r4 <- clust_dat[["Resource"]] %>%
 
 r4_means <- r4 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2133,7 +2131,7 @@ a1 <- clust_dat[["Actors"]] %>%
 
 a1_means <- a1 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2245,7 +2243,7 @@ a3 <- clust_dat[["Actors"]] %>%
 
 a3_means <- a3 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2358,7 +2356,7 @@ a4 <- clust_dat[["Actors"]] %>%
 
 a4_means <- a4 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2473,7 +2471,7 @@ a2 <- clust_dat[["Actors"]] %>%
 
 a2_means <- a2 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
@@ -2585,7 +2583,7 @@ a5 <- clust_dat[["Actors"]] %>%
 
 a5_means <- a5 %>%
   st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster),#, GEOID),
+  pivot_longer(!c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "input_data_value") %>%
   group_by(input_data_name) %>%
