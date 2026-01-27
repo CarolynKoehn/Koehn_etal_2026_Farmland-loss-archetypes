@@ -426,7 +426,7 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 
 :::
 
-## Cluster Transitions
+## Cluster Transitions {#sec-transitions}
 
 There was one resource transition in the study period: Power County transitioned from R3 (Access to mountain recreation and urban amenities) to R2 (Flat land near natural and urban amenities) in 2000. This can be attributed to a lower percentage of residents employed in hospitality, as well as less large farms and less cropland loss after 2000.
 
@@ -448,9 +448,7 @@ This analysis recontextualizes counties in the study area, allowing us to link c
 
 Archetype analysis also revealed gaps in our knowledge that can be used for future studies of community change. In the beginning of this study, we hypothesized that we would identify archetypes related to three major phenomena that lead to farmland conversion -- urban sprawl, agricultural industrialization, and amenity migration -- and we conducted interviews and qualitative analysis in a selection of counties where these processes were occurring. However, the archetype analysis also revealed the R4 (rural agriculture as natural amenity) group of counties that we had not identified as a separate group of counties that required qualitative data collection. [Local knowledge suggests... David's assessment?] This type of county will require further study to understand its unique dynamics of agricultural change.
 
-Dynamic archetype analysis (finding archetypes through time) is an especially useful tool for considering multifaceted SES dynamics through time. Dynamic archetypes have been used to study the effect of uniform, multi-country policy on agricultural change [@orozco2024]; however, our study is located in a place and time where farmland protection policy is primarily enacted at the local level [CITE]. Absent major policy change, we were able to build a proposed timeline of actor archetype transitions that we would expect to occur by observing all the transitions that took place in our study period. By using this timeline, we propose likely future scenarios that each county may face, which can inform proactive policy design. Longitudinally comparable datasets are important for this work. In this analysis, we've laid the blueprint to use public data in this way for any region in the US.
-
-- Right to farm act Idaho and LLUPA act relied on to protect agriculture
+Dynamic archetype analysis (archetype change through time) is an especially useful tool for considering multifaceted, temporal SES dynamics. Dynamic archetypes are a fairly recent innovation with the archetype analysis literature, and have primarily been used to study how a major change or "shock" to a system results in archetype change. For example, @orozco2024 used dynamic archetypes to study the effect of EU agricultural policies on agricultural changes in Germany. However, our study is located in a place and time where farmland protection policy has not changed. Farmland protection in southern Idaho is based on the 1981 Right to Farm section of Idaho Code, which protects farmlands from nuisance lawsuits [@IDRightToFarm], and the 1975 Local Land Use Planning Act, which mandates that cities and counties must plan and zone [@IDLLUPA; @meyer2025]. Therefore, farmland protection actions and funding from 1990-2020 in southern Idaho occur at the county level or lower. Absent major policy change, we were able to build a proposed timeline of actor archetype transitions that we would expect to occur by observing all the transitions that took place in our study period (see Section @sec-transitions). We propose that this timeline reveals likely future scenarios that each county may face, which can inform proactive policy design. Longitudinally comparable datasets are important for this work. In this analysis, we've laid the blueprint to use public data in this way for any region in the US.
 
 ## Multiple archetypes display risks of farmland loss
 
