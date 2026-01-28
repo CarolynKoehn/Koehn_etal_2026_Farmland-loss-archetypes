@@ -456,6 +456,8 @@ I'd like to argue that resource archetypes indicate risk of certain causes/pheno
 
 ## Qualitative data enriches quantitative archetypes
 
+Qualitative data enhances archetype analysis by providing further contextualisation and validation of findings.
+
 - validation
 - It is our opinion that the qualitative data enhances our archetype analysis by providing further contextualisation and validation of findings. -- Gwenaelle
 - "A limitation of the data driven archetypes is a failure to reflect this potential trajectory and community change within a stable archetype, for which on-the-ground data collection is necessary."
