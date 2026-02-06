@@ -1,5 +1,5 @@
 ---
-title: "Data-driven archetypes of farmland change: Preliminary results"
+title: "Data-driven archetypes of farmland change"
 author: Carolyn Koehn
 abstract: |
   Approximately 1.5 million km$^2$ of land globally was converted from agriculture to highly developed areas between 1992 and 2018. The processes leading to this conversion are variable, but most farmland protection policy focuses on controlling urban sprawl. A better understanding of the multiple contexts in which farmland loss occurs can inform diverse and targeted policies for agricultural land protection. To identify multiple contexts of agricultural change, we used a mixed methods archetypes approach that identifies recurring patterns of variables in social-ecological systems across different spaces and time periods. We combined finite Gaussian mixture model cluster analysis and qualitative data to find recurring patterns of change over time in 26 counties in southern Idaho's Snake River Plain, a region of the western United States [US] with both high agricultural production and high population growth where agricultural lands are at risk of conversion. We used data linked to resource and actor variables in a commonly used social-ecological systems framework. Specifically, we calculated descriptive metrics for 1990, 2000, 2010, and 2020 from the US Census, land use/land cover spatial data, the US Census of Agriculture, and other public data sources. We found that these 26 counties over 4 time points clustered into 5 resource clusters and 5 actors clusters. Resource clusters were strongly driven by developed, crop-, and federal lands, housing density, and land near major roadways, whereas actor clusters were strongly driven by degree of geographical isolation and population density. We then selected three counties from the full pool of counties to do qualitative case study analysis and link those insights with the results of the quantitatively derived clusters. Through combined quantitative and qualitative approaches, we found that agricultural land loss occurs in multiple contexts, including along the rural-urban continuum and in more rural areas with recreation access. We reveal spatially distant counties in the same archetype that may be able to share successful farmland protection policies, as well as neighboring counties in different archetypes that will likely require different policy pathways to protect farmland. We intentionally used publicly available data so that this approach could be applied to many areas grappling with agricultural land loss.
@@ -380,7 +380,7 @@ actor_map <- ggplot(actor_map_data, aes(fill = cluster)) +
   theme(legend.position="bottom",
         legend.key.spacing.x = unit(20, "pt"),
         legend.key.justification = "center",
-        legend.key.width = unit(100, "pt"),
+        legend.key.width = unit(50, "pt"),
         text = element_text(size=14, face = "bold"),
         strip.text.x = element_text(size=14, face="bold"),
         plot.background = element_rect(fill=NA, color="black"),
@@ -432,6 +432,21 @@ There was one resource transition in the study period: Power County transitioned
 
 Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural and isolated archetype is A5 (geographically isolated rural counties with less economic opportunity). From A5, counties transition to A4 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A3 (small town counties grow as quickly as small cities), if population growth is concentrated and creates an urban area. A4 may further transition to A3 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A3 counties transition to A2 (small cities) once enough population growth has occurred to reclassify the small towns in A3 counties to the micropolitan areas of A2 counties. Finally, A2 counties may become metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county.
 
+## Combined archetypes have different farmland loss outcomes
+
+```{r}
+#| fig-cap: "Different outcomes in R3 based on actor archetype"
+
+# actors affecting outcomes in R3
+
+clust_ag_loss <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c("county","year","cropland_change","developed_change","Perc_change_land_in_farms", "percent_cropland", "percent_developed")]))
+
+dev_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=developed_change)) + geom_boxplot()
+crops_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=cropland_change)) + geom_boxplot()
+
+dev_r3 + crops_r3
+```
+
 ## Case Studies
 
 
@@ -458,9 +473,18 @@ In the rapidly expanding field of archetype analysis for sustainability science,
 
 ## Multiple archetypes display risks of farmland loss
 
-I'd like to argue that resource archetypes indicate risk of certain causes/phenomena of farmland loss (i.e. urban sprawl, amenity migration, industrialization), and actor archetypes are how we see those phenomena play out.
+R1, the cluster losing the most cropland and land in farms and gaining the most developed land, contains both counties that exhibit the traditional patterns of urban sprawl -- Ada and Canyon Counties, which contain Idaho's largest city (Boise) and its metropolitan area. However, other archetypes, namely R2 and R3, are also losing cropland and land in farms and gaining developed land. These outcomes are tied not only to the resource archetype, but also the actor archetype. In R3, counties with access to mountain recreation, the largest gains in developed land are observed when the actor archetype is small cities (R2) or rural with less agriculture (R4). This indicates that certain actor archetypes are more likely to fuel non-farm development on croplands.
+
+The rich sociology literature on amenity migration can further develop our understanding of development in R3. 
+
+
+
 
 ## Building middle range theories
+
+-- related to farmland loss in other archetypes beyond urban sprawl
+- build on idea: certain actor archetypes are more likely to fuel non-farm development on croplands
+- Future research should study if these archetypes exhibit any spatial patterns of development that can be used to inform future spatial land use change models, since standard urban growth models are likely a poor fit and would not generate realistic predictions. For example, the Farms Under Theat models have underpredicted farmland loss in Idaho.
 
 ## Limitations
 
@@ -946,7 +970,8 @@ farm_sizes2 <- farm_sizes %>%
   rowwise() %>%
   mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
   mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
-                ~.x/total_farms*100))
+                ~.x/total_farms*100),
+         year = as.integer(year))
 
 # 1992 data
 farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
@@ -1311,7 +1336,8 @@ farm_sizes2 <- farm_sizes %>%
   rowwise() %>%
   mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
   mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
-                ~.x/total_farms*100))
+                ~.x/total_farms*100),
+         year = as.integer(year))
 
 # 1992 data
 farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
@@ -1470,7 +1496,8 @@ farm_sizes2 <- farm_sizes %>%
   rowwise() %>%
   mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
   mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
-                ~.x/total_farms*100))
+                ~.x/total_farms*100),
+         year = as.integer(year))
 
 # 1992 data
 farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
@@ -1630,7 +1657,8 @@ farm_sizes2 <- farm_sizes %>%
   rowwise() %>%
   mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
   mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
-                ~.x/total_farms*100))
+                ~.x/total_farms*100),
+         year = as.integer(year))
 
 # 1992 data
 farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
@@ -1790,7 +1818,8 @@ farm_sizes2 <- farm_sizes %>%
   rowwise() %>%
   mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
   mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
-                ~.x/total_farms*100))
+                ~.x/total_farms*100),
+         year = as.integer(year))
 
 # 1992 data
 farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
@@ -1950,7 +1979,8 @@ farm_sizes2 <- farm_sizes %>%
   rowwise() %>%
   mutate(total_farms = sum(c_across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`), na.rm=TRUE)) %>%
   mutate(across(`AREA OPERATED: (1,000 TO 1,999 ACRES)`:`AREA OPERATED: (500 TO 999 ACRES)`,
-                ~.x/total_farms*100))
+                ~.x/total_farms*100),
+         year = as.integer(year))
 
 # 1992 data
 farm_sizes_1992 <- read.csv("data/Farm_size_1925-1992.csv") %>%
