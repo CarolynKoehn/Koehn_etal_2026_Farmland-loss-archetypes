@@ -40,7 +40,7 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 Approximately 1.5 million km$^2$ of land globally has been converted from agriculture to urban and highly developed areas between 1992 and 2018, amounting to 7.5% of total global land cover change in that 25-year period [@radwan2021]. The pathway to conversion is often attributed to urban or suburban sprawl [@chen2020; @vanvliet2017], and land use projections for future agricultural land loss are based on the assumption that population growth will drive urban development of agricultural lands based on their proximity to an urban center [i.e. land rent/"growth machine" theory, @meyfroidt2018; @xie2023; @chen2020; @haney2015]. Other pathways to agricultural land conversion, such as housing development in rural settlements and increased local commodity processing [@ju2018; @jiang2019], are described by less spatially-explicit theories [e.g. rural gentrification, @gosnell2011; "technology treadmill," @meyfroidt2018] and so are not operationalized in spatial land use prediction models. The focus on urban sprawl in farmland loss predictions leads to a mismatch between the identification of threatened farmlands, policy implemented to protect farmland, and actual farmland conversion. For example, urban growth boundaries are effective in containing development in some small cities but ineffective in others [@dempsey2013]. In order to enact effective policies to protect high quality agricultural lands, it is critical to understand the multiple pathways by which those lands are converted to other uses and where they are occurring. There are three recurring patterns of farmland loss that have been described separately in a number of case studies: urban/suburban sprawl, amenity migration, and agricultural industrialization.
 <!-- Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social and community well-being [@smith2001]. -->
 
-Urban sprawl is a widely recognized cause of agricultural land loss. As the population in urban centers grows, there is increased need for housing. While cities may create denser housing in the urban center to accommodate a larger population, they often expand outwards as spacious suburban neighborhoods [@dieleman2004]. As suburbs encroach on agricultural land, farmland fragmentation makes farming more difficult and encourages further development [@latruffe2014; @qiu2015; @freedgood2020]. Rising land values near urban areas are a critical barrier to entry for young farmers, which is particularly problematic in the context of a nationwide aging farming population looking to retire [@kuethe2014; @sheridan2007]. Farmland fragmentation and rising land values create a higher likelihood that near-urban farmlands will be sold for development rather than continuing in agriculture. High quality croplands are especially susceptible to urban sprawl as both farming and housing development are easiest on flat lands with more access to freshwater [@halperin2023; @bren2017]. Demographically, urbanized areas have higher population density and diversified employment opportunities compared to more rural areas, and suburban areas in particular are linked to higher education quality and lower levels of poverty [@dumont2023; @burdick2017]. There are a number of adaptations that farmers in urbanizing areas have deployed to prevent farmland loss with varying success, including building social capital with non-farmers, diversifying operations, succession planning, and utilizing policy instruments like agricultural easements and zoning [@sharp2003; @inwood2012; @bengston2004]. Urban and suburban sprawl are a prominent force in agricultural land loss and are accounted for in many land use change models focused on agricultural lands [@xie2023; @chen2020; @haney2015].
+Urban sprawl is a widely recognized cause of agricultural land loss. As the population in urban centers grows, there is increased need for housing. While cities may create denser housing in the urban center to accommodate a larger population, they often expand outwards, creating spacious suburban neighborhoods [@dieleman2004]. As suburbs encroach on agricultural land, farmland fragmentation makes farming more difficult and encourages further development [@latruffe2014; @qiu2015; @freedgood2020]. Rising land values near urban areas are a critical barrier to entry for young farmers, which is particularly problematic in the context of a nationwide aging farming population looking to retire [@kuethe2014; @sheridan2007]. Farmland fragmentation and rising land values create a higher likelihood that near-urban farmlands will be sold for development rather than continuing in agriculture. High quality croplands are especially susceptible to urban sprawl as both farming and housing development are easiest on flat lands with more access to freshwater [@halperin2023; @bren2017]. Demographically, urbanized areas have higher population density and diversified employment opportunities compared to more rural areas, and suburban areas in particular are linked to higher education quality and lower levels of poverty [@dumont2023; @burdick2017]. There are a number of adaptations that farmers in urbanizing areas have deployed to prevent farmland loss with varying success, including building social capital with non-farmers, diversifying operations, succession planning, and utilizing policy instruments like agricultural easements and zoning [@sharp2003; @inwood2012; @bengston2004]. Urban and suburban sprawl are a prominent force in agricultural land loss and are accounted for in many land use change models focused on agricultural lands [@xie2023; @chen2020; @haney2015].
 
 Industrial development is another driver of agricultural land loss, but agricultural change in the industrial context manifests differently than in urban sprawl. Across Asia, conversion of agricultural land to industry use precedes urban sprawl or occurs alongside urban sprawl [@azadi2011; @tuyen2013; @zhou2020]. In Europe, a large portion of manufacturing was shifted to rural areas in the late 1970s [@keeble1983], and food manufacturing is an important component of many rural economies [@rizov2011]. In the United States, food manufacturing occurs in both urban and rural areas, especially those with access to raw materials (e.g. milk), labor availability, and sufficient infrastructure, including interstates, water, and electricity [@lambert2009; @compton2018]. Additionally, the presence of one manufacturing facility is correlated with the presence of other facilities, as well as with associated commodity production [@lambert2009]. Besides conversion of agricultural land for manufacturing facilities, these factories can attract non-local workers who need housing, yet their settlement patterns may be different from those of urban sprawl populations. Farmworkers producing raw commodities may be housed on farms, provided housing by their employers in nearby towns or cities, or find their own housing, and rapid Hispanic population growth is associated with food processing plants [@garni2018; @quandt2015; @lichter2012]. Farmers near food processing plants can increase their sales by increasing their production of the raw materials used by the nearby industry, but this comes at considerable input and labor costs [@jafri2024]. Thus, industrial development involves different demands for land and farmer adaptations compared to other drivers of farmland loss.
 
@@ -441,15 +441,21 @@ Looking across actor transitions, we can put together a common progression throu
 
 clust_ag_loss <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c("county","year","cropland_change","developed_change","Perc_change_land_in_farms", "percent_cropland", "percent_developed")]))
 
-dev_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=developed_change)) + geom_boxplot()
-crops_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=cropland_change)) + geom_boxplot()
+dev_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=developed_change)) + 
+  geom_boxplot() + 
+  labs(title="R3") +
+  scale_y_continuous(limits = c(0,0.7))
+dev_r2 <- ggplot(filter(clust_ag_loss, cluster.R=="R2"), aes(x=cluster.A, y=developed_change)) + 
+  geom_boxplot() + 
+  labs(title="R2") +
+  scale_y_continuous(limits = c(0,0.7))
 
-dev_r3 + crops_r3
+dev_r2 + dev_r3
 ```
 
 ## Case Studies
 
-
+GOOGLE DOC CONTENTS HERE
 
 <!-- P.B. Nelson, A. Wei Lee, L. Nelson
 Linking baby boomer and Hispanic migration streams into rural America–A multi-scaled approach
@@ -465,26 +471,18 @@ Archetype analysis also revealed gaps in our knowledge that can be used for futu
 
 Dynamic archetype analysis (archetype change through time) is an especially useful tool for considering multifaceted, temporal SES dynamics. Dynamic archetypes are a fairly recent innovation with the archetype analysis literature, and have primarily been used to study how a major change or "shock" to a system results in archetype change. For example, @orozco2024 used dynamic archetypes to study the effect of EU agricultural policies on agricultural changes in Germany. However, our study is located in a place and time where farmland protection policy has not changed. Farmland protection in southern Idaho is based on the 1981 Right to Farm section of Idaho Code, which protects farmlands from nuisance lawsuits [@IDRightToFarm], and the 1975 Local Land Use Planning Act, which mandates that cities and counties must plan and zone [@IDLLUPA; @meyer2025]. Therefore, farmland protection actions and funding from 1990-2020 in southern Idaho occur at the county level or lower. Absent major policy change, we were able to build a proposed timeline of actor archetype transitions that we would expect to occur by observing all the transitions that took place in our study period (see Section @sec-transitions). We propose that this timeline reveals likely future scenarios that each county may face, which can inform proactive policy design. Longitudinally comparable datasets are important for this work. In this analysis, we've laid the blueprint to use public data in this way for any region in the US.
 
+## Multiple resource archetypes are at risk of farmland loss, actor archetypes indicate likely rate of development
+
+R1, the cluster losing the most cropland and land in farms and gaining the most developed land, contains both counties that exhibit the traditional patterns of urban sprawl -- Ada and Canyon Counties, which contain Idaho's largest city (Boise) and its metropolitan area. However, other archetypes, namely R2 and R3, are also losing cropland and land in farms and gaining developed land. These outcomes are tied not only to the resource archetype, but also the actor archetype. In both R2 and R3, the largest gains in developed land are observed when the actor archetype is small cities (A2) or rural with less agriculture (A4). This indicates that certain actor archetypes are more likely to fuel non-farm development: the growing small city and the rural area transitioning away from an agricultural economy.
+
+All three resource archetypes at risk of farmland loss are either on flat lands with access to urban amenities (R1, R2) or near mountain recreation (R3). These results align with existing research on farmland conversion. Flat, accessible lands are prime sites for residential development as well as farming, and often residential development is more profitable. This is especially true if urban amenities such as grocery stores, healthcare facilities, and other commercial offerings are accessible from or developed alongside new housing developments. On the other end of the spectrum, rural areas near mountain recreation offer many natural amenities, and non-farm development can be similarly profitable. Our finding that some actor archetypes have higher rates of development than others, particularly that growing small town counties have lower rates of development than some rural counties, was more surprising and demonstrates both the strengths and limitations of the USDA Rural-Urban Commuting Area (RUCA) codes, which we adapted for this analysis and were strong drivers of the actor archetypes. The strength of the RUCA methodology is that the urban population threshold used to distinguish between small town and micropolitan counties is useful for delineating different rates of development in R2 and R3 counties. However, our clustering identified two distinct rural actor archetypes, one of which had higher rates of development (A4) than the other (A5).
+
+
 ## Qualitative data enriches quantitative archetypes
 
-Qualitative data enhances archetype analysis by providing further context and validation of our findings. A limitation of the data driven archetypes is their failure to detect changes in counties without archetype shifts. Our actor archetypes are expected to reflect community change, but they are strongly tied to [agency] data on metropolitan, micropolitan, small town, and rural areas, which are based on population and housing density thresholds. When a county remains between these thresholds, changes in its actors are not as easily detected, though we were able to distinguish between two types of rural actors. This was the case in Twin Falls County, where interview data revealed dramatic changes to the community that were not captured by the quantitative archetypes, while at the same time affirming its essentially unchanged economic reliance on agricultural products. The qualitative data underscore the need to consider change even in places that have not changed archetypes through time.
+Qualitative data enhances archetype analysis by providing further context and validation of our findings. A limitation of the data driven archetypes is their failure to detect changes in counties without archetype shifts. Our actor archetypes are expected to reflect community change, but they are strongly tied to USDA ERS data on metropolitan, micropolitan, small town, and rural areas, determined by population and housing density thresholds. When a county remains between these thresholds, changes in its actors are not as easily detected, though we were able to distinguish between two types of rural actors. This was the case in Twin Falls County, where interview data revealed dramatic changes to the community that were not captured by the quantitative archetypes, while at the same time affirming its essentially unchanged economic reliance on agricultural products. The qualitative data underscore the need to consider change even in places that have not changed archetypes through time.
 
-In the rapidly expanding field of archetype analysis for sustainability science, there has been a need to establish methods for archetype validation. Robust archetypes require both internal validation to demonstrate that cases in each archetype are indeed more similar to each other than to other cases and external validation to demonstrate the extent to which the archetypes are applicable outside the study [CITE]. We contend that qualitative data collection is a method for both types of validation. In this study, we used qualitative data for limited internal validation. We were only able to collect [a usable sample size??] for one case each in 3 of the 5 resource and actor archetypes. We were able to use these data to construct a fuller picture of community change in these archetypes than we could with quantitative data alone. Future research may be able to use qualitative data collection in multiple cases in each archetype to reveal nuanced similarities and differences in outcomes and social-ecological attributes between cases, furthering the use of qualitative data for internal archetype validation. Qualitative data can also be used for external validation when a rich literature of case studies exists for similar phenomena outside the study area. For example, amenity migration in the western United States is a well studied phenomenon in rural sociology. In the next section, we will link our qualitative data with published case studies of amenity migration to build a greater understanding of the [extent] of the R3 archetype.
-
-## Multiple archetypes display risks of farmland loss
-
-R1, the cluster losing the most cropland and land in farms and gaining the most developed land, contains both counties that exhibit the traditional patterns of urban sprawl -- Ada and Canyon Counties, which contain Idaho's largest city (Boise) and its metropolitan area. However, other archetypes, namely R2 and R3, are also losing cropland and land in farms and gaining developed land. These outcomes are tied not only to the resource archetype, but also the actor archetype. In R3, counties with access to mountain recreation, the largest gains in developed land are observed when the actor archetype is small cities (R2) or rural with less agriculture (R4). This indicates that certain actor archetypes are more likely to fuel non-farm development on croplands.
-
-The rich sociology literature on amenity migration can further develop our understanding of development in R3. 
-
-
-
-
-## Building middle range theories
-
--- related to farmland loss in other archetypes beyond urban sprawl
-- build on idea: certain actor archetypes are more likely to fuel non-farm development on croplands
-- Future research should study if these archetypes exhibit any spatial patterns of development that can be used to inform future spatial land use change models, since standard urban growth models are likely a poor fit and would not generate realistic predictions. For example, the Farms Under Theat models have underpredicted farmland loss in Idaho.
+In the rapidly expanding field of archetype analysis for sustainability science, there has been a need to establish methods for archetype validation. Robust archetypes require both internal validation to demonstrate that cases in each archetype are indeed more similar to each other than to other cases and external validation to demonstrate the extent to which the archetypes are applicable outside the study [CITE]. We contend that qualitative data collection is a method for both types of validation. In this study, we used qualitative data for limited internal validation. We were only able to collect [a usable sample size??] for one case each in 3 of the 5 resource and actor archetypes. We were able to use these data to construct a fuller picture of community change in these archetypes than we could with quantitative data alone. Future research may be able to use qualitative data collection in multiple cases in each archetype to reveal nuanced similarities and differences in outcomes and social-ecological attributes between cases, furthering the use of qualitative data for internal archetype validation. Qualitative data can also be used for external validation when a rich literature of case studies exists for similar phenomena outside the study area. For example, amenity migration in the western United States is a well studied phenomenon in rural sociology. In future research, linking qualitative data with published case studies of amenity migration could validate the extent of the "access to mountain recreation and urban amenities" (R3) archetype.
 
 ## Limitations
 
@@ -508,6 +506,10 @@ This analysis recontextualizes counties in the study area, allowing us to link c
 
 I'm thinking of linking known middle range theories (briefly referred to in my first introduction paragraph) to different archetypes since the aim of archetype analysis is to build toward middle range theory. This could also be done in the case studies section, or perhaps it's too much to take on in a single section of this discussion.
 
+-- related to farmland loss in other archetypes beyond urban sprawl
+- build on idea: certain actor archetypes are more likely to fuel non-farm development on croplands
+- Future research should study if these archetypes exhibit any spatial patterns of development that can be used to inform future spatial land use change models, since standard urban growth models are likely a poor fit and would not generate realistic predictions. For example, the Farms Under Theat models have underpredicted farmland loss in Idaho.
+
 Possible references:
 
 P. Meyfroidt, R. Roy Chowdhury, A. de Bremond, E.C. Ellis, K.H. Erb, T. Filatova, R.D. Garrett, J.M. Grove, A. Heinimann, T. Kuemmerle, C.A. Kull, E.F. Lambin, Y. Landon, Y. le Polain De Waroux, P. Messerli, D. Müller, J.Ø. Nielsen, G.D. Peterson, V. Rodriguez García, ..., P.H. Verburg. Middle-range theories of land system change. Global Environmental Change, 53 (2018), pp. 52-67, 10.1016/j.gloenvcha.2018.08.006
@@ -527,129 +529,6 @@ From Gwénaëlle: "the twin falls by the highway is a whole world different than
 -->
 
 <!--
-## NCP Outcomes of Archetypes
-
-I only have NCP data for 2016-2020, so NCP must be analyzed as an outcome of the 40 years of archetypes. This section answers question 4.
-
-```{r}
-#| label: "get NCP data"
-#| include: false
-#| eval: false
-
-# get list of file paths
-NCP_data_files <- list.files("data/NCP_data", pattern = ".tif",
-                             full.names = TRUE,
-                             recursive = TRUE)
-
-# read data files into list
-NCP_data <- lapply(NCP_data_files, function(x) rast(x))
-names(NCP_data) <- NCP_data_files %>%
-  str_remove("../data/NCP_data/") %>%
-  str_remove(".tif")
-
-# check that all are aligned
-# careful with this step - it may apply spatial functions that can warp data
-template <- NCP_data[[1]]
-aligned_rasts <- lapply(NCP_data, function(x) {
-  if(crs(x) != crs(template)) {x <- project(x, template)}
-  if(sum(res(x) != res(template)) > 0) {x <- resample(x, template)}
-  if(sum(origin(x) != origin(template)) > 0) {x <- resample(x, template)}
-  if(sum(ext(x) != ext(template)) > 0) {x <- resample(x, template)}
-  
-  return(x)
-})
-
-NCP_data <- rast(aligned_rasts)
-names(NCP_data) <- names(aligned_rasts)
-```
-
-```{r}
-#| label: "summarise NCP by county"
-#| include: false
-#| eval: false
-
-max_min_NCP_layers <- as.numeric(lapply(NCP_data, FUN = function(x) {max(values(x), na.rm=T)})) - as.numeric(lapply(NCP_data, FUN = function(x) {min(values(x), na.rm=T)}))
-
-NCP_sc <- scale(NCP_data,
-                center = TRUE,
-                scale = max_min_NCP_layers) #If scale is a numeric vector (recycled to nlyr(x)), each layer of x is divided by the corresponding value.
-
-NCP_by_county_mean <- exact_extract(x = NCP_sc,
-                               y = barcodes,
-                               fun = "mean",
-                               append_cols = c("county", "barcode"))
-NCP_by_county_sd <- exact_extract(x = NCP_sc,
-                               y = barcodes,
-                               fun = "stdev",
-                               append_cols = c("county", "barcode"))
-
-
-
-# NCP_pca <- prcomp(NCP_sc[,-c(1:2)])
-```
-
-```{r}
-#| label: "cluster NCP calcs"
-#| include: false
-#| eval: false
-
-NCP_cats <- data.frame(NCP = names(NCP_data),
-                       NCP_cat = c(rep("Climate Adaptation", 2),
-                                   rep("C Stock Protection", 3),
-                                   rep("Food and Feed", 4),
-                                   rep("Habitat", 8),
-                                   rep("Recreation", 2),
-                                   rep("Water Quality", 2)))
-
-NCP_means <- NCP_by_county_mean %>%
-  pivot_longer(cols = !c("county", "barcode"),
-               names_to = "NCP",
-               values_to = "mean") %>%
-  mutate(NCP = str_remove(NCP, "mean.")) %>%
-  left_join(NCP_cats) %>%
-  mutate(NCP = str_remove(NCP, regex("^data/NCP_data/[:print:]*/")))
-
-NCP_stdev <- NCP_by_county_sd %>%
-  pivot_longer(cols = !c("county", "barcode"),
-               names_to = "NCP",
-               values_to = "stdev") %>%
-  mutate(NCP = str_remove(NCP, "stdev.")) %>%
-  left_join(NCP_cats) %>%
-  mutate(NCP = str_remove(NCP, regex("^data/NCP_data/[:print:]*/")))
-
-NCP_means_sd <- left_join(NCP_means, NCP_stdev) %>%
-  mutate(barcode.R = str_remove_all(barcode, regex("A[:digit:]{1}")),
-         barcode.A = str_remove_all(barcode, regex("R[:digit:]{1}")))
-```
-```{r}
-#| label: "fig-NCP-Rclusters"
-#| fig-cap: "The range of mean 2016-2020 NCP values for each county in each Resource cluster pathway. Values are scaled so that 0 represents the mean of each NCP across the study area, so values below 0 are below average and above 0 are above average. I separated the 21 NCP layers I used in chapter 1 into the 6 NCP categories used in chapter 1, so even clusters with 2 counties (e.g. R5 = Ada and Canyon County) have >2 means in each category from multiple NCP layers."
-#| fig-width: 8
-#| fig-height: 6
-#| eval: false
-
-ggplot(NCP_means_sd, aes(x=mean, y=barcode.R)) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_boxplot() +
-  facet_wrap(vars(NCP_cat)) +
-  scale_y_discrete(
-    limits = rev(unique(NCP_means_sd$barcode.R)[order(unique(NCP_means_sd$barcode.R))]),
-    labels = rev(c("R1", "R2", "R3", "R4", "R5"))) +
-  labs(x = "Cluster mean (scaled values)", y = "Resource Cluster") +
-  theme_bw()
-```
-
-_C Stock Protection:_ Cluster R2 provides above average C stock protection. This makes sense since R2 is associated with forested, mountainous areas.
-
-_Climate Adaptation:_ Clusters R2 and R4 are areas with more ability to adapt to climate change. These are more likely to have A1 Actor clusters (more educated urbanites). This result points to issues of environmental justice, where more educated (so I'm assuming, more wealthy) actors are also the most well positioned to adapt to climate change. R1 also has A1 actors, but has other actor clusters as well, and this is reflected in the wide spread of climate adaptation NCP.
-
-_Food and Feed:_ Resource clusters with potential for more croplands (R1, R4, R5) provide above average food and feed NCP.
-
-_Habitat:_ The Resource clusters where agriculture and development are limited by rugged conditions (R3, and R2 to a lesser degree) generally provide higher than average habitat NCP. More agricultural (R5) and urban (R4) clusters generally provide less habitat on average, but they have a wide range, indicating that they provide different types of habitat NCP to different levels.
-
-_Recreation:_ Most Resource clusters provide recreation NCP near the average for the study area.
-
-_Water Quality:_ Most Resource clusters are near average here.
 
 # Main Takeaways
 
@@ -666,10 +545,6 @@ This analysis recontextualizes counties in the study area, allowing us to link c
 Overall, I found that resource archetypes remained stable over this 40 year period while actor archetypes were more likely to change. This is reasonable for two reasons: (1) populations are more mobile than land systems, so it is easier for them to change, and (2) the difference between land systems (e.g. the dry shrublands of Owyhee and the forested recreation lands of Blaine) is greater than the difference between human populations, so it would require a greater change to shift resource archetypes compared to actor archetypes.
 
 The presence of A1 actors (educated, growing, urban population) is associated with changes in resource systems, even if no counties transitioned from one resource archetype to another. Counties with A1 actors tend to accelerate their developed land growth and housing density. However, A1 does not always mean accelerated development, as evidenced by Blaine County, which has had wealthy inhabitants for a long time and has implemented land protections so that their resource system more closely matches more isolated counties.
-
-## NCP -- ??
-
-I need to think more about the NCP results and if they belong in this chapter. I don't find any surprising results here; the resource systems and their NCP outcomes all seem logical to me. Additionally, the NCP ranges seem to be either really wide or small and all centered on the average (recreation and water quality especially). Both those patterns are difficult to draw conclusions from.
 
 -->
 
