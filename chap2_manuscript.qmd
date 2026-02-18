@@ -441,23 +441,38 @@ Looking across actor transitions, we can put together a common progression throu
 ## Combined archetypes have different farmland loss outcomes
 
 ```{r}
-#| fig-cap: "Different outcomes in R3 based on actor archetype"
+#| fig-cap: "Development outcomes are mediated by both resource and actor archetypes. The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with less agriculture) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development is increased in A2 and A3."
+#| label: "fig-resouce-actor-combo"
 
 # actors affecting outcomes in R3
 
 clust_ag_loss <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c("county","year","cropland_change","developed_change","Perc_change_land_in_farms", "percent_cropland", "percent_developed")]))
 
-dev_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=developed_change)) + 
+ggplot(clust_ag_loss, aes(x=cluster.A, y=developed_change)) + 
   geom_boxplot() + 
-  labs(title="R3") +
-  scale_y_continuous(limits = c(0,0.7))
-dev_r2 <- ggplot(filter(clust_ag_loss, cluster.R=="R2"), aes(x=cluster.A, y=developed_change)) + 
-  geom_boxplot() + 
-  labs(title="R2") +
-  scale_y_continuous(limits = c(0,0.7))
+  labs(x = "Actor Archetype", y = "Developed Land Gain (%)") +
+  scale_y_continuous(limits = c(0,0.7)) +
+  facet_wrap(vars(cluster.R)) +
+  theme_bw() +
+  theme(panel.grid.major.x = element_blank())
 
-dev_r2 + dev_r3
+# dev_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=developed_change)) + 
+#   geom_boxplot() + 
+#   labs(title="R3: Access to mountain recreation\nand urban amenities", x = "Actor Archetype", y = NULL) +
+#   scale_y_continuous(limits = c(0,0.7)) +
+#   theme_bw() +
+#   theme(panel.grid.major.x = element_blank())
+# dev_r2 <- ggplot(filter(clust_ag_loss, cluster.R=="R2"), aes(x=cluster.A, y=developed_change)) + 
+#   geom_boxplot() + 
+#   labs(title="R2: Flat land near natural\nand urban amenities", x = "Actor Archetype", y = "Developed Land Gain (%)") +
+#   scale_y_continuous(limits = c(0,0.7)) +
+#   theme_bw() +
+#   theme(panel.grid.major.x = element_blank())
+# 
+# dev_r2 + dev_r3
 ```
+
+Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo).
 
 ## Case Studies
 
