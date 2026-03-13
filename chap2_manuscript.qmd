@@ -72,45 +72,45 @@ The localized and overall effects of industrial expansion have not been included
 
 The Snake River Plain ecoregion of the United States [@ecoregions] intersects with 26 Idaho counties (109,700 km$^2$). It contains  productive croplands [@freedgood2020], localized yet rapidly growing highly developed urban areas [@census_metro], and public rangelands grazed by livestock (@freedgood2020). This region features two primary ecological zones, the river plain and the shrub steppe, and a diverse range of social systems, from urban and exurban systems to dryland agriculture and rural public lands, that together form a diverse array of social-ecological systems [@aho2022]. 
 
-Farmland protection in southern Idaho is based on the 1981 Right to Farm section of Idaho Code, which protects farmlands from nuisance lawsuits [@IDRightToFarm], and the 1975 Local Land Use Planning Act, which mandates that cities and counties must plan and zone [@IDLLUPA; @meyer2025]. Therefore, farmland protection actions and funding from 1990-2020 in southern Idaho occur at the county level or lower. Farmland protection is mainly accomplished through zoning that prevents development on farmland or, rarely, costly perpetual easements established in partnership with land trusts or local government [@pald]. Before 2020, Idaho's Snake River Plain contained 64 agricultural easements totaling to 271 $km^2$, or 0.2% of the total study area [@pald].
+Farmland protection in southern Idaho is based on the 1981 Right to Farm section of Idaho Code, which protects farmlands from nuisance lawsuits [@IDRightToFarm], and the 1975 Local Land Use Planning Act, which mandates that cities and counties must plan and zone [@IDLLUPA; @meyer2025]. Therefore, farmland protection actions and funding from 1990-2020 in southern Idaho occur at the county level or lower. Farmland protection is mainly accomplished through zoning that prevents development on farmland or, rarely, costly perpetual easements established in partnership with land trusts or local government [@pald]. Before 2020, Idaho's Snake River Plain contained 64 agricultural easements totaling 271 $km^2$, or 0.2% of the total study area [@pald].
 
 ## Data Selection
 
-The social-ecological systems [SES] framework first published in 2007 by Elinor Ostrom is a conceptual framework that provides a list of variables that may affect the outcome of a SES [@ostrom2009; @partelow2018]. For comparative analysis of multiple case studies, the focus of archetype analysis, it provides structure and variables for comparison [@oberlack2016; @partelow2018]. The framework introduces variables describing four major subsystems in a SES: resource systems, resource units, governance systems, and actors, as well as variables describing the interactions of these systems, the related ecosystem, and the social, economic, and political setting [@ostrom2009]. Readily-available public data can describe some of these systems comprehensively, and while it is difficult to quantify indicators for others [@partelow2018]. We chose to focus on three subsystems that are easily described by quantitative public data: the resource system and resource units, which we combine into a single resource model, and the actors. We linked data available from 1990-2020 to second-tier variables in these subsystems of the SES framework based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found, but it is common to analyze subsets of SES variables in the SES literature [@partelow2018]. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
+The social-ecological systems [SES] framework first published in 2007 by Elinor Ostrom is a conceptual framework that provides a list of variables that may affect the outcome of a SES [@ostrom2009; @partelow2018]. For comparative analysis of multiple case studies, the focus of archetype analysis, it provides structure and variables for comparison [@oberlack2016; @partelow2018]. The framework introduces variables describing four major subsystems in a SES: resource systems, resource units, governance systems, and actors, as well as variables describing the interactions of these systems, the related ecosystem, and the social, economic, and political setting [@ostrom2009]. Readily-available public data can describe some of these systems comprehensively, while it is difficult to quantify indicators for others [@partelow2018]. We chose to focus on three subsystems that are easily described by quantitative public data: the resource system and resource units, which we combine into a single resource model, and the actors. We linked data available from 1990-2020 to second-tier variables in these subsystems of the SES framework based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found, but it is common to analyze subsets of SES variables in the SES literature [@partelow2018]. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
 
 ::: {#tbl-datasel-R}
 
-| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
-|--|---|---|---|
-| RS1 -- Sector | Agriculture, Natural Amenities, Urban / Residential | | |
-| RS3 -- Size of Resource System | Agriculture  | Percent land in farms | US Census of Agriculture |
-| | | Percent cropland | National Land Cover Database (NLCD) |
-| | Natural Amenities | Percent forestland | NLCD |
-| | | Percent shrubland | NLCD |
-| | | Percent federally managed land | US Bureau of Land Management Surface Management Agencies |
-| | | Lake area | HydroSHEDS |
-| | | River length | HydroSHEDS |
-| | Urban / Residential | Percent developed land | NLCD |
-| | | Land in, nearby, and far from urban areas | IPUMS |
-| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | US Census of Agriculture |
-| | Natural Amenities | Percent land in recreation areas | Protected Areas Database - US (PAD-US) |
-| | | Distance to nearest national park | PAD-US |
-| | | Distance to nearest ski area | PAD-US |
-| | Urban / Residential | Number houses per unit area | US Decennial Census |
-| | | Percent non-federal land within 10km of a major roadway | US Decennial Census, PAD-US |
-| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP), US Census of Governments |
-| RS9 -- Location | All | Average slope | OpenTopography |
-| RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | US Census of Agriculture |
-| | | Percent change of land area in farms | US Census of Agriculture |
-| | | Percent change of land cover in cropland (5 year period) | NLCD |
-| | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD |
-| | | Percent change of land cover in shrubland (5 year period) | NLCD |
-| | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD |
-| RU4 -- Economic Value | Agriculture | Percent farms with net loss | US Census of Agriculture |
-| | | Agriculture support jobs per 1000 residents | US Census of Agriculture |
-| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | CBP |
-| | Urban / Residential | Median home value | US Decennial Census |
-| RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres)* | US Census of Agriculture |
+| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source | Methods |
+|--|---|---|---|---|
+| RS1 -- Sector | Agriculture, Natural Amenities, Urban / Residential | | | |
+| RS3 -- Size of Resource System | Agriculture  | Percent land in farms | US Census of Agriculture | @sec-land-in-farms-methods |
+| | | Percent cropland | National Land Cover Database (NLCD) | @sec-perc-cropland-methods |
+| | Natural Amenities | Percent forestland | NLCD | @sec-perc-forest-methods |
+| | | Percent shrubland | NLCD | @sec-perc-shrubland-methods |
+| | | Percent federally managed land | US Bureau of Land Management | @sec-fedlands |
+| | | Lake area | HydroSHEDS | @sec-lake-area-methods |
+| | | River length | HydroSHEDS | @sec-river-miles-methods |
+| | Urban / Residential | Percent developed land | NLCD | @sec-dev-land-methods |
+| | | Land in, nearby, and far from urban areas | IPUMS | @sec-urbareas |
+| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | US Census of Agriculture | @sec-farm-density-methods |
+| | Natural Amenities | Percent land in recreation areas | Protected Areas Database - US (PAD-US) | @sec-rec-area-methods |
+| | | Distance to nearest national park | PAD-US | @sec-dist-nat-park-methods |
+| | | Distance to nearest ski area | PAD-US | @sec-dist-ski-area-methods |
+| | Urban / Residential | Number houses per unit area | US Decennial Census | @sec-hous-dens-methods |
+| | | Percent non-federal land within 10km of a major roadway | US Decennial Census, PAD-US | @sec-major-roads-methods |
+| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP), US Census of Governments | @sec-health-jobs-methods |
+| RS9 -- Location | All | Average slope | OpenTopography | @sec-slope-methods |
+| RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | US Census of Agriculture | @sec-num-farms-change-methods |
+| | | Percent change of land area in farms | US Census of Agriculture | @sec-land-in-farms-change-methods |
+| | | Percent change of land cover in cropland (5 year period) | NLCD | @sec-cropland-change-methods |
+| | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD | @sec-forest-change-methods |
+| | | Percent change of land cover in shrubland (5 year period) | NLCD | @sec-shrubland-change-methods |
+| | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD | @sec-dev-land-change-methods |
+| RU4 -- Economic Value | Agriculture | Percent farms with net loss | US Census of Agriculture | @sec-farm-net-loss-methods |
+| | | Agriculture support jobs per 1000 residents | US Census of Agriculture | @sec-ag-support-jobs-methods |
+| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | CBP | @sec-hospitality-jobs-methods |
+| | Urban / Residential | Median home value | US Decennial Census | @sec-home-value-methods |
+| RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres)* | US Census of Agriculture | @sec-farm-size-methods |
 
 Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units. * indicates that principal components were used to reduce dimensions.
 
@@ -594,21 +594,22 @@ Census of Agriculture data was published for 1992, 2002, 2012, and 2022, so data
 
 For all indicators that were simplified to principal components with principal component analysis, we retained principal components that explained >70% of the variance according to @aho2022.
 
-### Resources
+### Resources 
+<!-- TO DO: when reviewing, review associated code as well -->
 
-#### Percent land in farms
+#### Percent land in farms {#sec-land-in-farms-methods}
 
 Land in farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
-#### Percent cropland
+#### Percent cropland {#sec-perc-cropland-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories.
 
-#### Percent forestland
+#### Percent forestland {#sec-perc-forest-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent forestland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories.
 
-#### Percent shrubland
+#### Percent shrubland {#sec-perc-shrubland-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent shrubland, we used the "Shrub/Scrub" category.
 
@@ -616,15 +617,15 @@ Annual land cover data from the National Land Cover Database (NLCD) was download
 
 We used the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset to represent federal lands [@blm_sma]. We classified the following management agency codes as federal land: BLM, BOR, COE, DOE, DOI, FAA, FHA, GSA, LU_DOI, LU_USDA, MIL, NPS, NWR, USDA, USFS. We then calculated the percent area covered by these management agencies in each county. This indicator was time invariable; federal lands are assumed to not be sold or acquired over the 40 year time period.
 
-#### Lake area
+#### Lake area {#sec-lake-area-methods}
 
 Lake area data is from the Hydrosheds HydroLAKES product [v1.0, @hydrolakes]. We calculated the total area in square kilometers of lakes larger than 10 ha in each county. This indicator is time invariable; we assumed that lake area would not change since 1990.
 
-#### Miles of river
+#### Miles of river {#sec-river-miles-methods}
 
 We accessed river data from the WWF HydroSHEDS Free Flowing Rivers Network [v1.0, @hydrosheds] in Google Earth Engine. We filtered to rivers of order 7 or lower which have long-term average discharge >0.1 cubic meters per second. Then, we found the total length of rivers in each county and divided by the county area, so that river length units are in $km/km^2$. This indicator is time invariable; we assumed that river length would not change since 1990.
 
-#### Percent developed land
+#### Percent developed land {#sec-dev-land-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent developed land, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories.
 
@@ -632,33 +633,33 @@ Annual land cover data from the National Land Cover Database (NLCD) was download
 
 Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. We first downloaded population size and housing unit count data for census blocks, 1990-2020, within 150 miles of Idaho from IPUMS [@ipums]. Then, we designated any census blocks with housing density $\geq$425 $units/mi^2$ as initial urban core blocks. Then, we added adjacent census blocks with housing density $\geq$200 $units/mi^2$ to the urban cores, repeating this process until there were no census blocks with housing density $\geq$200 $units/mi^2$ adjacent to the urban cores. Finally, we filtered out any urban cores without a high density urban nucleus, defined as a census block with housing density $\geq$1,275 $units/mi^2$, and we filtered out any urban cores with $\leq$2,000 houses or $\leq$5,000 residents. After these urban areas were established, land in each county was classified as "within an urban area," "within 10 mi of an urban area," "within 20 mi of an urban area," increasing in units of 10 mi, with the final category being ">100 mi from an urban area." Then, we calculated the percent cover of each category in each county. This process was repeated for each year, as population growth shifted urban boundaries and created new urban areas. Then, these data were used in a principal component analysis. We retained the first two principal components, which explained 75.8% of the variance.
 
-#### Farm density
+#### Farm density {#sec-farm-density-methods}
 
 Number of farms and total county land data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
-#### Percent land in recreation areas
+#### Percent land in recreation areas {#sec-rec-area-methods}
 
 We used data from the Protected Areas Database, which "was originally designed to support biodiversity assessments; however, its scope expanded in recent years to include all public and nonprofit held lands and waters" [@pad_us].
 
 The following land designations (column `Des_Tp`) were considered recreation lands to calculate percent recreation land in this analysis: Recreation Management Area, National Monument, National Park, State Recreation Area, State Park, National Recreation Area, National Scenic or Historic Trail. Since sas some state parks were misclassified, these additional local designation (column `Loc_Ds`) terms related to recreation were added as well: State Park, Recreation Reservoir, National Recreation Trail, Recreation Area, National Recreation Area, National Monument, SREC, REC, SP, National Park, and Designated - Recreational. To capture time series data, we filtered data by date established and only included parks established before each time point 1990-2020. Parks without an establishment date were assumed to be established before 1990. We calculated the percent area covered by these recreation lands for each county and year.
 
-#### Distance to nearest national park
+#### Distance to nearest national park {#sec-dist-nat-park-methods}
 
 We calculated the Euclidean distance from the edge of each county to the edge of the closest national park in the PAD-US data [@pad_us]. This indicator was time invariable, as all nearby national parks were established before 1990.
 
-#### Distance to nearest ski area
+#### Distance to nearest ski area {#sec-dist-ski-area-methods}
 
 We calculated the Euclidean distance from the edge of each county to the edge of the closest ski area in the PAD-US data [@pad_us]. This indicator was time invariable, as all nearby ski resorts were in use before 1990.
 
-#### Housing density
+#### Housing density {#sec-hous-dens-methods}
 
 Data for the number of houses in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Population and Housing [1990 CPH-2-14, @CofPopHous_1990]. We used total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
-#### Non-federal land near major roadway
+#### Non-federal land near major roadway {#sec-major-roads-methods}
 
 First, we downloaded primary and secondary road shapefiles from the US Census TIGER/Line shapefiles [@tiger_line] using the`tigris` package [v2.1, @tigris]. Primary roads "are generally divided limited-access highways within the Federal interstate highway system or under state management," and secondary roads are "main arteries, usually in the U.S. highway, state highway, or county highway system" [@tiger_line_docs]. Then, we created a 10km buffer around the road shapefiles, cropping out federal lands described in @sec-fedlands. We then calculated the percent of the county covered by non-federal lands within 10 km of a primary or secondary road.
 
-#### Healthcare workers per 1000 residents
+#### Healthcare workers per 1000 residents {#sec-health-jobs-methods}
 
 We downloaded data for public sector health workers from the Census of Governments [@aspep1997; @aspep2002; @aspep2012; @aspep2022]. We added local government employees in the "Health" and "Hospitals" categories. Because the first available dataset from the Census of Governments is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 employment data for 1990, 2002 employment data for 2000, 2012 employment data for 2010, and 2022 employment data for 2020.
 
@@ -669,41 +670,41 @@ We downloaded data for private sector health workers from the County Business Pa
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and decade.
 
-#### Average slope
+#### Average slope {#sec-slope-methods}
 
 We downloaded elevation data from Terrain Tiles [@aws_terrain] via the `elevatr` package [v0.99.0, @elevatr] at a resolution of 106.8872 meters. We calculated the slope from the elevation data and averaged the slope values within each county. This indicator is time invariant; we assume that the average slope will not change through time.
 
-#### Percent change in number of farms
+#### Percent change in number of farms {#sec-num-farms-change-methods}
 
 Number of farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
 We calculated the five-year percent change in number of farms before each time point. For example, for 2022: $(Farms_{2022} - Farms_{2017}) / Farms_{2017}$
 
-#### Percent change of land in farms
+#### Percent change of land in farms {#sec-land-in-farms-change-methods}
 
 Land in farms data for 1997-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1987-1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We used the five-year change in the percent of all county land that was in farms.
 
-#### Percent change of cropland
+#### Percent change of cropland {#sec-cropland-change-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories. We used the five-year change in the percent of all county land that was in cropland.
 
-#### Percent change of forest
+#### Percent change of forest {#sec-forest-change-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories. We used the five-year change in the percent of all county land that was in forestland.
 
-#### Percent change of shrubland
+#### Percent change of shrubland {#sec-shrubland-change-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the "Shrub/Scrub category. We used the five-year change in the percent of all county land that was in shrubland.
 
-#### Percent change of developed land
+#### Percent change of developed land {#sec-dev-land-change-methods}
 
 Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories. We used the five-year change in the percent of all county land that was in developed land.
 
-#### Percent farms with net loss
+#### Percent farms with net loss {#sec-farm-net-loss-methods}
 
 Farms with net loss and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 4 [@CofAg_1992_netloss].
 
-#### Agriculture support jobs
+#### Agriculture support jobs {#sec-ag-support-jobs-methods}
 
 We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total agriculture support workers in each county for each year:
 
@@ -714,7 +715,7 @@ We also downloaded the number of hired workers from the Census of Agriculture fo
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of agriculture support workers by the total population count in each county and year.
 
-#### Hotel and restaurant jobs
+#### Hotel and restaurant jobs {#sec-hospitality-jobs-methods}
 
 We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total hospitality workers in each county for each year:
 
@@ -723,11 +724,11 @@ We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002;
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of hospitality workers by the total population count in each county and year.
 
-#### Median home value
+#### Median home value {#sec-home-value-methods}
 
 Data for the median home value in each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from the 1990 Census of Housing [1990 CH-1-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for housing in December of each year [@cpiu_housing].
 
-#### Farm size
+#### Farm size {#sec-farm-size-methods}
 
 Number of farms in each size class and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms]. We found the percent of farms in each size category available for each year, and then simplified the data using principal component analysis. We retained the first two principal components, which explained 81.1% of the variance.
 
