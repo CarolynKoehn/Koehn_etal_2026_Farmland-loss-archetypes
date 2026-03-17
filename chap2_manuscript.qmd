@@ -118,22 +118,22 @@ Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's
 
 ::: {#tbl-datasel-A}
 
-| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
-|--|--|---|---|
-| A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census |
-| | | Percent population change (10 year period) | US Decennial Census |
-| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | CBP, Census of Governments, US Census of Agriculture |
-| | | Percent population 65+ and not in labor force | US Decennial Census |
-| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program |
-| | | Median household income | US Decennial Census |
-| | | Unemployment rate | US Bureau of Labor Statistics |
-| | | Percent population with high school, Bachelor's degree | USDA Economic Research Service |
-| | | Racial composition of population* | US Decennial Census |
-| | | Percent population with Hispanic ethnicity | US Decennial Census |
-| | Agriculture | Percent farms full- or part-owned, or tenant operated* | US Census of Agriculture |
-| | | Percent farms with net loss | US Census of Agriculture |
-| | | Number of hired workers | US Census of Agriculture |
-| A4 -- Location | All | Geographical isolation* | IPUMS, US Decennial Census |
+| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source | Methods |
+|--|--|---|---|---|
+| A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census | @sec-pop-dens-methods |
+| | | Percent population change (10 year period) | US Decennial Census | @sec-pop-change-methods |
+| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | CBP, Census of Governments, US Census of Agriculture | @sec-employ-indust-methods |
+| | | Percent population 65+ and not in labor force | US Decennial Census | @sec-retired-methods |
+| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program | @sec-avg-age-methods |
+| | | Median household income | US Decennial Census | @sec-avg-income-methods |
+| | | Unemployment rate | US Bureau of Labor Statistics | @sec-unemployment-methods |
+| | | Percent population with high school, Bachelor's degree | USDA Economic Research Service | @sec-education-methods |
+| | | Racial composition of population* | US Decennial Census | @sec-race-methods |
+| | | Percent population with Hispanic ethnicity | US Decennial Census | @sec-ethnicity-methods |
+| | Agriculture | Percent farms full- or part-owned, or tenant operated* | US Census of Agriculture | @sec-farm-tenure-methods |
+| | | Percent farms with net loss | US Census of Agriculture | @sec-farm-net-loss-methods |
+| | | Number of hired workers | US Census of Agriculture | @sec-hired-workers-methods |
+| A4 -- Location | All | Geographical isolation* | IPUMS, US Decennial Census | @sec-isolation-methods |
 
 Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors. * indicates that principal components were used to reduce dimensions.
 
@@ -141,17 +141,17 @@ Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's s
 
 ## Gaussian Mixed Model Clustering
 
-We ran two separate cluster analyses, one with the resource variables and one with the actor variables, in order to characterize the resource and actor subsystems of the counties separately.
+We fit two separate cluster models, one with the resource variables and one with the actor variables, in order to characterize the resource and actor subsystems of the counties separately. We treated each county-year combination (e.g. Ada County in 1990) as a single observation, for a total of 104 observations.
 
 ### Model Selection
 
-There are three components to model selection in Gaussian-based cluster modeling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019]. Dimension reduction is important in this analysis because we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters that require more parameters if we reduce the number of dimensions [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about a social-ecological agricultural system, we decided to remove redundant indicators in order to test more clustering configurations.
+There are three components to model selection in Gaussian-based cluster modeling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019]. Dimension reduction is important in this analysis because we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters that require more parameters if we reduce the number of dimensions [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about an agricultural social-ecological system, we decided to remove redundant indicators in order to test more clustering configurations.
 
-We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable, as identified by BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, see @clustvarsel for a full description of the backward stepwise greedy search). 
+We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable, as identified by BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, see @clustvarsel for a full description of the backward stepwise greedy search).
 
 The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented with R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes (see @scrucca2023 for a description of all possible shapes), though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >3 groups.
 
-Because clustering models are sensitive to their initialization, we ran each model 200 times with random initializations. We selected the best model structure of the 200 runs using BIC, and the log likelihoods for the 200 runs of both models indicated no evidence of alternative local solutions [@bauer2021].
+Because clustering models are sensitive to their initialization, we ran each model 200 times with random initialization. We selected the best model structure of the 200 runs using BIC, and the log likelihoods for the 200 runs of both models indicated no evidence of alternative local solutions [@bauer2021].
 
 ### Selected Model Structures
 
@@ -159,7 +159,7 @@ After variable selection, we removed (1) agriculture support jobs, (2) shrubland
 
 After variable selection, we removed most indicators from the actors model, retaining (1) population density, (2) the first principal component of employment, (3) number of hired agricultural workers, and (4) the first two principal components for geographical isolation. The optimal number of clusters was 5, and the optimal cluster shape was EVV [ellipsoidal, with equal volume, variable shape, and variable orientation in dimensional space, @scrucca2023].
 
-To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
+To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
 <!-- For identifying most influential, consider methods from Pacheco-Romero, M., Vallejos, M., Paruelo, J. M., Alcaraz-Segura, D., Torres-García, M. T., Salinas-Bonillo, M. J., & Cabello, J. (2022). A data-driven methodological routine to identify key indicators for social-ecological system archetype mapping. Environmental Research Letters, 17(4), 045019. -->
 
@@ -189,8 +189,8 @@ ci_clust[["Actors"]] <- read.csv("data/model results/ci_clust_actors.csv")
 ```{r}
 #| label: fig-R-CIs
 #| message: false
-#| fig-cap: "Characteristics of each Resource cluster. The means for each variable in each cluster are estimated by the 5-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
-#| fig-height: 7.5
+#| fig-cap: "Characteristics of each Resource cluster. The resource cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled, if the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-height: 8
 #| fig-width: 8
 
 clust_dat_sc <- list()
@@ -259,23 +259,23 @@ actor_means <- clust_dat$Actors %>%
 
 #### Cluster R1: Risk of urban sprawl -- Flat land with accessible urban amenities
 
-Characteristic resources of R1 are crop- and developed land, high access to highways and urban areas, higher housing density, more healthcare workers, and flatter land (@fig-R-CIs, @supptblb-data-r1). This cluster has more small farms than any other. These counties have experienced higher cropland loss and developed land gain compared to other resource clusters (@suppfigb-R-ranges, @supptblb-data-r1). This cluster is home to Boise, the largest city in Idaho, and neighboring Canyon County, known for its high quality farmland but experiencing urban sprawl from the Boise metropolitan area.
+Characteristic resources of R1 are crop- and developed land, high access to highways and urban areas, higher housing density, more healthcare workers, and flatter land (@fig-R-CIs, @supptblb-data-r1). This cluster has more small farms than any other. These counties have experienced higher cropland loss and developed land gain compared to other resource clusters (@suppfigb-R-ranges, @supptblb-data-r1). This cluster is home to Boise, the largest city in Idaho, and neighboring Canyon County, known for its high quality farmland but experiencing urban sprawl from the Boise metropolitan area (@fig-cluster-maps).
 
 #### Cluster R2: Risk of urban sprawl, amenity migration, and/or industrial agriculture -- Flat land near natural and urban amenities
 
-R2 is closer to national parks and ski areas, and is closer to urban areas while not containing much urban or developed land. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain is low. These counties tend to have lower home values than R2 (@supptblb-data-r3).
+R2 is closer to national parks and ski areas, and is closer to urban areas while not containing much urban or developed land. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain is low. These counties tend to have lower home values than R1 and R3 (@supptblb-data-r3). This cluster contains five counties (@fig-cluster-maps). An illustrative example of this cluster is Twin Falls County, which contains the growing city of Twin Falls and a growing dairy industry, fueled by the recent establishment of a large yogurt processing plant.
 
 #### Cluster R3: Risk of amenity migration -- Access to mountain recreation and urban amenities
 
-Characteristic resources of R3 are a greater presence of forestland and more steep lands (@fig-R-CIs). These counties are closer to ski areas and have a higher presence of recreation land, have an average presence of lakes and rivers, and support more jobs in hospitality (@suppfigb-R-ranges, @supptblb-data-r2). There is little developed or urban land, and both housing and farm density are low. However, most of the land in these counties lie within 50 miles of an urban area and its amenities, and access to major roadways is average for the study area (@supptblb-data-r2). These counties have higher home values compared to other clusters (@supptblb-data-r2), indicating the appeal of the natural amenities and non-urban nature of these counties. Rates of cropland loss and developed land gain are fairly low compared to other clusters.
+Characteristic resources of R3 are a greater presence of forestland and more steep lands (@fig-R-CIs). These counties are closer to ski areas and have a higher presence of recreation land, have an average presence of lakes and rivers, and support more jobs in hospitality (@suppfigb-R-ranges, @supptblb-data-r2). There is little developed or urban land, and both housing and farm density are low. However, most of the land in these counties lie within 50 miles of an urban area and its amenities, and access to major roadways is average for the study area (@supptblb-data-r2). These counties have higher home values compared to other clusters (@supptblb-data-r2), indicating the appeal of the natural amenities and non-urban nature of these counties. Rates of cropland loss and developed land gain are fairly low compared to other clusters. This cluster contains ten counties (@fig-cluster-maps). An illustrative example is Teton County, which attracts outdoor recreationists to live in its small towns and rural areas.
 
 #### Cluster R4: Risk of amenity migration and industrialized agriculture -- Rural agriculture as natural amenity
 
-Cluster R4 has less presence of natural land covers like forest and shrublands, and average cover of cropland and developed land (@fig-R-CIs). Though there are many rivers, access to other natural amenities such as ski areas, national parks, lakes, forests, and recreation lands are low (@suppfigb-R-ranges). Like R2 and R3, there is not much urban land in these counties, but almost all of their lands are within 50 miles of an urban area (@supptblb-data-r5). Rates of cropland loss are low, while developed land gain and farm loss are average for the study area (@fig-R-CIs).
+Cluster R4 has less presence of natural land covers like forest and shrublands, and average cover of cropland and developed land (@fig-R-CIs). Though there are many rivers, access to other natural amenities such as ski areas, national parks, lakes, forests, and recreation lands are low (@suppfigb-R-ranges). Like R2 and R3, there is not much urban land in these counties, but almost all of their lands are within 50 miles of an urban area (@supptblb-data-r5). Rates of cropland loss are low, while developed land gain and farm loss are average for the study area (@fig-R-CIs). This cluster contains six counties (@fig-cluster-maps).
 
 #### Cluster R5: Low risk of farmland loss -- Very isolated counties with few natural amenities
 
-The unique characteristics of R5 are more shrubland cover, less cropland cover, a greater amount of federal land, greater distance from urban areas, and less access to highways (@fig-R-CIs). Natural amenities are also few, with less river miles, minimal lake area, average presence of recreation and forest land, and long distances to a ski areas (@suppfigb-R-ranges). Similar to R2, R5 has more large farms and less farms operating at a loss. The low cropland cover of R5 indicates that agriculture in these counties is more focused on livestock grazing (@supptblb-data-r4). R5 has low rates of cropland loss and developed land gain, and it is also losing fewer farms than other counties (@suppfigb-R-ranges).
+The unique characteristics of R5 are more shrubland cover, less cropland cover, a greater amount of federal land, greater distance from urban areas, and less access to highways (@fig-R-CIs). Natural amenities are also few, with less river miles, minimal lake area, average presence of recreation and forest land, and long distances to a ski areas (@suppfigb-R-ranges). Similar to R2, R5 has more large farms and less farms operating at a loss. The low cropland cover of R5 indicates that agriculture in these counties is more focused on livestock grazing (@supptblb-data-r4). R5 has low rates of cropland loss and developed land gain, and it is also losing fewer farms than other counties (@suppfigb-R-ranges). This cluster contains six counties (@fig-cluster-maps).
 
 ### Actors Clusters
 
@@ -284,7 +284,7 @@ The most influential variables in the resource model were: (1) geographic isolat
 ```{r}
 #| label: fig-A-CIs
 #| message: false
-#| fig-cap: "Characteristics of each Actors cluster. The means for each variable in each cluster are estimated by the 5-cluster model. 95% confidence intervals were obtained through bootstrapping. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Characteristics of each Actors cluster. The actors cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
 #| fig-height: 6
 #| fig-width: 7.5
 
@@ -311,23 +311,23 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
 
 #### Cluster A1: Metropolitan counties with high population growth
 
-The defining characteristics of A1 are its high population density, low employment in agriculture, and metropolitan workforce, with most people living and working in the same metropolitan county, or living in Canyon County and commuting to nearby Boise for work (@fig-A-CIs, @supptblb-data-a1). A1 also has high population growth, higher incomes, and a higher percentage of residents with a Bachelor's degree (@suppfigb-A-ranges). Despite a lower proportion of residents in agricultural production, the number of hired agricultural workers is fairly high for the study area, indicating the high production needs of the farms that remain in these counties (@fig-A-CIs). A1 also has the highest share of farms that are fully owned by the producer, as well as a higher percentage of farms operating at a loss. These farm labor, tenure, and profit rates indicate that farming in these counties is financially difficult, and renting land to expand farming operations is especially challenging.
+The defining characteristics of A1 are its high population density, low employment in agriculture, and metropolitan workforce, with most people living and working in the same metropolitan county, or living in Canyon County and commuting to nearby Boise for work (@fig-A-CIs, @supptblb-data-a1). A1 also has high population growth, higher incomes, and a higher percentage of residents with a Bachelor's degree (@suppfigb-A-ranges). Despite a lower proportion of residents in agricultural production, the number of hired agricultural workers is fairly high for the study area, indicating the high production needs of the farms that remain in these counties (@fig-A-CIs). A1 also has the highest share of farms that are fully owned by the producer, as well as a higher percentage of farms operating at a loss. These farm labor, tenure, and profit rates indicate that farming in these counties is financially difficult, and expanding farming operations by renting land is especially challenging.
 
 #### Cluster A2: Small cities 
 
-Cluster A2's unique characteristic is that all its counties are micropolitan (contain an urban area with 10,000-49,999 residents, @supptblb-data-a3), and most workers live and work in the same county. A2 is similar to A1 (high population growth with wealthier, highly educated residents), but experiences most indicators to a lesser degree. Population density and growth are high, but not as high as A1, and residents have higher incomes and more are college educated, but not at the levels of A1 (@suppfigb-A-ranges). Like A1, a lower percentage of residents are employed in agriculture, but there are a higher percentage in retail trade and lower percentage in construction compared to A1 (@supptblb-data-a3).
+Cluster A2's unique characteristic is that all its counties are micropolitan (contain an urban area with 10,000-49,999 residents, @supptblb-data-a3), and most workers live and work in the same county. A2 has high population growth with wealthier, highly educated residents similar to A1, but experiences most of these indicators to a lesser degree. Population density and growth are high, but not as high as A1, and residents have higher incomes and more are college educated, but not at the levels of A1 (@suppfigb-A-ranges). Like A1, a lower percentage of residents are employed in agriculture, but there are a higher percentage in retail trade and lower percentage in construction compared to A1 (@supptblb-data-a3).
 
 #### Cluster A3: Small town counties grow as quickly as small cities
 
-Counties in A3 are "small town" counties (contain an urban area with population 5,000-9,999), have low population density, and are fairly geographically isolated with most workers living and working in the same county or another small town county (@fig-A-CIs, @supptblb-data-a4). In many ways, A3 is similar to A4, with similar employment in agriculture, lower incomes, and fewer people with a Bachelor's degree (@fig-A-CIs). Population growth rates are similar in A2, A3, and A4, and this population growth fuels transitions to more urbanized clusters.
+Counties in A3 are "small town" counties (contain an urban area with population 5,000-9,999), have low population density, and are fairly geographically isolated with most workers living and working in the same county or another small town county (@fig-A-CIs, @supptblb-data-a4). In many ways, A3 is similar to A4, with similar employment in agriculture, lower incomes, and fewer people with a Bachelor's degree (@fig-A-CIs). Population growth rates are similar in A2, A3, and A4.
 
 #### Cluster A4: Rural counties with less agriculture
 
-A4 and A5 are very similar in that they are rural counties, meaning they do not contain an urban area with more than 5,000 residents, with low population density, moderate population growth, and fewer residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a2). A4 is differentiated by fewer workers in agriculture, more people commuting to more urban counties, and slightly higher incomes compared to the rural counties in A5 (@supptblb-data-a2, @suppfigb-A-ranges).
+A4 and A5 are very similar in that they contain rural counties, meaning they do not contain an urban area with more than 5,000 residents, with low population density, moderate population growth, and fewer residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a2). A4 is differentiated by fewer workers in agriculture, more people commuting to more urban counties, and slightly higher incomes compared to the rural counties in A5 (@supptblb-data-a2, @suppfigb-A-ranges).
 
 #### Cluster A5: Geographically isolated rural counties with less economic opportunity
 
-Like A2, A5 has rural counties with low population density, moderate population growth, and less residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a5). However, compared to A2, more residents of A5 counties are working in agriculture, and less commute to more urbanized areas (@supptblb-data-a5). A5 has lower incomes and hires fewer agricultural workers compared to other clusters (@suppfigb-A-ranges).
+Like A4, A5 contains rural counties with low population density, moderate population growth, and less residents with a Bachelor's degree (@fig-A-CIs, @supptblb-data-a5). However, compared to A4, more residents of A5 counties are working in agriculture, and less commute to more urbanized areas (@supptblb-data-a5). A5 has lower incomes and hires fewer agricultural workers compared to other clusters (@suppfigb-A-ranges).
 
 ::: {.landscape}
 
@@ -435,15 +435,17 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 
 ## Cluster Transitions {#sec-transitions}
 
-There was one resource transition in the study period: Power County transitioned from R3 (Access to mountain recreation and urban amenities) to R2 (Flat land near natural and urban amenities) in 2000. This can be attributed to a lower percentage of residents employed in hospitality, as well as less large farms and less cropland loss after 2000.
+There was one resource transition in the study period: Power County transitioned from R3 (Access to mountain recreation and urban amenities) to R2 (Flat land near natural and urban amenities) in 2000 (@fig-cluster-maps). This can be attributed to a lower percentage of residents employed in hospitality, as well as less large farms and less cropland loss after 2000.
 
-Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural and isolated archetype is A5 (geographically isolated rural counties with less economic opportunity). From A5, counties transition to A4 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A3 (small town counties grow as quickly as small cities), if population growth is concentrated and creates an urban area. A4 may further transition to A3 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A3 counties transition to A2 (small cities) once enough population growth has occurred to reclassify the small towns in A3 counties to the micropolitan areas of A2 counties. Finally, A2 counties may become metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county.
+Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural and isolated archetype is A5 (geographically isolated rural counties with less economic opportunity). From A5, counties transition to A4 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A3 (small town counties grow as quickly as small cities), if population growth is concentrated and creates an urban area. A4 may further transition to A3 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A3 counties transition to A2 (small cities) once enough population growth has occurred to reclassify the small towns in A3 counties to the micropolitan areas of A2 counties. Finally, A2 counties may become metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county (@fig-cluster-maps).
 
 ## Combined archetypes have different farmland loss outcomes
 
 ```{r}
-#| fig-cap: "Development outcomes are mediated by both resource and actor archetypes. Developed land gain is the percent increase of county land in the developed land class over a 5-year period."
+#| fig-cap: "Development outcomes are mediated by both resource and actor archetypes. We would expect development gains to decrease along the actor archetype gradient of most to least urban, yet this is not the case in R2 and R3. Developed land gain is the percent increase of county land in the developed land class over a 5-year period."
 #| label: "fig-resouce-actor-combo"
+#| warning: false
+#| message: false
 
 # actors affecting outcomes in R3
 
@@ -452,7 +454,7 @@ clust_ag_loss <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c
 ggplot(clust_ag_loss, aes(x=cluster.A, y=developed_change)) + 
   geom_boxplot() + 
   labs(x = "Actor Archetype", y = "Developed Land Gain (%)") +
-  scale_y_continuous(limits = c(0,0.7)) +
+  scale_y_continuous(limits = c(0,2)) +
   facet_wrap(vars(cluster.R)) +
   theme_bw() +
   theme(panel.grid.major.x = element_blank())
@@ -479,9 +481,7 @@ Development outcomes are mediated by both resource and actor archetypes (@fig-re
 
 GOOGLE DOC CONTENTS HERE
 
-<!-- P.B. Nelson, A. Wei Lee, L. Nelson
-Linking baby boomer and Hispanic migration streams into rural America–A multi-scaled approach
-Popul. Space Place, 15 (2009), pp. 277-293 -->
+<!-- add references to this section in the relevant quant sections -->
 
 # Discussion
 
@@ -734,15 +734,15 @@ Number of farms in each size class and total farms data for 2002-2022 are availa
 
 ### Actors
 
-#### Population density
+#### Population density {#sec-pop-dens-methods}
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided by total county land from the Census of Agriculture retrieved for 2002-2022 from the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs] and digitized for 1992 from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 6 [@CofAg_1992_landinfarms].
 
-#### Population change
+#### Population change {#sec-pop-change-methods}
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $ (population_{1990} - population_{1980}) / population_{1980} $.
 
-#### Percent employed in different industries
+#### Percent employed in different industries {#sec-employ-indust-methods}
 
 Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020.
 
@@ -773,43 +773,43 @@ We used data from the Quarterly Census of Employment and Wages [@qcew] to quanti
 
 We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first three components, which explained 73.1% of the variance.
 
-#### Percent retired
+#### Percent retired {#sec-retired-methods}
 
 We defined retirees as residents over age 65 who were not in the labor force. Population counts and counts of people >65 not in the labor force for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Labor force data for 1990 were digitized from Table 144 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. Population count data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts].
 
-#### Average age
+#### Average age {#sec-avg-age-methods}
 
 Data on the weighted average age of residents in each county from 1969-2023 were downloaded from the @nih_age. 
 
-#### Median household income
+#### Median household income {#sec-avg-income-methods}
 
 Data for the median household income in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from from Table 148 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for all items in the Western United States (series ID CUUR0400SA0) in December of each year [@cpiu_all].
 
-#### Unemployment rate
+#### Unemployment rate {#sec-unemployment-methods}
 
 We downloaded monthly unemployment rate data from @unemployment and used the mean unemployment rate across months for each county and year.
 
-#### Education level -- high school or Bachelor's degree
+#### Education level -- high school or Bachelor's degree {#sec-education-methods}
 
 We downloaded data on the percentage of residents whose highest level of education was high school or a Bachelor's degree from @education. We used the column "2008-2012" to represent 2010 and the column "2019-2023" to represent 2020.
 
-#### Racial composition
+#### Racial composition {#sec-race-methods}
 
 Population counts for each race used by the US Census for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020_dhc] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. We simplified these data with principle component analysis, retaining the first component which explained 95.3% of the variance.
 
-#### Hispanic ethnicity
+#### Hispanic ethnicity {#sec-ethnicity-methods}
 
 Population counts and ethnicity data for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020_dhc] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990].
 
-#### Farm tenure
+#### Farm tenure {#sec-farm-tenure-methods}
 
 Number of farms in each tenure class (full-owned, part-owned, and tenant) and total farms data for 2002-2022 are available in the Census of Agriculture and were retrieved with the USDA NASS API [@CofAg_quickstats] using R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 11 [@CofAg_1992_tenure]. We found the percent of farms in each tenure category for each year, and then simplified the data using principal component analysis. We retained the first principal component, which explained 92.6% of the variance.
 
-#### Number of hired agricultural workers
+#### Number of hired agricultural workers {#sec-hired-workers-methods}
 
 We downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
 
-#### Geographical isolation
+#### Geographical isolation {#sec-isolation-methods}
 
 We calculated a custom county-level proxy for the Rural-Urban Commuting Area [RUCA] codes [@ruca] that could be compared across time. We first used the urban areas we computed (methods in @sec-urbareas) to designate counties as metropolitan (contain an urban area with population >50,000), micropolitan (largest urban area has population 10,000-49,999), small town (largest urban area has population <9,999), or rural (no urban area). Then, we used county-to-county commuting flow data [@commute1990; @commute2000; @commute2010; @commute2020] to calculate how many workers from each county commuted to six types of counties: metropolitan, micropolitan, small town, rural, >150 mile commute, or work and live in the same county. We also created two categories for residents of a metropolitan county who commuted to a county with a larger or smaller metropolitan area (by population size). In total, we had 25 commuting categories, which we simplified through principal component analysis. We retained the first two components, which explained 80.3% of the variance.
 
