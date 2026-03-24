@@ -196,6 +196,32 @@ row_vals <- apply(summary(drmod_actors)$basis, 1,
                      })
 names(row_vals) <- row.names(summary(drmod_actors)$basis)
 print(row_vals[order(row_vals, decreasing=TRUE)])
+
+# influence - resources
+mults <- c(summary(drmod_resource)$evalues.cumperc[1], (summary(drmod_resource)$evalues.cumperc - lag(summary(drmod_resource)$evalues.cumperc))[2:length(summary(drmod_resource)$evalues.cumperc)]) / 100
+
+row_vals <- apply(summary(drmod_resource)$basis, 1, 
+                     function(row) {
+                       row_val <- sum(abs(row * mults))
+                     })
+names(row_vals) <- row.names(summary(drmod_resource)$basis)
+write.csv(data.frame(indicator = names(row_vals)[order(row_vals, decreasing=TRUE)],
+                     influence = row_vals[order(row_vals, decreasing=TRUE)]),
+          "../data/model results/drmod_resource.csv", 
+          row.names = FALSE)
+
+# influence - actors
+mults <- c(summary(drmod_actors)$evalues.cumperc[1], (summary(drmod_actors)$evalues.cumperc - lag(summary(drmod_actors)$evalues.cumperc))[2:length(summary(drmod_actors)$evalues.cumperc)]) / 100
+
+row_vals <- apply(summary(drmod_actors)$basis, 1, 
+                     function(row) {
+                       row_val <- sum(abs(row * mults))
+                     })
+names(row_vals) <- row.names(summary(drmod_actors)$basis)
+write.csv(data.frame(indicator = names(row_vals)[order(row_vals, decreasing=TRUE)],
+                     influence = row_vals[order(row_vals, decreasing=TRUE)]),
+          "../data/model results/drmod_actors.csv", 
+          row.names = FALSE)
 ```
 
 

@@ -145,11 +145,11 @@ We fit two separate cluster models, one with the resource variables and one with
 
 ### Model Selection
 
-There are three components to model selection in Gaussian-based cluster modeling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019]. Dimension reduction is important in this analysis because we have relatively few observations (n=104) compared to dimensions (30 resource variables, 18 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters that require more parameters if we reduce the number of dimensions [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about an agricultural social-ecological system, we decided to remove redundant indicators in order to test more clustering configurations.
+There are three components to model selection in Gaussian-based cluster modeling: variable selection, number of clusters, and cluster shape. First, variable selection is used to remove redundant or irrelevant variables from the data that could degrade the performance of model-based clustering [@bouveyron2019]. Reducing the dimensions of a model reduces the number of parameters needed to specify the covariance matrix [@bouveyron2019]. Dimension reduction is important in this analysis because we have relatively few observations (n=104) compared to dimensions (30 resource variables, 19 actor variables), and we cannot estimate more model parameters than observations. We can test more combinations of cluster shape and number of clusters that require more parameters if we reduce the number of dimensions [@scrucca2023; @bouveyron2019]. While all of our chosen indicators convey important information about an agricultural social-ecological system, we decided to remove redundant indicators in order to test more clustering configurations.
 
 We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable, as identified by BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, see @clustvarsel for a full description of the backward stepwise greedy search).
 
-The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented with R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes (see @scrucca2023 for a description of all possible shapes), though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >3 groups.
+The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented with R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes (see @scrucca2023 for a description of all possible shapes), though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >4 groups.
 
 Because clustering models are sensitive to their initialization, we ran each model 200 times with random initialization. We selected the best model structure of the 200 runs using BIC, and the log likelihoods for the 200 runs of both models indicated no evidence of alternative local solutions [@bauer2021].
 
@@ -157,7 +157,7 @@ Because clustering models are sensitive to their initialization, we ran each mod
 
 After variable selection, we removed (1) agriculture support jobs, (2) shrubland change, (3) lake area, and (4) land in farms from the resource model. The optimal number of clusters was 5, and the optimal cluster shape was VEV [ellipsoidal, with variable volume, equal shape, and variable orientation in dimensional space, @scrucca2023].
 
-After variable selection, we removed most indicators from the actors model, retaining (1) population density, (2) the first principal component of employment, (3) number of hired agricultural workers, and (4) the first two principal components for geographical isolation. The optimal number of clusters was 5, and the optimal cluster shape was EVV [ellipsoidal, with equal volume, variable shape, and variable orientation in dimensional space, @scrucca2023].
+After variable selection, we removed most indicators from the actors model, retaining (1) population density, (2-3) the first and third principal components of employment, (4) percentage of residents with a Bachelors degree, (5) number of hired agricultural workers, and (6-7) the first two principal components for geographical isolation. The optimal number of clusters was 5, and the optimal cluster shape was EVV [ellipsoidal, with equal volume, variable shape, and variable orientation in dimensional space, @scrucca2023].
 
 To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
@@ -185,12 +185,13 @@ ci_clust[["Resource"]] <- read.csv("data/model results/ci_clust_resource.csv")
 ci_clust[["Actors"]] <- read.csv("data/model results/ci_clust_actors.csv")
 ```
 
+<!-- comment to ask: re-level in order of influence rather than methods tables? -->
 
 ```{r}
 #| label: fig-R-CIs
 #| message: false
 #| fig-cap: "Characteristics of each Resource cluster. The resource cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled, if the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
-#| fig-height: 8
+#| fig-height: 8.5
 #| fig-width: 8
 
 clust_dat_sc <- list()
@@ -293,7 +294,7 @@ The most influential variables in the resource model were: (1) geographic isolat
 
 ci_clust$Actors %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A3", "A4", "A2", "A5"),
+                          levels = c("A1", "A4", "A5", "A2", "A3"),
                           labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
 ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
@@ -301,8 +302,8 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
-  scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc1", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
-                   labels = rev(c("Population Density", "Employment Sectors (PC1)", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) +
+  scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc1", "emply_pc3", "Bachelors", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
+                   labels = rev(c("Population Density", "Employment Sectors (PC1)", "Employment Sectors (PC3)", "Hired Ag Workers", "Bachelors", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
   theme_bw() +
   theme(text = element_text(size = 14),
@@ -335,7 +336,7 @@ Like A4, A5 contains rural counties with low population density, moderate popula
 #| label: fig-cluster-maps
 #| fig-width: 13
 #| fig-height: 7
-#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R3 in 1990 and R2 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R3-A2, or small cities with access to mountain recreation and urban amenities, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
+#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R3 in 1990 and R2 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R4-A3, or small town counties where rural agriculture is a natural amenity, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
   mutate(cluster = factor(cluster,
@@ -366,7 +367,7 @@ resource_map <- clust_dat[["Resource"]] %>%
 
 actor_map_data <- clust_dat[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A3", "A4", "A2", "A5"),
+                          levels = c("A1", "A4", "A5", "A2", "A3"),
                           labels = c("A1: Metropolitan counties with high population growth",
                                      "A2: Small cities",
                                      "A3: Small town counties grow as quickly as small cities",
@@ -403,7 +404,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                             levels = c("R1", "R3", "R2", "R5", "R4"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
-                            levels = c("A1", "A3", "A4", "A2", "A5"),
+                            levels = c("A1", "A4", "A5", "A2", "A3"),
                             labels = c("A1", "A2", "A3", "A4", "A5")))
 
 assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.A, county_clusts$cluster.R)),
@@ -438,6 +439,7 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 There was one resource transition in the study period: Power County transitioned from R3 (Access to mountain recreation and urban amenities) to R2 (Flat land near natural and urban amenities) in 2000 (@fig-cluster-maps). This can be attributed to a lower percentage of residents employed in hospitality, as well as less large farms and less cropland loss after 2000.
 
 Looking across actor transitions, we can put together a common progression through actor archetypes. The most rural and isolated archetype is A5 (geographically isolated rural counties with less economic opportunity). From A5, counties transition to A4 (rural counties with less agriculture), keeping their rural nature but transitioning away from traditional rural careers, or they transition to A3 (small town counties grow as quickly as small cities), if population growth is concentrated and creates an urban area. A4 may further transition to A3 if an urban area is created (i.e. Gem County, 1990 to 2000). Next, A3 counties transition to A2 (small cities) once enough population growth has occurred to reclassify the small towns in A3 counties to the micropolitan areas of A2 counties. Finally, A2 counties may become metropolitan A1 counties if enough population growth occurs, but in our study area, this only occurred adjacent to another A1 county (@fig-cluster-maps).
+<!-- re-examine A1 transitions -- has to do with employment -->
 
 ## Combined archetypes have different farmland loss outcomes
 
@@ -475,7 +477,7 @@ ggplot(clust_ag_loss, aes(x=cluster.A, y=developed_change)) +
 # dev_r2 + dev_r3
 ```
 
-Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo). The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with less agriculture) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development gains decrease more linearly along the actor archetype gradient of most to least urban.
+Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo). The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with less agriculture) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development gains decrease more linearly along the actor archetype gradient of most to least urban. A1 is the actor archetype associated with high population growth and density, yet those actors' impacts on developed land gains are mediated by the resource system. A1 counties are associated with more developed land gain in R1 counties than in the R3-A1 county.
 
 ## Case Studies
 
@@ -487,7 +489,7 @@ GOOGLE DOC CONTENTS HERE
 
 ## Archetype analysis links spatially and temporally separated but thematically similar counties
 
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially separated but have similar resources and actors. For example, Twin Falls County and Bingham County are both R2-A2 in 2020 -- small cities with flat land near natural and urban amenities. The archetype shift in Bingham County occurred between 2000-2010, indicating that they will face similar agricultural changes and risks of farmland conversion to Twin Falls, but at a delayed rate. Indeed, [connecting example]. Bingham County may be able to learn from farmland protection interventions in Twin Falls. Unfortunately, our qualitative data suggests that farmland protection has been extremely limited in Twin Falls. Instead of suggesting transferable policies, we propose that Bingham County should consider its possible "no policy implemented" future may look similar to Twin Falls, and decide if they would like to implement policies that guide their county's future in a different direction. Another example is Teton County and Minidoka County, which are both in actor archetype A4 -- rural counties with less agriculture. Though they are in different resource archetypes, they are both dealing with agricultural and community change stemming from population growth. One example of this is new Latter-Day Saints temples under construction or newly completed in counties neighboring both Teton and Minidoka [cite]. Our preliminary qualitative data revealed that producers and old newcomers are allied in advocating for farmland protection in Teton County. It is unclear if this alliance arises from Teton's combination of actors and resources, or if it is possible in multiple resource archetypes. If the producer-old newcomer alliance primarily arises from actor type alone, Minidoka County might pursue a similar alliance of farmland protection advocates.
+This analysis recontextualizes counties in the study area, linking counties that are spatially separated but have similar resources and actors. For example, Twin Falls County and Bingham County are both R2-A2 in 2020 -- small cities with flat land near natural and urban amenities. The archetype shift in Bingham County occurred between 2000-2010, indicating that they will face similar agricultural changes and risks of farmland conversion to Twin Falls, but at a delayed rate. Indeed, [connecting example]. Bingham County may be able to learn from farmland protection interventions in Twin Falls. Unfortunately, our qualitative data suggests that farmland protection has been extremely limited in Twin Falls. Instead of suggesting transferable policies, we propose that Bingham County should consider its possible "no policy implemented" future may look similar to Twin Falls, and decide if they would like to implement policies that guide their county's future in a different direction. Another example is Teton County and Minidoka County, which are both in actor archetype A4 -- rural counties with less agriculture. Though they are in different resource archetypes, they are both dealing with agricultural and community change stemming from population growth. One example of this is new Latter-Day Saints temples under construction or newly completed in counties neighboring both Teton and Minidoka [cite]. Our preliminary qualitative data revealed that producers and old newcomers are allied in advocating for farmland protection in Teton County. It is unclear if this alliance arises from Teton's combination of actors and resources, or if it is possible in multiple resource archetypes. If the producer-old newcomer alliance primarily arises from actor type alone, Minidoka County might pursue a similar alliance of farmland protection advocates.
 
 Archetype analysis also revealed gaps in our knowledge that can be used for future studies of community change. In the beginning of this study, we hypothesized that we would identify archetypes related to three major phenomena that lead to farmland conversion -- urban sprawl, agricultural industrialization, and amenity migration -- and we conducted interviews and qualitative analysis in a selection of counties where these processes were occurring. However, the archetype analysis also revealed the R4 (rural agriculture as natural amenity) group of counties that we had not identified as requiring targeted qualitative data collection. Local knowledge suggests that farmland conversion may be in its beginning stages, as farmers in these counties are receiving cold calls about selling their land to prospective buyers (David Anderson, personal communication). This arcehtype will require further study to understand its unique dynamics of agricultural change.
 
@@ -988,15 +990,15 @@ a1_means <- a1 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
   select(-input_data_name)
 
 ###############
 # get employment raw data
-emply_a1 <- read.csv("data/clean_data_for_PCA/employment_industries.csv") %>%
+emply_a1 <- read.csv("data/clean_data_for_PCA/employment_industries_update_new_totals.csv") %>%
   pivot_longer(!c("county", "year"),
                names_to = "industry",
                values_to = "perc_workers")
@@ -1988,8 +1990,8 @@ Summary statistics for counties in archetype R5. Bolded cluster means are signif
 #| label: suppfigb-A-influential
 #| message: false
 
-var_labs <- data.frame(indicator = rev(c("pop_per_acre", "emply_pc1", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
-                   pretty_label = rev(c("Population Density", "Employment Sectors (PC1)", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)")))
+var_labs <- data.frame(indicator = rev(c("pop_per_acre", "emply_pc1", "emply_pc3", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2", "Bachelors")),
+                   pretty_label = rev(c("Population Density", "Employment Sectors (PC1)", "Employment Sectors (PC3)", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)", "Residents with Bachelors")))
 
 read.csv("data/model results/drmod_actors.csv") %>%
   left_join(var_labs) %>%
@@ -2020,7 +2022,7 @@ we used dimension reduction to maximally separate clusters, which is similar to 
 
 clust_dat_sc[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A3", "A4", "A2", "A5"),
+                          levels = c("A1", "A4", "A5", "A2", "A3"),
                           labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
   st_drop_geometry() %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
@@ -2032,8 +2034,8 @@ clust_dat_sc[["Actors"]] %>%
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
   geom_boxplot() +
   scale_x_continuous(limits = c(-1,1)) +
-  scale_y_discrete(limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
-                   labels = rev(c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) +
+  scale_y_discrete(limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
+                   labels = rev(c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) +
   scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
                     values = c("orchid3", "orchid3", "beige"),
                     labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
@@ -2073,15 +2075,15 @@ a1_means <- a1 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
   select(-input_data_name)
 
 ###############
 # get employment raw data
-emply_a1 <- read.csv("data/clean_data_for_PCA/employment_industries.csv") %>%
+emply_a1 <- read.csv("data/clean_data_for_PCA/employment_industries_update_new_totals.csv") %>%
   mutate(year = ifelse(year==1997, 1990, year-2)) %>%
   right_join(st_drop_geometry(a1[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
@@ -2115,7 +2117,7 @@ urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
                values_to = "perc")
 ```
 
-The counties in A1 are Ada and Canyon (2010-2020).
+The counties in A1 are Ada, Canyon (2010-2020), and Madison (2010-2020).
 
 ::: {#supptblb-data-a1}
 
@@ -2127,7 +2129,7 @@ The counties in A1 are Ada and Canyon (2010-2020).
 |  Jobs in retail trade |  `r round(mean(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`%  |
 |  Jobs in health and social services |  **`r round(mean(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`%** | `r round(median(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
 |  Jobs in education and libraries |  **`r round(mean(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`%** | `r round(median(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
-|  Jobs in manufacturing |  **`r round(mean(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%** | `r round(median(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in manufacturing |  `r round(mean(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Manufacturing")$perc_workers), 0)`%  |
 |  Jobs in accommodation and food |  `r round(mean(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
 |  Jobs in construction |  `r round(mean(subset(emply_a1, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Construction")$perc_workers), 0)`%  |
 |  Jobs in federal government |  `r round(mean(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Federal.Government")$perc_workers), 0)`%  |
@@ -2143,7 +2145,7 @@ The counties in A1 are Ada and Canyon (2010-2020).
 |  Median income |  \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
 |  Unemployment rate |  `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
 |  Percent residents with high school education as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  **`r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`%** | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
 |  White residents |  `r round(mean(subset(races_a1, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a1, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a1, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a1, race == "Persons_white")$perc), 0)`%  |
 |  American Indian or Alaska Native residents |  `r round(mean(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
 |  Black residents |  `r round(mean(subset(races_a1, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_Black")$perc), 1)`%  |
@@ -2155,9 +2157,11 @@ The counties in A1 are Ada and Canyon (2010-2020).
 |  Part-owned farms (% of all farms) |  `r round(mean(subset(tenure_a1, tenure == "Num_part_owned")$perc), 0)`% | `r round(median(subset(tenure_a1, tenure == "Num_part_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a1, tenure == "Num_part_owned")$perc), 0)`% | `r round(max(subset(tenure_a1, tenure == "Num_part_owned")$perc), 0)`%  |
 |  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`%  |
 |  Farms with Net Loss (% of all farms) |  `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
-|  Number of hired agricultural workers |  **`r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)`** | `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Number of hired agricultural workers |  `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
 |  Live and work in same metropolitan county (% of workers) |  **`r round(mean(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |
+|  Live and work in same micropolitan county (% of workers) |  **`r round(mean(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%  |
 |  Live metropolitan, commute to a bigger metropolitan area (% of workers) |  **`r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |
+|  Live micropolitan, commute to another micropolitan area (% of workers) |  **`r round(median(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |
 
 Summary statistics for counties in archetype A1. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A1 are metropolitan (contain an urban area with population >50,000).
 
@@ -2167,122 +2171,9 @@ Summary statistics for counties in archetype A1. Bolded cluster means are signif
 
 ```{r}
 #| include: false
-#| label: "A3 data"
-
-# labeled A3 in model, A2 in manuscript
-
-a3 <- clust_dat[["Actors"]] %>%
-  filter(cluster == "A3")
-
-a3_means <- a3 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            median = median(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE)) %>%
-  mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
-  arrange(var_name_clean) %>%
-  relocate(var_name_clean, .before = input_data_name) %>%
-  select(-input_data_name)
-
-###############
-# get employment raw data
-emply_a3 <- read.csv("data/clean_data_for_PCA/employment_industries.csv") %>%
-  mutate(year = ifelse(year==1997, 1990, year-2)) %>%
-  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "industry",
-               values_to = "perc_workers")
-
-###############
-# racial composition
-races_a3 <- read.csv("data/clean_data_for_PCA/races_all.csv") %>%
-  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "race",
-               values_to = "perc")
-
-###############
-# farm tenure
-tenure_a3 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
-  mutate(county = str_to_title(county),
-         year = as.integer(year)-2) %>%
-  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "tenure",
-               values_to = "perc")
-
-###############
-# urbanicity
-urb_a3 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
-  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
-               values_to = "perc")
-```
-
-The counties in A2 are Bannock, Bonneville, Madison, Twin Falls, Bingham (2010-2020), Canyon (1990-2000), Elmore (2010-2020), and Jerome (2020).
-
-::: {#supptblb-data-a3}
-
-| Indicator  | Mean | Median  | Minimum  |  Maximum |
-|----------|---|---|---|---|
-|  Population density (persons per $km^2$) |  **`r round(subset(a3_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)`** | `r round(subset(a3_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a3_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a3_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
-|  Population change |  +`r round(subset(a3_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a3_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a3_means, var_name_clean == "Population Change")$max, 0)`%  |
-|  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
-|  Jobs in retail trade |  `r round(mean(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`%  |
-|  Jobs in health and social services |  **`r round(mean(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`%** | `r round(median(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
-|  Jobs in education and libraries |  **`r round(mean(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`%** | `r round(median(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
-|  Jobs in manufacturing |  **`r round(mean(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`%** | `r round(median(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`%  |
-|  Jobs in accommodation and food |  `r round(mean(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
-|  Jobs in construction |  `r round(mean(subset(emply_a3, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Construction")$perc_workers), 0)`%  |
-|  Jobs in federal government |  `r round(mean(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`%  |
-|  Jobs in wholesale trade |  `r round(mean(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`% |
-|  Jobs in state government |  `r round(mean(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`%  |
-|  Jobs in finance, insurance, and real estate |  `r round(mean(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |
-|  Jobs in trucking and warehousing |  `r round(mean(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |
-|  Jobs in recreation |  `r round(mean(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`%  |
-|  Jobs in mining, quarrying, oil and gas extraction |  `r round(mean(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |
-|  Jobs in legal services |  `r round(mean(subset(emply_a3, industry == "Legal")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Legal")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Legal")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Legal")$perc_workers), 0)`%  |
-|  Percent retirees |  `r round(subset(a3_means, var_name_clean == "Retirees")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Retirees")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Retirees")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Retirees")$max, 0)`%  |
-|  Average age |  `r round(subset(a3_means, var_name_clean == "Average Age")$mean, 0)` | `r round(subset(a3_means, var_name_clean == "Average Age")$median, 0)`  |  `r round(subset(a3_means, var_name_clean == "Average Age")$min, 0)` | `r round(subset(a3_means, var_name_clean == "Average Age")$max, 0)`  |
-|  Median income |  \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Unemployment rate |  `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  White residents |  `r round(mean(subset(races_a3, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a3, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a3, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a3, race == "Persons_white")$perc), 0)`%  |
-|  American Indian or Alaska Native residents |  `r round(mean(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
-|  Black residents |  `r round(mean(subset(races_a3, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_Black")$perc), 1)`%  |
-|  Asian residents |  `r round(mean(subset(races_a3, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_Asian")$perc), 1)`%  |
-|  Pacific Islander residents |  `r round(mean(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`%  |
-|  Residents of some other race |  `r round(mean(subset(races_a3, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_other")$perc), 1)`%  |
-|  Percent Hispanic |  `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$max, 0)`%  |
-|  Full-owned farms (% of all farms) |  `r round(mean(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`% | `r round(median(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`% | `r round(max(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`%  |
-|  Part-owned farms (% of all farms) |  `r round(mean(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`% | `r round(median(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`% | `r round(max(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`%  |
-|  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`%  |
-|  Farms with Net Loss (% of all farms) |  `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
-|  Number of hired agricultural workers |  **`r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)`** | `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Live and work in same micropolitan county (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Micropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Micropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Micropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Micropolitan_Stay")$perc), 0)`%  |
-|  Live micropolitan, commute to another micropolitan (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Micropolitan_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |
-|  Live micropolitan, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Micropolitan_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |
-
-Summary statistics for counties in archetype A2. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A2 are micropolitan counties (contain an urban area with a population 10,000-49,999).
-
-:::
-
-### A3
-
-```{r}
-#| include: false
 #| label: "A4 data"
 
-# labeled A4 by model, A3 in manuscript
+# labeled A4 by model, A2 in manuscript
 
 a4 <- clust_dat[["Actors"]] %>%
   filter(cluster == "A4")
@@ -2298,15 +2189,15 @@ a4_means <- a4 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
   select(-input_data_name)
 
 ###############
 # get employment raw data
-emply_a4 <- read.csv("data/clean_data_for_PCA/employment_industries.csv") %>%
+emply_a4 <- read.csv("data/clean_data_for_PCA/employment_industries_update_new_totals.csv") %>%
   mutate(year = ifelse(year==1997, 1990, year-2)) %>%
   right_join(st_drop_geometry(a4[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
@@ -2340,7 +2231,7 @@ urb_a4 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
                values_to = "perc")
 ```
 
-The counties in A3 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jerome (1990-2010), Gem (2000-2020), and Washington (2000-2020).
+The counties in A2 are Bannock, Bonneville, Twin Falls, Bingham (2010-2020), Elmore (2010-2020), Jerome (2020), Canyon (1990-2000), and Madison (1990-2000).
 
 ::: {#supptblb-data-a4}
 
@@ -2350,9 +2241,9 @@ The counties in A3 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jero
 |  Population change |  +`r round(subset(a4_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a4_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a4_means, var_name_clean == "Population Change")$max, 0)`%  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`%  |
-|  Jobs in health and social services |  **`r round(mean(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`%** | `r round(median(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
-|  Jobs in education and libraries |  **`r round(mean(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`%** | `r round(median(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
-|  Jobs in manufacturing |  **`r round(mean(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`%** | `r round(median(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in health and social services |  `r round(mean(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
+|  Jobs in education and libraries |  `r round(mean(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
+|  Jobs in manufacturing |  `r round(mean(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Manufacturing")$perc_workers), 0)`%  |
 |  Jobs in accommodation and food |  `r round(mean(subset(emply_a4, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
 |  Jobs in construction |  `r round(mean(subset(emply_a4, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Construction")$perc_workers), 0)`%  |
 |  Jobs in federal government |  `r round(mean(subset(emply_a4, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Federal.Government")$perc_workers), 0)`%  |
@@ -2381,135 +2272,21 @@ The counties in A3 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jero
 |  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a4, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a4, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a4, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a4, tenure == "Num_tenant")$perc), 0)`%  |
 |  Farms with Net Loss (% of all farms) |  `r round(subset(a4_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a4_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a4_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
 |  Number of hired agricultural workers |  `r format(round(subset(a4_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a4_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a4_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a4_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Live and work in same "small town" county (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Small.town_Stay")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Small.town_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Small.town_Stay")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Small.town_Stay")$perc), 0)`%  |
-|  Live small town, commute to another small town (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Small.town_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Small.town_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Small.town_Small.town")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Small.town_Small.town")$perc), 0)`%  |
-|  Live small town, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Small.town_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Small.town_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |
-|  Live small town, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Small.town_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Small.town_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |
-|  Live small town, commute to rural (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Small.town_Rural")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Small.town_Rural")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Small.town_Rural")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Small.town_Rural")$perc), 0)`%  |
+|  Live and work in same micropolitan county (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Micropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Micropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Micropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Micropolitan_Stay")$perc), 0)`%  |
+|  Live micropolitan, commute to another micropolitan (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Micropolitan_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |
+|  Live micropolitan, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Micropolitan_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |
 
-Summary statistics for counties in archetype A3. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A3 are "small town" counties (contain an urban area with a population 5,000-9,999).
+Summary statistics for counties in archetype A2. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A2 are micropolitan counties (contain an urban area with a population 10,000-49,999).
 
 :::
 
-### A4
-
-```{r}
-#| include: false
-#| label: "A2 data"
-
-# labeled A2 by model, A4 in manuscript
-
-a2 <- clust_dat[["Actors"]] %>%
-  filter(cluster == "A2")
-
-a2_means <- a2 %>%
-  st_drop_geometry() %>%
-  pivot_longer(!c(county, year, cluster, GEOID),
-               names_to = "input_data_name",
-               values_to = "input_data_value") %>%
-  group_by(input_data_name) %>%
-  summarise(mean = mean(input_data_value, na.rm=TRUE),
-            median = median(input_data_value, na.rm=TRUE),
-            min = min(input_data_value, na.rm=TRUE),
-            max = max(input_data_value, na.rm=TRUE)) %>%
-  mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
-  arrange(var_name_clean) %>%
-  relocate(var_name_clean, .before = input_data_name) %>%
-  select(-input_data_name)
-
-###############
-# get employment raw data
-emply_a2 <- read.csv("data/clean_data_for_PCA/employment_industries.csv") %>%
-  mutate(year = ifelse(year==1997, 1990, year-2)) %>%
-  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "industry",
-               values_to = "perc_workers")
-
-###############
-# racial composition
-races_a2 <- read.csv("data/clean_data_for_PCA/races_all.csv") %>%
-  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "race",
-               values_to = "perc")
-
-###############
-# farm tenure
-tenure_a2 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
-  mutate(county = str_to_title(county),
-         year = as.integer(year)-2) %>%
-  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "tenure",
-               values_to = "perc")
-
-###############
-# urbanicity
-urb_a2 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
-  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
-  pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
-               values_to = "perc")
-```
-
-The counties in A4 are Fremont, Gooding, Jefferson, Minidoka, Gem (1990), Owyhee (1990), Power (2010), and Teton (2000-2020).
-
-::: {#supptblb-data-a2}
-
-| Indicator  | Mean | Median  | Minimum  |  Maximum |
-|----------|---|---|---|---|
-|  Population density (persons per $km^2$) |  **`r round(subset(a2_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)`** | `r round(subset(a2_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a2_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a2_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
-|  Population change |  +`r round(subset(a2_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a2_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a2_means, var_name_clean == "Population Change")$max, 0)`%  |
-|  Jobs in agriculture, forestry, fishing, or hunting |  `r round(mean(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
-|  Jobs in retail trade |  `r round(mean(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`%  |
-|  Jobs in health and social services |  `r round(mean(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
-|  Jobs in education and libraries |  `r round(mean(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
-|  Jobs in manufacturing |  `r round(mean(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`%  |
-|  Jobs in accommodation and food |  `r round(mean(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
-|  Jobs in construction |  `r round(mean(subset(emply_a2, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Construction")$perc_workers), 0)`%  |
-|  Jobs in federal government |  `r round(mean(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`%  |
-|  Jobs in wholesale trade |  `r round(mean(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`% |
-|  Jobs in state government |  `r round(mean(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`%  |
-|  Jobs in finance, insurance, and real estate |  `r round(mean(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |
-|  Jobs in trucking and warehousing |  `r round(mean(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |
-|  Jobs in recreation |  `r round(mean(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`%  |
-|  Jobs in mining, quarrying, oil and gas extraction |  `r round(mean(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |
-|  Jobs in legal services |  `r round(mean(subset(emply_a2, industry == "Legal")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Legal")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Legal")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Legal")$perc_workers), 0)`%  |
-|  Percent retirees |  `r round(subset(a2_means, var_name_clean == "Retirees")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Retirees")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Retirees")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Retirees")$max, 0)`%  |
-|  Average age |  `r round(subset(a2_means, var_name_clean == "Average Age")$mean, 0)` | `r round(subset(a2_means, var_name_clean == "Average Age")$median, 0)`  |  `r round(subset(a2_means, var_name_clean == "Average Age")$min, 0)` | `r round(subset(a2_means, var_name_clean == "Average Age")$max, 0)`  |
-|  Median income |  \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Unemployment rate |  `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  White residents |  `r round(mean(subset(races_a2, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a2, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a2, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a2, race == "Persons_white")$perc), 0)`%  |
-|  American Indian or Alaska Native residents |  `r round(mean(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
-|  Black residents |  `r round(mean(subset(races_a2, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_Black")$perc), 1)`%  |
-|  Asian residents |  `r round(mean(subset(races_a2, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_Asian")$perc), 1)`%  |
-|  Pacific Islander residents |  `r round(mean(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`%  |
-|  Residents of some other race |  `r round(mean(subset(races_a2, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_other")$perc), 1)`%  |
-|  Percent Hispanic |  `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$max, 0)`%  |
-|  Full-owned farms (% of all farms) |  `r round(mean(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`% | `r round(median(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`% | `r round(max(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`%  |
-|  Part-owned farms (% of all farms) |  `r round(mean(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`% | `r round(median(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`% | `r round(max(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`%  |
-|  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`%  |
-|  Farms with Net Loss (% of all farms) |  `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
-|  Number of hired agricultural workers |  `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Live and work in same "rural" county (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`%  |
-|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
-|  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%  |
-|  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
-
-Summary statistics for counties in archetype A4. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A4 are "rural" counties (do not contain an urban area).
-
-:::
-
-### A5
+### A3
 
 ```{r}
 #| include: false
 #| label: "A5 data"
+
+# labeled A5 by model, A3 in manuscript
 
 a5 <- clust_dat[["Actors"]] %>%
   filter(cluster == "A5")
@@ -2525,15 +2302,15 @@ a5_means <- a5 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
   select(-input_data_name)
 
 ###############
 # get employment raw data
-emply_a5 <- read.csv("data/clean_data_for_PCA/employment_industries.csv") %>%
+emply_a5 <- read.csv("data/clean_data_for_PCA/employment_industries_update_new_totals.csv") %>%
   mutate(year = ifelse(year==1997, 1990, year-2)) %>%
   right_join(st_drop_geometry(a5[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
@@ -2567,7 +2344,7 @@ urb_a5 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
                values_to = "perc")
 ```
 
-The counties in A5 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jerome (1990-2010), Gem (2000-2020), and Washington (2000-2020).
+The counties in A3 are Cassia, Payette, Blaine (2000-2020), Gem (2000-2020), Washington (2000-2020), Jerome (1990-2010), Bingham (1990-2000), and Elmore (1990-2000).
 
 ::: {#supptblb-data-a5}
 
@@ -2577,9 +2354,9 @@ The counties in A5 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jero
 |  Population change |  +`r round(subset(a5_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a5_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a5_means, var_name_clean == "Population Change")$max, 0)`%  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`%  |
-|  Jobs in health and social services |  **`r round(mean(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%** | `r round(median(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
-|  Jobs in education and libraries |  **`r round(mean(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`%** | `r round(median(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
-|  Jobs in manufacturing |  **`r round(mean(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`%** | `r round(median(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in health and social services |  `r round(mean(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
+|  Jobs in education and libraries |  `r round(mean(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
+|  Jobs in manufacturing |  `r round(mean(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Manufacturing")$perc_workers), 0)`%  |
 |  Jobs in accommodation and food |  `r round(mean(subset(emply_a5, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
 |  Jobs in construction |  `r round(mean(subset(emply_a5, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Construction")$perc_workers), 0)`%  |
 |  Jobs in federal government |  `r round(mean(subset(emply_a5, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Federal.Government")$perc_workers), 0)`%  |
@@ -2595,7 +2372,7 @@ The counties in A5 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jero
 |  Median income |  \$`r format(round(subset(a5_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a5_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a5_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a5_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
 |  Unemployment rate |  `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
 |  Percent residents with high school education as highest education attained |  `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
-|  Percent residents with Bachelor's degree as highest education attained | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained | **`r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`%** | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
 |  White residents |  `r round(mean(subset(races_a5, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a5, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a5, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a5, race == "Persons_white")$perc), 0)`%  |
 |  American Indian or Alaska Native residents |  `r round(mean(subset(races_a5, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a5, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a5, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a5, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
 |  Black residents |  `r round(mean(subset(races_a5, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a5, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a5, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a5, race == "Persons_Black")$perc), 1)`%  |
@@ -2608,11 +2385,240 @@ The counties in A5 are Cassia, Payette, Elmore (1990), Bingham (1990-2000), Jero
 |  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a5, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a5, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a5, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a5, tenure == "Num_tenant")$perc), 0)`%  |
 |  Farms with Net Loss (% of all farms) |  `r round(subset(a5_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a5_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a5_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
 |  Number of hired agricultural workers |  **`r format(round(subset(a5_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)`** | `r format(round(subset(a5_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a5_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a5_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Live and work in same "rural" county (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%  |
-|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
-|  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%  |
-|  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
+|  Live and work in same "small town" county (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Small.town_Stay")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Small.town_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Small.town_Stay")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Small.town_Stay")$perc), 0)`%  |
+|  Live small town, commute to another small town (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Small.town_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Small.town_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Small.town_Small.town")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Small.town_Small.town")$perc), 0)`%  |
+|  Live small town, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Small.town_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Small.town_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |
+|  Live small town, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Small.town_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Small.town_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |
+|  Live small town, commute to rural (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Small.town_Rural")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Small.town_Rural")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Small.town_Rural")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Small.town_Rural")$perc), 0)`%  |
 
-Summary statistics for counties in archetype A5. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A5 are "rural" counties (contain no urban areas).
+Summary statistics for counties in archetype A3. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A3 are "small town" counties (contain an urban area with a population 5,000-9,999). 
+
+:::
+
+### A4
+
+```{r}
+#| include: false
+#| label: "A2 data"
+
+# labeled A2 by model, A4 in manuscript
+
+a2 <- clust_dat[["Actors"]] %>%
+  filter(cluster == "A2")
+
+a2_means <- a2 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            median = median(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE)) %>%
+  mutate(var_name_clean = factor(input_data_name,
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+  arrange(var_name_clean) %>%
+  relocate(var_name_clean, .before = input_data_name) %>%
+  select(-input_data_name)
+
+###############
+# get employment raw data
+emply_a2 <- read.csv("data/clean_data_for_PCA/employment_industries_update_new_totals.csv") %>%
+  mutate(year = ifelse(year==1997, 1990, year-2)) %>%
+  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "industry",
+               values_to = "perc_workers")
+
+###############
+# racial composition
+races_a2 <- read.csv("data/clean_data_for_PCA/races_all.csv") %>%
+  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "race",
+               values_to = "perc")
+
+###############
+# farm tenure
+tenure_a2 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)-2) %>%
+  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "tenure",
+               values_to = "perc")
+
+###############
+# urbanicity
+urb_a2 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+  right_join(st_drop_geometry(a2[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "commut_type",
+               values_to = "perc")
+```
+
+The counties in A4 are Butte, Fremont, Gooding, Jefferson, Minidoka, Teton (2000-2020), Power (2020), Gem (1990), Owyhee (1990), and Washington (1990).
+
+::: {#supptblb-data-a2}
+
+| Indicator  | Mean | Median  | Minimum  |  Maximum |
+|----------|---|---|---|---|
+|  Population density (persons per $km^2$) |  `r round(subset(a2_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)` | `r round(subset(a2_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a2_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a2_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
+|  Population change |  +`r round(subset(a2_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a2_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a2_means, var_name_clean == "Population Change")$max, 0)`%  |
+|  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
+|  Jobs in retail trade |  `r round(mean(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`%  |
+|  Jobs in health and social services |  `r round(mean(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
+|  Jobs in education and libraries |  `r round(mean(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
+|  Jobs in manufacturing |  `r round(mean(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in accommodation and food |  `r round(mean(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
+|  Jobs in construction |  `r round(mean(subset(emply_a2, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Construction")$perc_workers), 0)`%  |
+|  Jobs in federal government |  `r round(mean(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Federal.Government")$perc_workers), 0)`%  |
+|  Jobs in wholesale trade |  `r round(mean(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Wholesale.Trade")$perc_workers), 0)`% |
+|  Jobs in state government |  `r round(mean(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "State.Government")$perc_workers), 0)`%  |
+|  Jobs in finance, insurance, and real estate |  `r round(mean(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |
+|  Jobs in trucking and warehousing |  `r round(mean(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |
+|  Jobs in recreation |  `r round(mean(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Recreation")$perc_workers), 0)`%  |
+|  Jobs in mining, quarrying, oil and gas extraction |  `r round(mean(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |
+|  Jobs in legal services |  `r round(mean(subset(emply_a2, industry == "Legal")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Legal")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Legal")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Legal")$perc_workers), 0)`%  |
+|  Percent retirees |  `r round(subset(a2_means, var_name_clean == "Retirees")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Retirees")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Retirees")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Retirees")$max, 0)`%  |
+|  Average age |  `r round(subset(a2_means, var_name_clean == "Average Age")$mean, 0)` | `r round(subset(a2_means, var_name_clean == "Average Age")$median, 0)`  |  `r round(subset(a2_means, var_name_clean == "Average Age")$min, 0)` | `r round(subset(a2_means, var_name_clean == "Average Age")$max, 0)`  |
+|  Median income |  \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a2_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Unemployment rate |  `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
+|  White residents |  `r round(mean(subset(races_a2, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a2, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a2, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a2, race == "Persons_white")$perc), 0)`%  |
+|  American Indian or Alaska Native residents |  `r round(mean(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
+|  Black residents |  `r round(mean(subset(races_a2, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_Black")$perc), 1)`%  |
+|  Asian residents |  `r round(mean(subset(races_a2, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_Asian")$perc), 1)`%  |
+|  Pacific Islander residents |  `r round(mean(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`%  |
+|  Residents of some other race |  `r round(mean(subset(races_a2, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_other")$perc), 1)`%  |
+|  Percent Hispanic |  `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Hispanic Residents")$max, 0)`%  |
+|  Full-owned farms (% of all farms) |  `r round(mean(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`% | `r round(median(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`% | `r round(max(subset(tenure_a2, tenure == "Num_full_owned")$perc), 0)`%  |
+|  Part-owned farms (% of all farms) |  `r round(mean(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`% | `r round(median(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`% | `r round(max(subset(tenure_a2, tenure == "Num_part_owned")$perc), 0)`%  |
+|  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a2, tenure == "Num_tenant")$perc), 0)`%  |
+|  Farms with Net Loss (% of all farms) |  `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
+|  Number of hired agricultural workers |  **`r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)`** | `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a2_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Live and work in same rural county (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Stay")$perc), 0)`%  |
+|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
+|  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Small.town")$perc), 0)`%  |
+|  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
+
+Summary statistics for counties in archetype A4. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A4 are "rural" counties (do not contain an urban area).
+
+:::
+
+### A5
+
+```{r}
+#| include: false
+#| label: "A3 data"
+
+# labeled A3 in model, A5 in manuscript
+
+a3 <- clust_dat[["Actors"]] %>%
+  filter(cluster == "A3")
+
+a3_means <- a3 %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            median = median(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE)) %>%
+  mutate(var_name_clean = factor(input_data_name,
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+  arrange(var_name_clean) %>%
+  relocate(var_name_clean, .before = input_data_name) %>%
+  select(-input_data_name)
+
+###############
+# get employment raw data
+emply_a3 <- read.csv("data/clean_data_for_PCA/employment_industries_update_new_totals.csv") %>%
+  mutate(year = ifelse(year==1997, 1990, year-2)) %>%
+  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "industry",
+               values_to = "perc_workers")
+
+###############
+# racial composition
+races_a3 <- read.csv("data/clean_data_for_PCA/races_all.csv") %>%
+  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "race",
+               values_to = "perc")
+
+###############
+# farm tenure
+tenure_a3 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
+  mutate(county = str_to_title(county),
+         year = as.integer(year)-2) %>%
+  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "tenure",
+               values_to = "perc")
+
+###############
+# urbanicity
+urb_a3 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+  right_join(st_drop_geometry(a3[,c(1:2)])) %>%
+  pivot_longer(!c("county", "year"),
+               names_to = "commut_type",
+               values_to = "perc")
+```
+
+The counties in A5 are Adams, Camas, Clark, Lincoln, Owyhee (2000-2020), Power (1990-2010), Blaine (1990), and Teton (1990).
+
+::: {#supptblb-data-a3}
+
+| Indicator  | Mean | Median  | Minimum  |  Maximum |
+|----------|---|---|---|---|
+|  Population density (persons per $km^2$) |  **`r round(subset(a3_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)`** | `r round(subset(a3_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a3_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a3_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
+|  Population change |  +`r round(subset(a3_means, var_name_clean == "Population Change")$mean, 0)`% | +`r round(subset(a3_means, var_name_clean == "Population Change")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Population Change")$min, 0)`% | +`r round(subset(a3_means, var_name_clean == "Population Change")$max, 0)`%  |
+|  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
+|  Jobs in retail trade |  `r round(mean(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`%  |
+|  Jobs in health and social services |  `r round(mean(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
+|  Jobs in education and libraries |  `r round(mean(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Education.and.Libraries")$perc_workers), 0)`%  |
+|  Jobs in manufacturing |  `r round(mean(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Manufacturing")$perc_workers), 0)`%  |
+|  Jobs in accommodation and food |  `r round(mean(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Accomodation.and.Food")$perc_workers), 0)`%  |
+|  Jobs in construction |  `r round(mean(subset(emply_a3, industry == "Construction")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Construction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Construction")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Construction")$perc_workers), 0)`%  |
+|  Jobs in federal government |  `r round(mean(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Federal.Government")$perc_workers), 0)`%  |
+|  Jobs in wholesale trade |  `r round(mean(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Wholesale.Trade")$perc_workers), 0)`% |
+|  Jobs in state government |  `r round(mean(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "State.Government")$perc_workers), 0)`%  |
+|  Jobs in finance, insurance, and real estate |  `r round(mean(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Finance..Insurance..and.Real.Estate")$perc_workers), 0)`%  |
+|  Jobs in trucking and warehousing |  `r round(mean(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Trucking.and.warehousing")$perc_workers), 0)`%  |
+|  Jobs in recreation |  `r round(mean(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Recreation")$perc_workers), 0)`%  |
+|  Jobs in mining, quarrying, oil and gas extraction |  `r round(mean(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Mining..Quarrying..and.Oil.and.Gas.Extraction")$perc_workers), 0)`%  |
+|  Jobs in legal services |  `r round(mean(subset(emply_a3, industry == "Legal")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Legal")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Legal")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Legal")$perc_workers), 0)`%  |
+|  Percent retirees |  `r round(subset(a3_means, var_name_clean == "Retirees")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Retirees")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Retirees")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Retirees")$max, 0)`%  |
+|  Average age |  `r round(subset(a3_means, var_name_clean == "Average Age")$mean, 0)` | `r round(subset(a3_means, var_name_clean == "Average Age")$median, 0)`  |  `r round(subset(a3_means, var_name_clean == "Average Age")$min, 0)` | `r round(subset(a3_means, var_name_clean == "Average Age")$max, 0)`  |
+|  Median income |  \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a3_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Unemployment rate |  `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
+|  White residents |  `r round(mean(subset(races_a3, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a3, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a3, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a3, race == "Persons_white")$perc), 0)`%  |
+|  American Indian or Alaska Native residents |  `r round(mean(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
+|  Black residents |  `r round(mean(subset(races_a3, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_Black")$perc), 1)`%  |
+|  Asian residents |  `r round(mean(subset(races_a3, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_Asian")$perc), 1)`%  |
+|  Pacific Islander residents |  `r round(mean(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`%  |
+|  Residents of some other race |  `r round(mean(subset(races_a3, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_other")$perc), 1)`%  |
+|  Percent Hispanic |  `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Hispanic Residents")$max, 0)`%  |
+|  Full-owned farms (% of all farms) |  `r round(mean(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`% | `r round(median(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`% | `r round(max(subset(tenure_a3, tenure == "Num_full_owned")$perc), 0)`%  |
+|  Part-owned farms (% of all farms) |  `r round(mean(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`% | `r round(median(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`%  |  `r round(min(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`% | `r round(max(subset(tenure_a3, tenure == "Num_part_owned")$perc), 0)`%  |
+|  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a3, tenure == "Num_tenant")$perc), 0)`%  |
+|  Farms with Net Loss (% of all farms) |  `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
+|  Number of hired agricultural workers |  `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a3_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
+|  Live and work in same rural county (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Rural_Stay")$perc), 0)`%  |
+|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
+|  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Rural_Small.town")$perc), 0)`%  |
+|  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
+
+Summary statistics for counties in archetype A5. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A5 are "rural" counties (contain no urban areas). 
 
 :::

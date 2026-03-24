@@ -1,1 +1,1 @@
-current model results from greedy backward variables from resource (29 vars) and actors (19 vars) separately
+current model results from greedy backward variables from resource (30 vars) and actors (19 vars) separately
