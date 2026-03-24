@@ -21,15 +21,15 @@ library(patchwork)
 #| label: "load data"
 
 # county data
-# aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
-#   select(c("GEOID", "NAME")) %>%
-#   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+  select(c("GEOID", "NAME")) %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
 
 # workaround when tigris is down
-aoi <- st_read("/vsizip/R:/CarolynKoehn/Data_raw/US_county_2020.zip/US_county_2020.shp") %>%
-  filter(STATEFP == 16) %>%
-  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>%
-  select(c("GEOID", "NAME"))
+# aoi <- st_read("/vsizip/R:/CarolynKoehn/Data_raw/US_county_2020.zip/US_county_2020.shp") %>%
+#   filter(STATEFP == 16) %>%
+#   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>%
+#   select(c("GEOID", "NAME"))
 
 # data retrieved from above sources
 # see notebooks/data_retrieval.qmd for all methods
