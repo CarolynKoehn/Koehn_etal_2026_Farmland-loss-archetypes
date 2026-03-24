@@ -2216,7 +2216,7 @@ a_data <- left_join(a_data, pop_change, by = c("county", "year"))
 
 ### Employment sectors
 
-County Business Patterns reports private sector employment, but they sometimes add missin values for confidentiality. We used imputed missing values for 1997-2012 from:
+County Business Patterns reports private sector employment, but they sometimes add missing values for confidentiality. We used imputed missing values for 1997-2012 from:
 
 Fabian Eckert, Teresa C. Fort, Peter K. Schott, and Natalie J. Yang. "Imputing Missing Values in the US Census Bureau's County Business Patterns." NBER Working Paper #26632, 2021. https://www.fpeckert.me/cbp/
 
@@ -2828,7 +2828,7 @@ names(recode_naic22) <- recode_naic22_df$naics22
 # 
 # employment_industries <- rbind(employment_industries, employment2012_clean)
 
-## TO DO: add total employed
+## add total employed
 cbp_totals <- employment %>%
   mutate(county = str_pad(county, width=3, side="left", pad="0"),
          GEOID = paste0(state, county)) %>%
@@ -2871,7 +2871,7 @@ employment_clean <- employment %>%
   rbind(loc_emp_2012) %>%
   rbind(filter(fed_state, year != 2022)) %>%
   rbind(filter(producers, year != 2022)) %>%
-  mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names), county) %>%
   group_by(county, year, Industry) %>%
   summarise(employed = sum(employed)) %>%
   pivot_wider(id_cols = c("county", "year"),
@@ -2880,11 +2880,12 @@ employment_clean <- employment %>%
   filter(county != 16999 & county != 16000) %>%
   replace(is.na(.), 0) %>%
   ungroup() %>%
-  mutate(Total = rowSums(.[3:ncol(.)])) %>%
+  # mutate(Total = rowSums(.[3:ncol(.)])) %>%
+  left_join(employment_totals[,-1], by = c("county", "year")) %>%
   rowwise() %>%
   mutate(across(!c(county, year),
-                ~.x/Total * 100)) %>%
-  select(-Total)
+                ~.x/total_employed * 100)) %>%
+  select(-total_employed)
   
 
 employment2022_clean <- employment2022 %>%
@@ -2898,7 +2899,7 @@ employment2022_clean <- employment2022 %>%
   rbind(loc_emp_2022) %>%
   rbind(filter(fed_state, year == 2022)) %>%
   rbind(filter(producers, year == 2022)) %>%
-  mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names), county) %>%
   group_by(county, year, Industry) %>%
   summarise(employed = sum(employed)) %>%
   pivot_wider(id_cols = c("county", "year"),
@@ -2908,25 +2909,28 @@ employment2022_clean <- employment2022 %>%
   select(-Total) %>%
   replace(is.na(.), 0) %>%
   ungroup() %>%
-  mutate(Total = rowSums(.[3:ncol(.)])) %>%
+  # mutate(Total = rowSums(.[3:ncol(.)])) %>%
+  left_join(employment_totals[,-1], by = c("county", "year")) %>%
   rowwise() %>%
   mutate(across(!c(county, year),
-                ~.x/Total * 100)) %>%
-  select(-Total)
+                ~.x/total_employed * 100)) %>%
+  select(-total_employed)
 
 # employment_industries <- rbind(employment_industries, employment2022_clean)
-employment_industries_update <- rbind(employment_clean, employment2022_clean)
+# employment_industries_update <- rbind(employment_clean, employment2022_clean)
+employment_industries_update_new_totals <- rbind(employment_clean, employment2022_clean)
 
-employ_pca <- prcomp(employment_industries[,-c(1:2)])
+employ_pca <- prcomp(employment_industries_update_new_totals[,-c(1:2)])
 summary(employ_pca)
 #biplot(employ_pca)
 
 # join components explaining >70% of variance
-a_data <- cbind(employment_industries, employ_pca$x[,1:3]) %>%
-  select(county, year, PC1, PC2, PC3) %>%
+a_data <- cbind(employment_industries_update_new_totals, employ_pca$x[,1:4]) %>%
+  select(county, year, PC1, PC2, PC3, PC4) %>%
   rename("emply_pc1" = "PC1",
          "emply_pc2" = "PC2",
-         "emply_pc3" = "PC3") %>%
+         "emply_pc3" = "PC3",
+         "emply_pc4" = "PC4") %>%
   mutate(year = ifelse(year == 1997, 1990, year-2)) %>%
   right_join(a_data, by=c("county", "year"))
 ```
