@@ -690,9 +690,9 @@ The presence of A1 actors (educated, growing, urban population) is associated wi
 
 ## Data Sources and Processing
 
-Code for data retrieval and processing can be found in [notebooks/data_retrieval.qmd](https://github.com/CarolynKoehn/FarmPrES-archetypes/blob/main/notebooks/data_retrieval.qmd). We used the `tidyverse` for data cleaning [v2.0.0, @tidyverse] and the `terra` [v1.7.71, @terra] and `sf` [v1.0.16, @sf] packages for raster and vector data processing, respectively.
+Code for data retrieval and processing can be found in [notebooks/data_retrieval.qmd](https://github.com/CarolynKoehn/FarmPrES-archetypes/blob/main/notebooks/data_retrieval.qmd). We used the `tidyverse` package for data cleaning [v2.0.0, @tidyverse] and the `terra` [v1.7.71, @terra] and `sf` [v1.0.16, @sf] packages for raster and vector data processing, respectively.
 
-Census of Agriculture data was published for 1992, 2002, 2012, and 2022, so data from these years was used to represent agricultural indicators in 1990, 2000, 2010, and 2020. All Census of Agriculture data was downloaded at the county scale.
+Census of Agriculture data was published for 1992, 2002, 2012, and 2022, so we used data from these years to represent agricultural indicators in 1990, 2000, 2010, and 2020. We downloaded all Census of Agriculture data at the county scale.
 
 For all indicators that were simplified to principal components with principal component analysis, we retained principal components that explained >70% of the variance according to @aho2022.
 
@@ -723,9 +723,9 @@ We used the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset
 
 Lake area data is from the Hydrosheds HydroLAKES product [v1.0, @hydrolakes]. We calculated the total area in square kilometers of lakes larger than 10 ha in each county. This indicator is time invariable; we assumed that lake area would not change since 1990.
 
-#### Miles of river {#sec-river-miles-methods}
+#### River length {#sec-river-miles-methods}
 
-We accessed river data from the WWF HydroSHEDS Free Flowing Rivers Network [v1.0, @hydrosheds] in Google Earth Engine. We filtered to rivers of order 7 or lower which have long-term average discharge >0.1 cubic meters per second. Then, we found the total length of rivers in each county and divided by the county area, so that river length units are in $km/km^2$. This indicator is time invariable; we assumed that river length would not change since 1990.
+We accessed river data from the WWF HydroSHEDS Free Flowing Rivers Network [v1.0, @hydrosheds] in Google Earth Engine. We filtered to rivers of order 7 or lower which have long-term average discharge >0.1 cubic meters per second. Then, we found the total length of rivers in each county and divided by the county area, so that river length units are in $km/km^2$. This indicator is time invariable; we assumed that river length would not change meaningfully for this analysis since 1990.
 
 #### Percent developed land {#sec-dev-land-methods}
 
@@ -733,7 +733,9 @@ Annual land cover data from the National Land Cover Database (NLCD) was download
 
 #### Land in, nearby, and far from urban areas {#sec-urbareas}
 
-Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. We first downloaded population size and housing unit count data for census blocks, 1990-2020, within 150 miles of Idaho from IPUMS [@ipums]. Then, we designated any census blocks with housing density $\geq$425 $units/mi^2$ as initial urban core blocks. Then, we added adjacent census blocks with housing density $\geq$200 $units/mi^2$ to the urban cores, repeating this process until there were no census blocks with housing density $\geq$200 $units/mi^2$ adjacent to the urban cores. Finally, we filtered out any urban cores without a high density urban nucleus, defined as a census block with housing density $\geq$1,275 $units/mi^2$, and we filtered out any urban cores with $\leq$2,000 houses or $\leq$5,000 residents. After these urban areas were established, land in each county was classified as "within an urban area," "within 10 mi of an urban area," "within 20 mi of an urban area," increasing in units of 10 mi, with the final category being ">100 mi from an urban area." Then, we calculated the percent cover of each category in each county. This process was repeated for each year, as population growth shifted urban boundaries and created new urban areas. Then, these data were used in a principal component analysis. We retained the first two principal components, which explained 75.8% of the variance.
+Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds [@ratcliffe2022]. We first downloaded population size and housing unit count data for census blocks, 1990-2020, within 150 miles of Idaho from IPUMS [@ipums]. Then, we designated any census blocks with housing density $\geq$425 $units/mi^2$ as initial urban core blocks. Next, we added adjacent census blocks with housing density $\geq$200 $units/mi^2$ to the urban cores, repeating this process until there were no census blocks with housing density $\geq$200 $units/mi^2$ adjacent to the urban cores. Finally, we filtered out any urban cores without a high density urban nucleus, defined as a census block with housing density $\geq$1,275 $units/mi^2$, and we filtered out any urban cores with $\leq$2,000 houses or $\leq$5,000 residents. 
+
+After these urban areas were established, land in each county was classified as "within an urban area," "within 10 mi of an urban area," "within 20 mi of an urban area," etc., increasing in units of 10 mi, with the final category being ">100 mi from an urban area." Then, we calculated the percent cover of each category in each county. This process was repeated for each year, as population growth shifted urban boundaries and created new urban areas. Then, these data were used in a principal component analysis. We retained the first two principal components, which explained 75.8% of the variance.
 
 #### Farm density {#sec-farm-density-methods}
 

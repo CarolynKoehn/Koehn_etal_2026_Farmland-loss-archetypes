@@ -23,15 +23,15 @@ nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 census_api_key(Sys.getenv('CENSUS_API_KEY'))
 
 # county data
-# county_shapes <- tigris::counties("ID") %>%
-#   select(c("GEOID", "NAME")) %>%
-#   mutate(tot_area = st_area(.))
+county_shapes <- tigris::counties("ID") %>%
+  select(c("GEOID", "NAME")) %>%
+  mutate(tot_area = st_area(.))
 
 # workaround when tigris is down
-county_shapes <- st_read("/vsizip/R:/CarolynKoehn/Data_raw/US_county_2020.zip/US_county_2020.shp") %>%
-  filter(STATEFP == 16) %>%
-  select(GEOID, NAME) %>%
-  mutate(tot_area = st_area(.))
+# county_shapes <- st_read("/vsizip/R:/CarolynKoehn/Data_raw/US_county_2020.zip/US_county_2020.shp") %>%
+#   filter(STATEFP == 16) %>%
+#   select(GEOID, NAME) %>%
+#   mutate(tot_area = st_area(.))
 
 # names and GEOIDs
 GEOID_names <- st_drop_geometry(county_shapes$NAME)
@@ -54,11 +54,12 @@ rs_data <- expand.grid(county = county_shapes$NAME,
 
 #### Percent land in farms
 
-Data for 2002-2022 are available through the USDA NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 6. 
+Data for 2002-2022 are available through the USDA NASS API. Data for 1992 were digitized from https://web.archive.org/web/20250907173430/https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 6. 
 
 ```{r}
 #| label: "percent land in farms"
 
+# list NASS API search parameters
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
                year = c(2002, 2012, 2022),
@@ -66,12 +67,15 @@ params <- list(agg_level_desc = "county",
                               "Land area, incl non-ag - acres"),
                domain_desc = "total")
 
+# query NASS API
 land_in_farms <- nassqs(params)
+
 # save a backup copy
 # write.csv(land_in_farms,
 #           "../data/API_data_download_backup/land_in_farms.csv",
 #           row.names = FALSE)
 
+# import and clean digitized historic data
 land_in_farms_1992 <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
   filter(Year == 1992) %>%
   select(County, Year, Perc_land_in_farms) %>%
@@ -82,17 +86,21 @@ land_in_farms_1992 <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022
 
 # clean and join
 rs_data <- land_in_farms %>%
+  # pivot so that columns are county, year, land in farms area, and total county area
   pivot_wider(id_cols = c(county_name, year),
               names_from = statisticcat_desc,
               values_from = Value) %>%
   rowwise() %>%
+  # calculate percent of county land in farms
   mutate(land_in_farms = `AREA OPERATED` / `AREA` * 100) %>%
+  # clean for joining into resource system data.frame
   rename("county" = "county_name") %>%
   mutate(county = str_to_title(county),
          year = as.numeric(year)) %>%
   select(c(county, year, land_in_farms)) %>%
   mutate(year = (year-2)) %>%
   rbind(land_in_farms_1992) %>%
+  # join into full RS data
   right_join(rs_data, by=c("county", "year"))
 ```
 
@@ -103,15 +111,20 @@ NLCD data were downloaded from https://www.mrlc.gov/viewer/
 ```{r}
 #| label: "load NLCD data"
 
+# load a list of all raster files
 file_list <- subset(unzip("../data/raw_data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name,
                     str_detect(unzip("../data/raw_data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name, "tiff$"))
+# sort file list by year
 file_list <- file_list[order(file_list)]
 
+# read list of raster files into a stacked raster
 nlcd_all_years_ID <- rast(paste0("/vsizip/../data/raw_data/NLCD_LndCov_1985-2020.zip/", file_list))
+# add years as raster layer names
 names(nlcd_all_years_ID) <- seq(1985,2020,5)
 
 # following code modified from @canderson156 at https://gis.stackexchange.com/questions/425821/calculating-proportion-of-a-polygon-covered-by-each-raster-category-using-r
 
+# function to total the percent of each category in a given area
 sum_cover <- function(x){
   list(x %>%
     group_by(value) %>%
@@ -120,6 +133,7 @@ sum_cover <- function(x){
   
 }
 
+# total proportion of each land cover in each county and year
 land_cover_counts <- lapply(nlcd_all_years_ID, function(x) {
                             exact_extract(x = x,
                                    y = county_shapes,
@@ -134,10 +148,12 @@ land_cover_counts <- lapply(nlcd_all_years_ID, function(x) {
 # organize into compatible data frame
 names(land_cover_counts) <- names(nlcd_all_years_ID)
 
+# pair land cover codes with category name in reference vector
 group_recode <- c(nlcd_colors()$Class, use.names=TRUE)
 names(group_recode) <- as.character(nlcd_colors()$ID)
 
 land_cover_percents <- bind_rows(land_cover_counts, .id="year") %>%
+  # add land cover label and convert from proportion to percent
   mutate(land_cover = recode(result.value, !!!group_recode),
          cover_percent = result.proportion*100) %>%
   rename("county" = "NAME") %>%
@@ -183,42 +199,55 @@ rs_data <- left_join(rs_data, shrubland, by=c("county", "year"))
 
 The API call is the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset, also available for download at https://gbp-blm-egis.hub.arcgis.com/pages/idaho. Federal lands are assumed to not be sold or acquired over the 40 year time period.
 
+Update 4/2/2026: API link is now outdated; the BLM has updated data with a new link. As of 4/2/26, the new API call can be found on the data information page: https://gbp-blm-egis.hub.arcgis.com/datasets/BLM-EGIS::blm-id-surface-management-agency/about under "View API Resources"
+
 ```{r}
 #| label: "percent federal land"
 
+# API call to BLM data repository, accessed 7/17/2025
 id_lt <- st_read("https://gis.blm.gov/idarcgis/rest/services/realty/BLM_ID_Surface_Management_Agency/FeatureServer/0/query?where=1%3D1&outFields=MGMT_AGNCY,AGNCY_NAME&outSR=4326&f=json", quiet=TRUE) %>%
+  # project to EPSG 4269
   st_transform(st_crs(county_shapes)) %>%
+  # make polygons valid
   st_make_valid()
 
+# create simpler tenure categories from agency names
 id_lt$Simple_Tenure <- ifelse(id_lt$AGNCY_NAME == "PRIVATE", "Private",
                             ifelse(id_lt$AGNCY_NAME %in% c("BIA", "IR"), "Tribal",
                               ifelse(id_lt$AGNCY_NAME %in% c("OTHER", "HSTRCWTR"), "Other",
                                 ifelse(str_starts(id_lt$AGNCY_NAME, "STATE"), "State", "Federal"))))
-
+# filter to only federal lands
 fed_clip <- id_lt %>%
   filter(Simple_Tenure == "Federal")
 # remove non-polygons
 fed_clip <- fed_clip[list(st_geometry_type(fed_clip))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
 
+# split federal land polygons along county lines
 county_polys <- fed_clip %>% 
   st_intersection(., county_shapes) %>%
   st_make_valid()
+# remove non-polygons
 county_polys <- county_polys[list(st_geometry_type(county_polys))[[1]] %in% c("POLYGON", "MULTIPOLYGON"),]
     
+# union federal land polygons within each county into multipolygons
 county_polys <- county_polys %>%
   group_by(NAME) %>%
   dplyr::summarise() %>%
   st_make_valid()
 
+# make copy of this data.frame for non-fed land near highways step later in document
 fed_for_roads <- county_polys
 
 fed_by_county <- county_polys %>%
+    # calculate area of federal land in each county
     mutate(fed_area = st_area(.)) %>%
     st_drop_geometry() %>%
+    # join with county info data.frame
     left_join(st_drop_geometry(county_shapes)) %>%
+    # calculate percent federal land area
     mutate(perc_fed = units::drop_units(fed_area / tot_area * 100))
 
-# clean and join
+# clean and join to full RS data
 rs_data <- fed_by_county %>%
   rename("county" = "NAME") %>%
   select("county", "perc_fed") %>%
@@ -232,26 +261,34 @@ Data from the Hydrosheds HydroLAKES product were downloaded from https://www.hyd
 ```{r}
 #| label: "percent open water"
 
+# filter downloaded Hydrolakes data to the USA
 us_lakes <- st_read("/vsizip/../data/raw_data/HydroLAKES_polys_v10_shp.zip/HydroLAKES_polys_v10_shp/HydroLAKES_polys_v10.shp") %>%
   filter(Country == "United States of America")
 
 lakes_area <- us_lakes %>%
+  # filter to approximate coordinates for Idaho
   filter(Pour_lat > 41 & Pour_lat < 50 &
            Pour_long > -118 & Pour_long < -110) %>%
   st_make_valid(.) %>%
+  # split lake polygons along county lines
   st_intersection(st_transform(county_shapes, st_crs(.))) %>%
   group_by(NAME) %>%
+  # union lake polygons within each county into multipolygons
   dplyr::summarise() %>%
+  # calculate lake area in each county
   mutate(lake_area = st_area(.))
   
 
 rs_data <- lakes_area %>%
+  # conver lake area to km2 and then drop the units data item
   mutate(lake_area_km2 = units::drop_units(units::set_units(lake_area, "km2"))) %>%
   st_drop_geometry(.) %>%
   select(-lake_area) %>%
   rename("county" = "NAME") %>%
+  # join to full RS data
   right_join(rs_data, by=c("county")) %>%
   rowwise() %>%
+  # if no lakes, set lake area to 0 instead of NA
   mutate(lake_area_km2 = ifelse(is.na(lake_area_km2), 0, lake_area_km2))
 ```
 
@@ -263,18 +300,25 @@ WWF Hydrosheds data
 3. Cropped to Idaho
 4. Downloaded and imported to R here
 
+Google Earth Engine code can be found here: https://code.earthengine.google.com/9e6f18b96e72318dc90a7bdd48e50c4d
+
 ```{r}
 #| label: "miles of river"
 
 rivers <- st_read("/vsizip/../data/raw_data/ID_Rivers_ORD7.zip/ID_Rivers_ORD7.shp") %>%
+  # project to EPSG 4269
   st_transform(st_crs(county_shapes)) %>%
+  # split rivers along county lines
   st_intersection(county_shapes) %>%
+  # calculate river lengths
   mutate(length = st_length(.)) %>%
   st_drop_geometry(.) %>%
   group_by(NAME) %>%
+  # in each county, sum river length and divide by county area
   summarise(rivers_km_per_km2 = 
               sum(units::set_units(length, "km")) / mean(units::set_units(tot_area, "km2")))
 
+# clean and join to full RS data
 rs_data <- rivers %>%
   mutate(rivers_km_per_km2 = units::drop_units(rivers_km_per_km2)) %>%
   left_join(rs_data, ., by = c("county" = "NAME"))
@@ -291,16 +335,17 @@ developed <- land_cover_percents %>%
   group_by(county, year) %>%
   summarise(percent_developed = sum(cover_percent))
 
+# join to full RS data
 rs_data <- left_join(rs_data, developed, by=c("county", "year"))
 
-# replace missing land with 0%
+# replace any missing land covers with 0%
 rs_data <- rs_data %>%
   mutate(across(percent_forest:percent_developed, ~ifelse(is.na(.x), 0, .x)))
 ```
 
 ### Urban Land
 
-Since the definition of urban area changed for the 2020 census, we recreate urban areas for 1990-2020 with the 2020 definitions and thresholds. Urban definition here: https://www.census.gov/newsroom/blogs/random-samplings/2022/12/redefining-urban-areas-following-2020-census.html
+Since the definition of urban area changed for the 2020 census, we recreated urban areas for 1990-2020 with the 2020 definitions and thresholds. Urban definition here: https://www.census.gov/newsroom/blogs/random-samplings/2022/12/redefining-urban-areas-following-2020-census.html
 
 Total population and housing units data for blocks in Idaho, 1990-2020, data downloaded from:
 Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 19.0 [dataset]. Minneapolis, MN: IPUMS. 2024. http://doi.org/10.18128/D050.V19.0
@@ -308,44 +353,63 @@ Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kug
 ```{r}
 #| label: "urban land"
 
+# create a polygon - Idaho + 150 miles of buffer
 id_buff <- st_buffer(st_union(county_shapes), dist = units::set_units(150, "mi"))
 
 #############
 # get urban populations
 
+# get names of IPUMS population and housing data files
 censdata_files <- list.files(path = "../data/raw_data/nhgis0006_csv/nhgis0006_csv", 
                              pattern=".csv",
                              full.names = TRUE)
+# create list with an element for each data file
 censdata_list <- vector(mode = "list", length = length(censdata_files))
+# read each data file into a different list element
 for(i in 1:length(censdata_list)) {
   censdata_list[[i]] <- read.csv(censdata_files[i])
 }
 
+# get names of IPUMS census block polygon data files for each year
+# files are zip files containing all census blocks for each year and each state (ID and all states within 150 miles of it)
 blocks_zip_files <- list.files(path = "..", pattern="shapefile", recursive = TRUE, full.names = TRUE)
+# create list with an element for each data file
 blocks_shp_files <- vector(mode = "character", length = length(blocks_zip_files))
+# create vector of data import strings for each shapefile
 for(i in 1:length(blocks_zip_files)) {
   blocks_shp_files[i] <- paste0("/vsizip/", 
                                 blocks_zip_files[i], "/",
+                                # detect name of shapefile within each zip file
                                 filter(unzip(zipfile = blocks_zip_files[i], list=TRUE),
                                        str_detect(Name, ".shp$"))$Name)
 }
+# create list to hold all census blocks for each year in a different element
 blocks_list <- vector(mode = "list", length = 4)
+# create vector of years
 years <- seq(1990, 2020, 10)
 for(i in 1:length(blocks_list)) {
+  # detect file names in blocks_shp_files with current year in loop
   year_files <- blocks_shp_files[str_detect(blocks_shp_files, 
                                             paste0(years[i], ".shp"))]
+  # loop through detected elements in blocks_shp_files
   for(f in year_files) {
+    # if it is the first detected file name
     if(f == year_files[1]) {
+      # read shapefile into sf data.frame
       year_blocks <- st_read(f) %>%
+        # select column with code for joining to population and housing data
         select(GISJOIN) %>%
+        # create column with FIPS code for joining to tigris data (county_shapes)
         mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7)))
+    # if not the first detected file name
     } else {
+      # add on to sf data.frame with same cleaning steps as above
       year_blocks <- st_read(f) %>%
         select(GISJOIN) %>%
         mutate(FIPS = paste0(str_sub(GISJOIN, 2, 3), str_sub(GISJOIN, 5, 7))) %>%
         rbind(year_blocks)
     }
-  }
+  } # end data import
   
   # make poygons valid and crop to within 150 miles of Idaho
   blocks_list[[i]] <- year_blocks %>%
@@ -353,20 +417,31 @@ for(i in 1:length(blocks_list)) {
     filter(st_is_valid(.)) %>%
     st_filter(st_transform(id_buff, st_crs(.)))
 }
+# end result is a 4-element list
+# each element is one year and contains all census blocks for that year from Idaho and within 150 miles of Idaho
+# census block polygons are valid and in their native projection (USA Contiguous Albers Equal Area Conic)
 
+# create function to join census data to census block polygons in each year
 join_clean_cens_blocks <- function(censdata, blocks) {
+  # save the column numbers of population and housing data (will vary with year)
   pop_col <- ncol(censdata)-1
   hous_col <- ncol(censdata)
   
   censdata %>%
-  rename("tot_pop" = pop_col,
-         "hous_units" = hous_col) %>%
-  select(GISJOIN, tot_pop, hous_units) %>%
-  full_join(blocks, by = "GISJOIN") %>%
-  st_as_sf() %>%
-  mutate(area_sq_mi = units::set_units(st_area(.), "mi2"),
-         hous_dens = units::drop_units(hous_units / area_sq_mi)) %>%
+    # rename population and housing columns to a standard name in each year
+    rename("tot_pop" = pop_col,
+           "hous_units" = hous_col) %>%
+    select(GISJOIN, tot_pop, hous_units) %>%
+    # join with census blocks data
+    full_join(blocks, by = "GISJOIN") %>%
+    # convert to sf object
+    st_as_sf() %>%
+    # create columns for total census block area and housing density by census block
+    mutate(area_sq_mi = units::set_units(st_area(.), "mi2"),
+           hous_dens = units::drop_units(hous_units / area_sq_mi)) %>%
+    # make all census block polygons valid
     st_make_valid(.) %>%
+    # filter out invalid or empty polygons
     filter(st_is_valid(.) & !st_is_empty(.))
 }
 
@@ -374,6 +449,9 @@ block_data_list <- mapply(join_clean_cens_blocks,
                           censdata = censdata_list, 
                           blocks = blocks_list,
                           SIMPLIFY = FALSE)
+# end result is a 4-element list
+# each element is one year and contains all census blocks for that year from Idaho and within 150 miles of Idaho, as well as their associated population and housing data
+# census block polygons are valid and in their native projection (USA Contiguous Albers Equal Area Conic)
 
 # remove large lists to free memory
 rm(censdata_list)
