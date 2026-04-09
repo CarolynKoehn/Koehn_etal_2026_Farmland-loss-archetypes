@@ -458,26 +458,38 @@ rm(censdata_list)
 rm(blocks_list)
 rm(year_blocks)
 
+# function that filters out rows with >= 425 housing units/sq mi -> inital urban core blocks
 init_urban_core <- function(block_data) {
   block_data %>%
     filter(hous_dens >= 425)
 }
 
+# apply inital urban core blocks function to each year of block data
 init_urban_core_list <- lapply(block_data_list, init_urban_core)
 
+# function that fills out the urban areas by following criteria described in Appendix A.1.1.9
 fill_urb_area <- function(init_urban_core, block_data) {
+  # initialize the initial urban cores as the current urban area
   current_urb <- init_urban_core
+  
   repeat {
+    # find all blocks adjacent to current urban area
     neighbors <- st_intersects(current_urb, block_data)
+    # get row index of neighboring blocks
     nb_idx <- unique(unlist(neighbors))
+    # add blocks with >200 houses/mi2 to new urban area
     new_urb <- block_data[nb_idx, ] %>%
       filter(hous_dens >= 200) %>%
       rbind(current_urb) %>%
+      # filter out any repeated rows
       distinct()
   
+    # break loop if current and new urban area are the same
+    # no blocks with high enough housing density were adjacent
     if(nrow(current_urb) == nrow(new_urb)) {
       break
     } else {
+      # otherwise rewrite the new urban area as the current urban area and repeat loop
       current_urb <- new_urb
     }
   }
@@ -485,25 +497,37 @@ fill_urb_area <- function(init_urban_core, block_data) {
   return(new_urb)
 }
 
+# free memory
+rm(init_urban_core_list)
+
+# apply fill urban areas function to each year
 urb_areas_list <- mapply(fill_urb_area,
                          init_urban_core = init_urban_core_list,
                          block_data = block_data_list,
                          SIMPLIFY = FALSE)
 
-# free memory
-# rm(init_urban_core_list)
-
+# function to filter out urban areas without a dense urban core
 urb_areas_thresholded <- function(urb_areas, block_data) {
+  # melt all boundaries between urban blocks
   urb_union <- st_union(urb_areas)
+  # separate the unioned multipolygon into separate urban area polygons
   urb_union_polys <- st_cast(urb_union, "POLYGON")
   
+  # identify which urban area each block is covered by (if any)
+  # returns list where each item represents a block and contains the urban area index it is part of
   blocks_covered <- st_covered_by(block_data, urb_union_polys)
+  # identify which blocks (rows) meet our high density criteria
   high_dens_nucleus <- which(block_data$hous_dens >= 1275)
+  # return the urban area indices belonging to high density blocks
   high_dens_blocks <- blocks_covered[high_dens_nucleus]
+  # get row numbers of urban areas that have high density blocks
   high_dens_poly_idx <- unique(unlist(high_dens_blocks))
+  # filter urban areas to only return those associated with high density block(s)
   urb_area_polys <- urb_union_polys[high_dens_poly_idx]
 
+  # reassign blocks to urban/non-urban based on new areas
   new_blocks_covered <- st_covered_by(block_data, urb_area_polys)
+  # return list of labels for each block: non-urban = NA, urban = index of urban area
   new_blocks_covered <- lapply(new_blocks_covered, function(x) {
     if(length(x) == 0) {
       return(NA)
@@ -512,39 +536,53 @@ urb_areas_thresholded <- function(urb_areas, block_data) {
     }
   })
   
+  # filter out urban areas with low total houses or population
   urb_areas_filt <- block_data %>%
     st_drop_geometry() %>%
+    # add column with urban labels
     mutate(in_urb_area = unlist(new_blocks_covered)) %>%
+    # group by urban labels
     group_by(in_urb_area) %>%
+    # calculate total houses and population in each area
     summarise(pop_thres = sum(tot_pop),
               hous_thres = sum(hous_units)) %>%
+    # apply filter
     filter(pop_thres >= 5000 | hous_thres >= 2000)
 
+    # return urban area polygons that meet both criteria
     return(urb_area_polys[urb_areas_filt$in_urb_area])
 }
 
+# apply thresholding function to each year
 urb_areas_thresholded_list <- mapply(urb_areas_thresholded,
                                      urb_areas = urb_areas_list,
                                      block_data = block_data_list,
                                      SIMPLIFY = FALSE)
 
-# rm(urb_areas_list)
+# free memory
+rm(urb_areas_list)
 
+# apply a distance from urban label to each block
 block_data_list <- mapply(function(x, y) {
+  # new column with NA label for each block
   x$dist_from_urb <- NA
   
+  # return vector with label - if block is in an urban area (T/F)
   in_urb_area <- as.logical(
     rowSums(
       st_covered_by(x, y, sparse = FALSE)
       )
     )
   
+  # if block is in urban area, dist from urb = 0
   x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & in_urb_area == TRUE, 0, NA)
   
   print("Urban blocks labelled")
   
+  # initialize a tracker object for loop
   miles <- 10
   repeat {
+    # buffer each urban area by _miles_ miles and determine which blocks are covered
     urb_area_dist <- as.logical(
       rowSums(
         st_covered_by(x, st_union(st_buffer(y, units::set_units(miles, "mi"))), sparse = FALSE)
@@ -552,11 +590,14 @@ block_data_list <- mapply(function(x, y) {
       )
     
     if(any(is.na(x$dist_from_urb)) & miles <= 100) {
+      # apply appropriate label to blocks currently with NA label
       x$dist_from_urb <- ifelse(is.na(x$dist_from_urb) & urb_area_dist == TRUE, 
                                 miles, x$dist_from_urb)
       
       print(paste("Blocks within", miles, "miles of urban area labelled"))
+      # advance tracer object and repeat cycle
       miles <- miles + 10
+    # if miles > 100, apply ">100" label and break loop
     } else {
       x$dist_from_urb <- ifelse(is.na(x$dist_from_urb), 
                                 ">100", x$dist_from_urb)
@@ -566,32 +607,48 @@ block_data_list <- mapply(function(x, y) {
     }
   }
   
+  # return blocks data now with urban labels
   return(x)
 }, x = block_data_list, y = urb_areas_thresholded_list, SIMPLIFY = FALSE)
 
+# calculate area of coverage of each dist from urban category in each county
 urb_dist_areas <- mapply(function(df, year) {
   df %>%
+    # filter to only blocks in Idaho
     filter(str_starts(FIPS, "16")) %>%
     st_drop_geometry() %>%
+    # join with county data
     left_join(st_drop_geometry(county_shapes), by = c("FIPS" = "GEOID")) %>%
+    # group by county and dist from urb category
     group_by(NAME, dist_from_urb) %>%
+    # calculate sum of census block area in each dist from urb category
     summarise(area = sum(area_sq_mi),
+              # retain total county area
               tot_area = mean(tot_area)) %>%
+    # percent area of each dist from urb category in each county
     mutate(perc_area = units::drop_units(area / units::set_units(tot_area, "mi2")) * 100) %>%
     select(-c(area, tot_area)) %>%
+    # pivot so counties are rows and each dist from urb category is a column with percentages
     pivot_wider(id_cols = "NAME",
                 names_from = "dist_from_urb",
                 names_prefix = "dist_from_urb",
                 values_from = "perc_area",
+                # any dist from urb categories not present in a county = 0%
                 values_fill = 0) %>%
+    # add year label to data
     mutate(year = year)
 }, df = block_data_list, year = years)
+# returns a list with counties and their distance from urban composition for each year
 
+# combine list into one data.frame
 urb_dist_areas <- do.call(rbind, urb_dist_areas) %>%
+  # fill all missing cells with 0 if not filled already
   mutate(across(where(is.numeric), ~ifelse(is.na(.x), 0, .x))) %>%
+  # organize column order
   relocate(year, .after = NAME) %>%
   rename("county" = "NAME") 
 
+# perform PCA for distance to urban composition data
 urb_dist_pca <- prcomp(urb_dist_areas[,-c(1:2)])
 
 # PC1 and PC2 account for >75% of variance
