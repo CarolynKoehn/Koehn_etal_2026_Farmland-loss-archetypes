@@ -197,15 +197,13 @@ rs_data <- left_join(rs_data, shrubland, by=c("county", "year"))
 
 #### Percent federal lands
 
-The API call is the 2023 BLM Idaho Surface Management Agency (Surface Ownership) dataset, also available for download at https://gbp-blm-egis.hub.arcgis.com/pages/idaho. Federal lands are assumed to not be sold or acquired over the 40 year time period.
-
-Update 4/2/2026: API link is now outdated; the BLM has updated data with a new link. As of 4/2/26, the new API call can be found on the data information page: https://gbp-blm-egis.hub.arcgis.com/datasets/BLM-EGIS::blm-id-surface-management-agency/about under "View API Resources"
+The API call is the 2026 BLM Idaho Surface Management Agency (Surface Ownership) dataset, also available for download at https://gbp-blm-egis.hub.arcgis.com/pages/idaho or https://gbp-blm-egis.hub.arcgis.com/datasets/BLM-EGIS::blm-id-surface-management-agency/about. Federal lands are assumed to not be sold or acquired over the 40 year time period.
 
 ```{r}
 #| label: "percent federal land"
 
 # API call to BLM data repository, accessed 7/17/2025
-id_lt <- st_read("https://gis.blm.gov/idarcgis/rest/services/realty/BLM_ID_Surface_Management_Agency/FeatureServer/0/query?where=1%3D1&outFields=MGMT_AGNCY,AGNCY_NAME&outSR=4326&f=json", quiet=TRUE) %>%
+id_lt <- st_read("https://gis.blm.gov/idarcgis/rest/services/lands/BLM_ID_Surface_Management_Agency/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", quiet=TRUE) %>%
   # project to EPSG 4269
   st_transform(st_crs(county_shapes)) %>%
   # make polygons valid
@@ -497,14 +495,14 @@ fill_urb_area <- function(init_urban_core, block_data) {
   return(new_urb)
 }
 
-# free memory
-rm(init_urban_core_list)
-
 # apply fill urban areas function to each year
 urb_areas_list <- mapply(fill_urb_area,
                          init_urban_core = init_urban_core_list,
                          block_data = block_data_list,
                          SIMPLIFY = FALSE)
+
+# free memory
+rm(init_urban_core_list)
 
 # function to filter out urban areas without a dense urban core
 urb_areas_thresholded <- function(urb_areas, block_data) {
@@ -3247,34 +3245,106 @@ a_data <- left_join(a_data, unemployment_clean, by = c("county", "year"))
 
 ### Education level
 
-Data were downloaded from https://data.ers.usda.gov/reports.aspx?ID=4026: County-Level Data Sets - Education
+Data for 2000-2020 were downloaded via API call using `tidycensus`. Data from 1990 were downloaded from IPUMS:
+Steven Manson, Jonathan Schroeder, David Van Riper, Katherine Knowles, Tracy Kugler, Finn Roberts, and Steven Ruggles. IPUMS National Historical Geographic Information System: Version 19.0 [dataset]. Minneapolis, MN: IPUMS. 2024. http://doi.org/10.18128/D050.V19.0
+
+Population data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were downloaded from https://www.nber.org/research/data/census-us-decennial-county-population-data-1900-1990.
 
 ```{r}
 #| label: "education level"
 
-high_school <- readxl::read_excel("../data/raw_data/EducationReport_HighSchool.xlsx",
-                                  skip=2) %>%
-  mutate(edu_level = "High school")
-bachelors <- readxl::read_excel("../data/raw_data/EducationReport_Bachelors.xlsx",
-                                  skip=2) %>%
-  mutate(edu_level = "Bachelors")
-edu_level <- rbind(high_school, bachelors) %>%
-  filter(Name != "Idaho") %>%
-  mutate(Name = str_remove(Name, ", ID")) %>%
-  pivot_longer(`1970`:`2019-2023`,
-               names_to = "year",
-               values_to = "percent") %>%
-  mutate(year = ifelse(year == "2008-2012", 2010,
-                       ifelse(year == "2019-2023", 2020, year))) %>%
-  filter(year %in% c("1990", "2000", "2010", "2020")) %>%
-  mutate(year = as.numeric(year)) %>%
-  select(Name, edu_level, percent, year) %>%
-  pivot_wider(id_cols = c(Name, year),
-              names_from = "edu_level",
-              values_from = "percent")
+educ1990 <- read.csv("../data/raw_data/nhgis0009_csv/nhgis0009_ds123_1990_county.csv") %>%
+  filter(STUSAB == "ID") %>%
+  rename("county" = "COUNTY",
+         "year" = "YEAR",
+         "high_school" = "E33003",
+         "bachelors" = "E33006") %>%
+  select(county, year, high_school, bachelors)
+
+educ2000 <- get_decennial(geography = "county",
+                          variables = c("P037011", "P037015", "P037028", "P037032"),
+                          year = 2000,
+                          state = "ID",
+                          sumfile = "sf3") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2000,
+         variable = ifelse(variable %in% c("P037011", "P037028"), "high_school", "bachelors")) %>%
+  group_by(county, year, variable) %>%
+  summarise(value = sum(value)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = variable,
+              values_from = value) %>%
+  select(county, year, high_school, bachelors)
+
+educ2010 <- get_acs(geography = "county",
+                      variables = c("B06009_003", "B06009_005"),
+                      year = 2010,
+                      state = "ID",
+                      survey="acs5") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2010,
+         variable = ifelse(variable == "B06009_003", "high_school", "bachelors")) %>%
+  group_by(county, year, variable) %>%
+  summarise(estimate = sum(estimate)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = variable,
+              values_from = estimate) %>%
+  select(county, year, high_school, bachelors)
+
+educ2020 <- get_acs(geography = "county",
+                      variables = c("B06009_003", "B06009_005"),
+                      year = 2020,
+                      state = "ID",
+                      survey="acs5") %>%
+  mutate(county = str_remove(NAME, " County, Idaho"),
+         year = 2020,
+         variable = ifelse(variable == "B06009_003", "high_school", "bachelors")) %>%
+  group_by(county, year, variable) %>%
+  summarise(estimate = sum(estimate)) %>%
+  pivot_wider(id_cols = c("county", "year"),
+              names_from = variable,
+              values_from = estimate) %>%
+  select(county, year, high_school, bachelors)
+
+educ_level <- rbind(educ1990, educ2000, educ2010, educ2020)
+
+pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
+  select(pop1990, name) %>%
+  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  mutate(name = str_remove(name, "ID "),
+         name = str_remove(name, " County"))
+pop2000 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2000) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2010 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P001001",
+                        year = 2010) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop2020 <- get_decennial(geography = "county",
+                        state = "ID",
+                        variables = "P1_001N",
+                        year = 2020) %>%
+  mutate(NAME = str_remove(NAME, " County, Idaho"))
+pop_tot <- data.frame(county = c(pop1990$name,
+                                  pop2000$NAME,
+                                  pop2010$NAME,
+                                  pop2020$NAME),
+                            year = rep(seq(1990, 2020, 10), each = nrow(pop1990)),
+                            pop = as.numeric(c(pop1990$pop1990,
+                                    pop2000$value,
+                                    pop2010$value,
+                                    pop2020$value)))
+
+educ_level <- left_join(educ_level, pop_tot) %>%
+  rowwise() %>%
+  mutate(high_school = high_school/pop * 100,
+         bachelors = bachelors/pop * 100)
 
 # join
-a_data <- left_join(a_data, edu_level, by = c("county" = "Name", "year"))
+a_data <- left_join(a_data, edu_level, by = c("county", "year"))
 ```
 
 ### Racial Composition

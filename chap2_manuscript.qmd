@@ -895,9 +895,9 @@ Data for the median household income in each county for 2000-2020 was downloaded
 
 We downloaded monthly unemployment rate data from @unemployment and used the mean unemployment rate across months for each county and year.
 
-#### Education level -- high school or Bachelor's degree {#sec-education-methods}
+#### Education level -- percent population with high school or Bachelor's degree {#sec-education-methods}
 
-We downloaded data on the percentage of residents whose highest level of education was high school or a Bachelor's degree from @education. We used the column "2008-2012" to represent 2010 and the column "2019-2023" to represent 2020.
+Data for educational attainment for adults >25 in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.7.5, @tidycensus]. Data for 1990 were accessed from IPUMS [@ipums]. Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.7.5, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts].
 
 #### Racial composition {#sec-race-methods}
 
