@@ -796,12 +796,11 @@ np_nn <- st_nearest_feature(st_transform(county_shapes, st_crs(pad_ski_np)),
 np_distance <- st_distance(st_transform(county_shapes, st_crs(pad_ski_np)),
                            subset(pad_ski_np, !str_detect(Unit_Nm, "Ski "))[np_nn,],
                            by_element = TRUE) %>%
-  units::set_units("km") %>%
-  # add county name labels, will in in correct order since they were used in the st_distance function
-  cbind(county_shapes$NAME) %>%
-  as.data.frame() %>%
-  rename("county" = "V2",
-         "dist_to_NP" = ".") %>%
+  units::set_units(., "km")
+
+# add county name labels, will in in correct order since they were used in the st_distance function
+np_distance <- data.frame(dist_to_NP = np_distance,
+                          county = county_shapes$NAME) %>%
   mutate(dist_to_NP = as.numeric(dist_to_NP))
 
 # join
@@ -878,12 +877,10 @@ pad_ski_years <- mapply(function(list, year) {
   ski_distance <- st_distance(st_transform(county_shapes, st_crs(ski_areas)),
                            ski_areas[ski_nn,],
                            by_element = TRUE) %>%
-  units::set_units("km") %>%
+  units::set_units("km")
   # add county name labels, will in in correct order since they were used in the st_distance function
-  cbind(county_shapes$NAME) %>%
-  as.data.frame() %>%
-  rename("county" = "V2",
-         "dist_to_ski" = ".") %>%
+  ski_distance <- data.frame(dist_to_ski = ski_distance,
+                             county = county_shapes$NAME) %>%
   mutate(dist_to_ski = as.numeric(dist_to_ski))
   
   return(ski_distance)
@@ -1021,179 +1018,142 @@ County Business Patterns reports private sector employment, but they sometimes a
 
 Fabian Eckert, Teresa C. Fort, Peter K. Schott, and Natalie J. Yang. "Imputing Missing Values in the US Census Bureau's County Business Patterns." NBER Working Paper #26632, 2021. https://www.fpeckert.me/cbp/
 
-2022 County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
+2022 County Business Patterns data was downloaded with the `censusapi` package. NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
 
-For public sector, we used ...
-
-<!-- old: County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html -->
+For public sector health workers, we used data from the Annual Survey of Public Employment & Payroll.
 
 ```{r}
 #| label: "healthcare"
 
+# associate GEOIDS with long string labels for 1997 public employment data
 loc_emp_1997_labs <- read.table("../data/raw_data/employment/97CEMPID.DAT",
                                 sep = ";", comment.char = "", quote = "") %>%
+  # filter to Idaho
   filter(str_starts(V1, "13")) %>%
+  # extract ID and GEOID from string label
   mutate(id = substr(V1, 1, 14),
          GEOID = substr(V1, 110, 114)) %>%
   select(-V1)
+# read in 1997 public employment data
 pub_health_1997 <- read_table("../data/raw_data/employment/97CEMPST.DAT",
                            na = "999999999",
                            col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  # filter to Idaho
   filter(str_starts(id, "13")) %>%
+  # add labels
   left_join(loc_emp_1997_labs) %>%
+  # filter to health services and filter out all of Idaho category
   filter(gov_func_code %in% c("032", "040") & GEOID != "16   ") %>%
   group_by(GEOID) %>%
+  # add full time and part time employees together
   summarise(pub_health_workers = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  # label year
   mutate(year = 1997)
 
+# associate GEOIDS with long string labels for 2002 public employment data
 loc_emp_2002_labs <- read.table("../data/raw_data/employment/02cempid.dat",
                                 sep = ";", comment.char = "", quote = "") %>%
+  # filter to Idaho
   filter(str_starts(V1, "13")) %>%
+  # extract ID and GEOID from long string label
   mutate(id = substr(V1, 1, 14),
          GEOID = substr(V1, 110, 114)) %>%
   select(-V1)
+# read in 2002 public employment data
 pub_health_2002 <- read_table("../data/raw_data/employment/02cempst.dat",
                            col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  # filter to Idaho
   filter(str_starts(id, "13")) %>%
+  # add labels
   left_join(loc_emp_2002_labs) %>%
+  # filter to health services and filter out all of Idaho category
   filter(gov_func_code %in% c("032", "040") & GEOID != "16   ") %>%
   group_by(GEOID) %>%
+  # add full time and part time employees together
   summarise(pub_health_workers = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  # label year
   mutate(year = 2002)
 
+# associate GEOIDS with long string labels for 2012 public employment data
 loc_emp_2012_labs <- read.table("../data/raw_data/employment/12cempid.dat",
                                 sep = ";", comment.char = "", quote = "") %>%
+  # filter to Idaho
   filter(str_starts(V1, "13")) %>%
+  # extract ID and GEOID from long string label
   mutate(id = substr(V1, 1, 14),
          GEOID = substr(V1, 110, 114)) %>%
   select(-V1)
+# read in 2012 public employment data
 pub_health_2012 <- read_table("../data/raw_data/employment/12cempst.dat",
                            col_names = c("id", "gov_func_code", "full_time_emp", "full_time_emp_flag", "full_time_payroll", "full_time_payroll_flag", "part_time_emp", "part_time_emp_flag", "part_time_payroll", "part_time_payroll_flag", "part_time_hours", "part_time_hours_flag", "full_time_equivalent_emp")) %>%
+  # filter to Idaho
   filter(str_starts(id, "13")) %>%
+  # add labels
   left_join(loc_emp_2012_labs) %>%
+  # filter to health services and filter out all of Idaho category
   filter(gov_func_code %in% c("032", "040") & GEOID != "16   ") %>%
   group_by(GEOID) %>%
+  # add full time and part time employees together
   summarise(pub_health_workers = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  # label year
   mutate(year = 2012)
 
+# read in 2022 public employment data
 pub_health_2022 <- readxl::read_xlsx("../data/raw_data/employment/22emp.xlsx",
                                   col_types = c("text", "text", "text", "text", "numeric", "skip", "skip", "skip", "numeric", "skip", "skip", "skip", "text", "skip", "text", "text", "text", "skip", "skip", "skip", "skip", "skip", "skip")) %>%
+  # filter to Idaho counties and health professions
   filter(State == "Idaho" & `Type of Government` == "County" & `Government Function` %in% c("Health", "Hospitals")) %>%
   group_by(`FIPS State`, `FIPS County`) %>%
+  # add part time and full time health workers
   summarise(pub_health_workers = sum(`Full-time Employees`, `Part-time Employees`)) %>%
+  # add year and GEOID labels
   mutate(year = 2022, 
          GEOID = paste0(`FIPS State`, `FIPS County`)) %>%
   ungroup() %>%
   select(GEOID, year, pub_health_workers)
 
-healthcare1997 <- rbind(
-  getCensus(name = "cbp",
-            vintage = 1997,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "8010"), # 8010  Offices and clinics of medical doctors
-  getCensus(name = "cbp",
-            vintage = 1997,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "8060"), # 8060  Hospitals
-  getCensus(name = "cbp",
-            vintage = 1997,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "8080") # 8080	Home health care services
-) %>%
-  mutate(GEOID = paste0(state, county),
-         year = 1997) %>%
+# read in interpolated private employment data
+healthcare9712 <- read.csv("../data/raw_data/employment/efsy_panel_naics.csv") %>%
+  # filter to Idaho and current years
+  filter(fipstate == 16 & year %in% c(1997, 2002, 2012)) %>%
+  # filter to health professions
+  filter(naics12 %in% c("621111", "621610", 
+                        unique(.$naics12[str_starts(.$naics12, "622")]),
+                        unique(.$naics12[str_starts(.$naics12, "623")]))) %>%
+  mutate(fipscty = str_pad(fipscty, 3, pad="0"),
+         GEOID = paste0(fipstate, fipscty)) %>%
   group_by(GEOID, year) %>%
-  summarise(heath_workers = sum(EMP))
+  # add health workers together
+  summarise(heath_workers = sum(emp))
 
-healthcare2002 <- rbind(
-  getCensus(name = "cbp", 
-            vintage=2002,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = "621111"), # 621111  Offices of physicians (exc mental health) 
-  getCensus(name = "cbp", 
-            vintage=2002,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = 622), # 622///  Hospitals 
-  getCensus(name = "cbp", 
-            vintage=2002,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = 621610) # 621610  Home health care services
-) %>%
-  mutate(GEOID = paste0(state, county),
-         year = 2002) %>%
-  group_by(GEOID, year) %>%
-  summarise(heath_workers = sum(EMP))
 
-healthcare2012 <- rbind(
-  getCensus(name = "cbp", 
-            vintage=2012,
-            vars = c("EMP", "NAICS2012"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2012 = "621111"),
-  getCensus(name = "cbp", 
-            vintage=2012,
-            vars = c("EMP", "NAICS2012"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2012 = 622),
-  getCensus(name = "cbp", 
-            vintage=2012,
-            vars = c("EMP", "NAICS2012"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2012 = 621610)
-) %>%
-  mutate(GEOID = paste0(state, county),
-         year = 2012) %>%
-  group_by(GEOID, year) %>%
-  summarise(heath_workers = sum(EMP))
-
-healthcare2022 <- getCensus(name = "cbp", 
+# pull CBP private employment data for 2022
+healthcare2022 <- getCensus(name = "cbp",
                             vintage=2022,
                   vars = c("EMP", "NAICS2017"),
                   region = "county:*",
                   regionin = "state:16") %>%
-  filter(NAICS2017 %in% c("621111", "622", "621610")) %>%
+  # filter to healthcare professions
+  filter(NAICS2017 %in% c("621111", "621610", "622", "623")) %>%
+  # add GEOID and year labels
   mutate(GEOID = paste0(state, county),
          year = 2022) %>%
   group_by(GEOID, year) %>%
+  # add health workers together
   summarise(heath_workers = sum(EMP))
 
-# save a backup copy
-# write.csv(healthcare1997,
-#           "../data/API_data_download_backup/healthcare1990.csv",
-#           row.names = FALSE)
-# write.csv(healthcare2002,
-#           "../data/API_data_download_backup/healthcare2000.csv",
-#           row.names = FALSE)
-# write.csv(healthcare2012,
-#           "../data/API_data_download_backup/healthcare2010.csv",
-#           row.names = FALSE)
-# write.csv(healthcare2022,
-#           "../data/API_data_download_backup/healthcare2020.csv",
-#           row.names = FALSE)
+# combine private health workers data
+priv_healthworkers <- do.call(rbind, list(healthcare9712, healthcare2022))
 
-priv_healthworkers <- do.call(rbind, list(healthcare1997, healthcare2002, healthcare2012, healthcare2022))
-
+# join private and public health workers
 healthworkers <- full_join(priv_healthworkers, pub_health_1997, by = c("GEOID", "year")) %>%
   full_join(pub_health_2002, by = c("GEOID", "year")) %>%
   full_join(pub_health_2012, by = c("GEOID", "year")) %>%
   full_join(pub_health_2022, by = c("GEOID", "year")) %>%
   ungroup() %>%
+  # add all health workers together
   mutate(health_workers = rowSums(.[3:ncol(.)], na.rm=TRUE)) %>%
+  # add county and year labels to match other resource data
   mutate(county = recode(GEOID, !!!GEOID_names),
          year = ifelse(year==1997, 1990, year-2)) %>%
   select(county, year, health_workers)
@@ -1230,12 +1190,16 @@ pop <- data.frame(county = c(pop1990$name,
                                     pop2010$value,
                                     pop2020$value))
 
+# join population and health workers
 health_pop <- left_join(pop, healthworkers, by = c("county", "year")) %>%
   rowwise() %>%
+  # replace NA health workers with 0
   mutate(healthworkers = ifelse(is.na(health_workers), 0, health_workers),
          pop = as.integer(pop)) %>%
+  # calculate health workers per 1000 people
   mutate(healthworkers_per_1000 = healthworkers / (pop/1000))
 
+# join to resource data
 rs_data <- health_pop %>%
   select(county, year, healthworkers_per_1000) %>%
   right_join(rs_data, by = c("county", "year"))
@@ -1247,15 +1211,18 @@ rs_data <- health_pop %>%
 
 #### Average slope
 
-Tested a PCA of mean, median, max, and stdev of slope and range of elevations, and it correlated pretty closely to mean slope (cor: 0.978883)
+I tested a PCA of mean, median, max, and stdev of slope and range of elevations, and it correlated pretty closely to mean slope (cor: 0.978883), so only mean slope is used in the analysis.
 
 ```{r}
 #| label: "slope"
 
+# access elevation data
 elevation <- elevatr::get_elev_raster(st_transform(county_shapes, 5070), z=9, clip="locations")
 
+# calculate slope from elevation
 slope <- terrain(elevation, v="slope", unit="degrees")
 
+# calculate average slope by county
 avg_slope <- exact_extract(slope, county_shapes, fun="mean", append_cols = "NAME") %>%
   rename("avg_slope" = "mean")
 
@@ -1286,29 +1253,29 @@ ru_data <- expand.grid(county = county_shapes$NAME,
 
 #### Percent change in number of farms
 
-Percent growth or decline compared to the number of farms 5 years previous. Data for 1997-2022 were downloaded from the NASS API. Data for 1987-1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 6.
+Percent growth or decline compared to the number of farms 5 years previous. Data for 1997-2022 were downloaded from the NASS API. Data for 1987-1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 6. (This URL is no longer supported, use archive.org to see the archived version of this webpage.)
 
 ```{r}
 #| label: "num farms change"
 
+# read in digitized data
 num_farms_1992_1987 <- read.csv("../data/Farm_size_1925-1992.csv") %>%
   filter(Year %in% c(1987, 1992) & Size == "all farms") %>%
   select(County, Year, Num_farms) %>%
   rename("county" = "County",
          "year" = "Year") %>%
+  # match year to other data
   mutate(year = as.numeric(year-2))
 
+# list parameters for NASS API query
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
                year__GE = 1997,
                short_desc = "Farm operations - number of operations",
                domain_desc = "total")
 
+# query NASS API
 num_farms_change <- nassqs(params)
-# save a backup copy
-# write.csv(num_farms_change,
-#           "../data/API_data_download_backup/num_farms_change.csv",
-#           row.names = FALSE)
 
 farm_change <- num_farms_change %>%
   pivot_wider(id_cols = c(county_name, year),
@@ -1319,9 +1286,13 @@ farm_change <- num_farms_change %>%
   mutate(county = str_to_title(county),
          year = as.numeric(year)) %>%
   select(c(county, year, Num_farms)) %>%
+  # match year to other data
   mutate(year = (year-2)) %>%
+  # add data from 1987-1992
   rbind(num_farms_1992_1987) %>%
+  # sort by county and year
   arrange(county, year) %>%
+  # take difference between farms at t(-5) and t(0)
   mutate(num_farms_prev = lag(Num_farms, 1),
          farm_change = Num_farms - num_farms_prev,
          perc_farms_change = farm_change / num_farms_prev * 100) %>%
@@ -1337,11 +1308,17 @@ ru_data <- left_join(ru_data, farm_change)
 ```{r}
 #| label: "percent change land in farms"
 
+# read in digitized data
 land_in_farms_change <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
+  # filter for years after or on 1987
   filter(Year >= 1987) %>%
+  # sort by county and year
   arrange(County, Year) %>%
+  # add lagged column with number of farms 5 years previous
   mutate(land_in_farms_lag = lag(Perc_land_in_farms)) %>%
+  # filter to only years of analysis
   filter(Year %in% c(1992, 2002, 2012, 2022)) %>%
+  # calculate difference in farms t(-5) and t(0)
   mutate(Perc_change_land_in_farms = Perc_land_in_farms - land_in_farms_lag) %>%
   select(County, Year, Perc_change_land_in_farms) %>%
   rename("county" = "County",
@@ -1362,7 +1339,9 @@ cropland_change <- land_cover_percents %>%
   group_by(county, year) %>%
   summarise(cover_percent = sum(cover_percent)) %>%
   arrange(county, year) %>%
+  # create lagged column with cropland 5 years previous
   mutate(cropland_prev = lag(cover_percent, 1),
+         # calculate difference
          cropland_change = cover_percent - cropland_prev,
          perc_cropland_change = cropland_change / cropland_prev * 100) %>%
   filter(year %in% c(1990,2000,2010,2020)) %>%
@@ -1384,7 +1363,9 @@ forest_change <- land_cover_percents %>%
   group_by(county, year) %>%
   summarise(cover_percent = sum(cover_percent)) %>%
   arrange(county, year) %>%
+  # create lagged column with forest 5 years previous
   mutate(forest_prev = lag(cover_percent, 1),
+         # calculate difference
          forest_change = cover_percent - forest_prev,
          perc_forest_change = forest_change / forest_prev * 100) %>%
   filter(year %in% c(1990,2000,2010,2020)) %>%
@@ -1398,7 +1379,9 @@ shrub_change <- land_cover_percents %>%
   group_by(county, year) %>%
   summarise(cover_percent = sum(cover_percent)) %>%
   arrange(county, year) %>%
+  # create lagged column with shrubland 5 years previous
   mutate(shrub_prev = lag(cover_percent, 1),
+         # calculate difference
          shrub_change = cover_percent - shrub_prev,
          perc_shrub_change = shrub_change / shrub_prev * 100) %>%
   filter(year %in% c(1990,2000,2010,2020)) %>%
@@ -1420,7 +1403,9 @@ developed_change <- land_cover_percents %>%
   group_by(county, year) %>%
   summarise(cover_percent = sum(cover_percent)) %>%
   arrange(county, year) %>%
+  # create lagged column with developed land 5 years previous
   mutate(developed_prev = lag(cover_percent, 1),
+         # calculate difference
          developed_change = cover_percent - developed_prev,
          perc_developed_change = developed_change / developed_prev * 100) %>%
   filter(year %in% c(1990,2000,2010,2020)) %>%
@@ -1440,11 +1425,12 @@ ru_data <- ru_data %>%
 
 #### Farms with net loss
 
-Data for 2002-2022 were downloaded from the NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 4.
+Data for 2002-2022 were downloaded from the NASS API. Data for 1992 were digitized from https://agcensus.library.cornell.edu/census_parts/1992-idaho/, Chapter 2, Table 4. (This URL is no longer supported, use archive.org to see archived version.)
 
 ```{r}
 #| label: "farms with loss"
 
+# list parameters for NASS API query
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
                year = c(2002, 2012, 2022),
@@ -1452,15 +1438,15 @@ params <- list(agg_level_desc = "county",
                               "Farm operations - number of operations"),
                domain_desc = "total")
 
+# query NASS API
 farms_w_loss <- nassqs(params)
-# save a backup copy
-# write.csv(farms_w_loss,
-#           "../data/API_data_download_backup/farms_w_loss.csv",
-#           row.names = FALSE)
 
+# read in digitized data
 farms_w_loss_1992 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  # join with digitized total farms data
   left_join(read.csv("../data/Farm_size_1925-1992.csv")) %>%
   filter(Size == "all farms") %>%
+  # calculate percent farms with net loss
   mutate(perc_farms_w_net_loss = Farms_w_net_losses / Num_farms * 100) %>%
   rename("county" = "County",
          "year" = "Year") %>%
@@ -1473,193 +1459,94 @@ ru_data <- farms_w_loss %>%
               names_from = statisticcat_desc,
               values_from = Value) %>%
   rowwise() %>%
+  # calculate percent farms with net loss
   mutate(perc_farms_w_net_loss = `LOSS` / `OPERATIONS` * 100) %>%
   rename("county" = "county_name") %>%
   mutate(county = str_to_title(county),
+         # match year to other data
          year = as.numeric(year)-2) %>%
   select(c(county, year, perc_farms_w_net_loss)) %>%
+  # join with 1992 data
   rbind(farms_w_loss_1992) %>%
+  # join with resource data
   right_join(ru_data, by=c("county", "year"))
 ```
 
 #### Jobs in agricultural support (hired labor, farm support services)
 
-County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
+County Business Patterns reports private sector employment, but they sometimes add missing values for confidentiality. We used imputed missing values for 1997-2012 from:
 
-Equivalent SIC and NAICS codes were found using the online code converting tool at https://siccode.com/naics-to-sic-conversion
+Fabian Eckert, Teresa C. Fort, Peter K. Schott, and Natalie J. Yang. "Imputing Missing Values in the US Census Bureau's County Business Patterns." NBER Working Paper #26632, 2021. https://www.fpeckert.me/cbp/
 
-Hired labor was downloaded from the Census of Ag. Data for 1992 were digitized from https://agcensus.library.cornell.edu/wp-content/uploads/1992-Idaho-CHAPTER_2_County_Data-1570-Table-05.pdf
+2022 County Business Patterns data was downloaded with the `censusapi` package. NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
+
+Hired labor was downloaded from the Census of Ag. Data for 1992 were digitized from https://agcensus.library.cornell.edu/wp-content/uploads/1992-Idaho-CHAPTER_2_County_Data-1570-Table-05.pdf (URL no longer supported, use archive.org)
 
 ```{r}
 #| label: "ag jobs"
 
+# read in digitized data on hired ag workers
 hired1990 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  # match years
   mutate(year = as.integer(Year)-2) %>%
   select(c(County, year, Hired_workers)) %>%
   rename("county" = "County",
          "num_hired" = "Hired_workers")
 
+# list parameters for NASS API query
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
                year = c(2002, 2012, 2022),
                short_desc = c("Labor, hired - Number of workers"),
                domain_desc = "total")
 
+# query NASS API
 hired <- nassqs(params)
 
+# clean hired workers data
 hired_clean <- hired %>%
   mutate(county_name = str_to_title(county_name),
+         # remove commas from numbers
          Value = as.numeric(str_remove_all(Value, ",")),
+         # match years
          year = as.integer(year)-2) %>%
   group_by(county_name, year) %>%
+  # add all hired worker for each year and county
   summarise(num_hired = sum(Value)) %>%
   rename("county" = "county_name") %>%
+  # add 1990 data
   rbind(hired1990)
 
-# ag support
-agjobs1990 <- rbind(
-  getCensus(name = "cbp",
-            vintage = 1990,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "0710"), # 0711 Soil Preparation Services
-  getCensus(name = "cbp",
-            vintage = 1990,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "0720"), # 0720 Crop Services
-  getCensus(name = "cbp",
-            vintage = 1990,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "0760"), # 0761 Farm Labor and Management Services
-  getCensus(name = "cbp",
-            vintage = 1990,
-            vars = c("EMP", "SIC_TTL"),
-            region = "county:*",
-            regionin = "state:16",
-            sic = "0750") # 0750 Animal Services except veterinary
-) %>%
-  mutate(GEOID = paste0(state, county),
-         year = 1990) %>%
+# read in interpolated private employment data
+agsupport9712 <- read.csv("../data/raw_data/employment/efsy_panel_naics.csv") %>%
+  # filter to Idaho and current years
+  filter(fipstate == 16 & year %in% c(1997, 2002, 2012)) %>%
+  # filter to ag support professions
+  filter(naics12 %in% c(unique(.$naics12[str_starts(.$naics12, "1151")]),
+                        unique(.$naics12[str_starts(.$naics12, "1152")]))) %>%
+  mutate(fipscty = str_pad(fipscty, 3, pad="0"),
+         GEOID = paste0(fipstate, fipscty)) %>%
   group_by(GEOID, year) %>%
-  summarise(ag_workers = sum(EMP))
+  # add ag workers together
+  summarise(ag_workers = sum(emp))
 
-agjobs2000 <- rbind(
-  getCensus(name = "cbp", 
-            vintage=2000,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = "115112"), # 115112 Soil Preparation, Planting, and Cultivating
-  getCensus(name = "cbp", 
-            vintage=2000,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = "115113"), # 115113 Crop Harvesting Primarily by Machine
-  getCensus(name = "cbp", 
-            vintage=2000,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = 115114), # 115114 Postharvest Crop Activities
-  getCensus(name = "cbp", 
-            vintage=2000,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = 115115), # 115115 Farm Labor Contractors and Crew Leaders
-  getCensus(name = "cbp", 
-            vintage=2000,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = 115116), # 115116 Farm Management Services
-  getCensus(name = "cbp", 
-            vintage=2000,
-            vars = c("EMP", "NAICS1997"),
-            region = "county:*",
-            regionin = "state:16",
-            naics1997 = 115210) # 115210 Support Activities for Animal Production
-) %>%
-  mutate(GEOID = paste0(state, county),
-         year = 2000) %>%
-  group_by(GEOID, year) %>%
-  summarise(ag_workers = sum(EMP))
-
-agjobs2010 <- rbind(
-  getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2007 = "115112"), # 115112 Soil Preparation, Planting, and Cultivating
-  getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2007 = "115113"), # 115113 Crop Harvesting Primarily by Machine
-  getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2007 = 115114), # 115114 Postharvest Crop Activities
-  getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2007 = 115115), # 115115 Farm Labor Contractors and Crew Leaders
-  getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2007 = 115116), # 115116 Farm Management Services
-  getCensus(name = "cbp", 
-            vintage=2010,
-            vars = c("EMP", "NAICS2007"),
-            region = "county:*",
-            regionin = "state:16",
-            naics2007 = 115210) # 115210 Support Activities for Animal Production
-) %>%
-  mutate(GEOID = paste0(state, county),
-         year = 2010) %>%
-  group_by(GEOID, year) %>%
-  summarise(ag_workers = sum(EMP))
-
-agjobs2020 <- getCensus(name = "cbp", 
-                            vintage=2020,
+# pull CBP private employment data for 2022
+agsupport2022 <- getCensus(name = "cbp",
+                            vintage=2022,
                   vars = c("EMP", "NAICS2017"),
                   region = "county:*",
                   regionin = "state:16") %>%
-  filter(NAICS2017 %in% c("115112", "115113", "115114", "115115", "115116", "115210")) %>%
+  # filter to ag support professions
+  filter(NAICS2017 %in% c("1151", "1152")) %>%
+  # add GEOID and year labels
   mutate(GEOID = paste0(state, county),
-         year = 2020) %>%
+         year = 2022) %>%
   group_by(GEOID, year) %>%
+  # add ag workers together
   summarise(ag_workers = sum(EMP))
 
-# save a backup copy
-# write.csv(agjobs1990,
-#           "../data/API_data_download_backup/agjobs1990.csv",
-#           row.names = FALSE)
-# write.csv(agjobs2000,
-#           "../data/API_data_download_backup/agjobs2000.csv",
-#           row.names = FALSE)
-# write.csv(agjobs2010,
-#           "../data/API_data_download_backup/agjobs2010.csv",
-#           row.names = FALSE)
-# write.csv(agjobs2020,
-#           "../data/API_data_download_backup/agjobs2020.csv",
-#           row.names = FALSE)
-
-agsupport <- do.call(rbind, list(agjobs1990, agjobs2000, agjobs2010, agjobs2020)) %>%
+# combine private ag workers data
+agsupport <- do.call(rbind, list(agsupport9712, agsupport2022)) %>%
   mutate(county = recode(GEOID, !!!GEOID_names))
 
 # get population (more info in actors section)
@@ -1694,13 +1581,18 @@ pop <- data.frame(county = c(pop1990$name,
                                     pop2010$value,
                                     pop2020$value))
 
+# join population and ag support data
 agjobs_pop <- left_join(pop, agsupport, by = c("county", "year")) %>%
+  # join on hired workers data
   left_join(hired_clean, by = c("county", "year")) %>%
   rowwise() %>%
+  # add 0 for any county with no ag workers
   mutate(ag_workers = ifelse(is.na(ag_workers), 0, ag_workers),
          pop = as.integer(pop)) %>%
+  # calculate number ag workers per 1000 people
   mutate(ag_support_per_1000 = sum(ag_workers, num_hired) / (pop/1000))
 
+# clean and join to all resource units data
 ru_data <- agjobs_pop %>%
   select(county, year, ag_support_per_1000) %>%
   right_join(ru_data, by = c("county", "year"))

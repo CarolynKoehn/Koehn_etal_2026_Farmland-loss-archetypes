@@ -769,10 +769,7 @@ First, we downloaded primary and secondary road shapefiles from the US Census TI
 
 We downloaded data for public sector health workers from the Census of Governments [@aspep1997; @aspep2002; @aspep2012; @aspep2022]. We added local government employees in the "Health" and "Hospitals" categories. Because the first available dataset from the Census of Governments is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 employment data for 1990, 2002 employment data for 2000, 2012 employment data for 2010, and 2022 employment data for 2020.
 
-We downloaded data for private sector health workers from the County Business Patterns series from the U.S. Census Bureau [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total healthcare workers in each county for each year:
-
-- 1997: SIC codes 8010 (Offices and clinics of medical doctors), 8060 (Hospitals), and 8080	(Home health care services)
-- 2002-2022: NAICS codes 621111 (Offices of physicians exc mental health), 622 (Hospitals), and 621610 (Home health care services)
+We used imputed values for private sector health workers from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We used the following NAICS codes: 621111 (Offices of physicians exc mental health), 622 (Hospitals), 623 (Nursing and Residential Care Facilities), and 621610 (Home health care services).
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and decade.
 
@@ -812,10 +809,7 @@ Farms with net loss and total farms data for 2002-2022 are available in the Cens
 
 #### Agriculture support jobs {#sec-ag-support-jobs-methods}
 
-We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total agriculture support workers in each county for each year:
-
-- 1990: SIC codes 0710 (Soil Preparation Services), 0720 (Crop Services), 0761 (Farm Labor and Management Services), 0750 (Animal Services except veterinary)
-- 2000-2020: NAICS codes 115112 (Soil Preparation, Planting, and Cultivating), 115113 (Crop Harvesting Primarily by Machine), 115114 (Postharvest Crop Activities), 115115 (Farm Labor Contractors and Crew Leaders), 115116 (Farm Management Services), 115210 (Support Activities for Animal Production)
+We used imputed values for private sector health workers from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We used the following NAICS codes: 1151 (Support Activities for Crop Production) and 1152 (Support Activities for Animal Production).
 
 We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
 
@@ -850,9 +844,7 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Percent employed in different industries {#sec-employ-indust-methods}
 
-Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020.
-
-We downloaded data for private sector jobs from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We summed jobs in the following categories based on which high-level SIC and NAICS codes were comparable:
+<!-- We downloaded data for private sector jobs from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We summed jobs in the following categories based on which high-level SIC and NAICS codes were comparable:
 
 - Agriculture, Forestry, Fishing and Hunting: SIC code 7 (Agricultural Services, Forestry, and Fishing), NAICS code 11 (Agriculture, Forestry, Fishing and Hunting)
 - Mining, Quarrying, and Oil and Gas Extraction: SIC code 10 (Mining), NAICS code 21 (Mining, Quarrying, and Oil and Gas Extraction)
@@ -866,7 +858,7 @@ We downloaded data for private sector jobs from the County Business Patterns ser
 - Education and libraries: SIC code 8200 (Educational services), NAICS codes 61 (Educational Services) and 519120 (Libraries and Archives)
 - Health and social services: SIC codes 8000 (Health services) and 8300 (Social services), NAICS code 62 (Health Care and Social Assistance)
 - Accommodation and Food: SIC codes 7000 (Hotels and Other Lodging Places) and 5800 (Eating and drinking places), NAICS code 72 (Accommodation and Food Services)
-- Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction)
+- Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction) -->
 
 The County Business Patterns data does not include public sector employees or agricultural producers. We used data from the Annual Survey of Public Employment & Payroll [@aspep1997; @aspep2002; @aspep2012; @aspep2022] to add public employees to the following categories:
 
@@ -876,6 +868,8 @@ The County Business Patterns data does not include public sector employees or ag
 - Recreation: ASPEP government function category "Parks & Recreation"
 
 We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state or federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022 since the County Business Patterns data did not include agricultural production.
+
+Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020.
 
 We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first three components, which explained 73.1% of the variance.
 
