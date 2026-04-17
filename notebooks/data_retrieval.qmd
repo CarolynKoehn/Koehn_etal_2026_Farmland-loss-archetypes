@@ -2036,11 +2036,15 @@ Data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 were download
 ```{r}
 #| label: "population density"
 
+# read in population data for 1990
 pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
   select(pop1990, name) %>%
+  # filter to Idaho, take out row for Idaho totals
   filter(str_starts(name, "ID") & name != "ID Idaho") %>%
+  # clean county names
   mutate(name = str_remove(name, "ID "),
          name = str_remove(name, " County"))
+# query census population data and clean county names
 pop2000 <- get_decennial(geography = "county",
                         state = "ID",
                         variables = "P001001",
@@ -2056,22 +2060,15 @@ pop2020 <- get_decennial(geography = "county",
                         variables = "P1_001N",
                         year = 2020) %>%
   mutate(NAME = str_remove(NAME, " County, Idaho"))
-# save a backup copy
-# write.csv(pop2000,
-#           "../data/API_data_download_backup/pop2000.csv",
-#           row.names = FALSE)
-# write.csv(pop2010,
-#           "../data/API_data_download_backup/pop2010.csv",
-#           row.names = FALSE)
-# write.csv(pop2020,
-#           "../data/API_data_download_backup/pop2020.csv",
-#           row.names = FALSE)
 
+# read in data on total county areas
 county_areas <- read.csv("../data/perc_land_in_farms_ID_counties_1925-2022.csv") %>%
   filter(Year >= 1990) %>%
+  # match years
   mutate(Year = as.numeric(Year-2)) %>%
   select(County, Year, Total_county_land_acres)
 
+# combine population data
 pop_dens <- data.frame(county = c(pop1990$name,
                                   pop2000$NAME,
                                   pop2010$NAME,
@@ -2081,9 +2078,11 @@ pop_dens <- data.frame(county = c(pop1990$name,
                                     pop2000$value,
                                     pop2010$value,
                                     pop2020$value)) %>%
+  # join on county areas
   left_join(county_areas,
             by = c("county" = "County",
                    "year" = "Year")) %>%
+  # calculate population density
   mutate(pop_per_acre = as.numeric(pop) / Total_county_land_acres) %>%
   select(county, year, pop_per_acre)
 
@@ -2098,12 +2097,14 @@ Population data sources same as above.
 ```{r}
 #| label: "population change"
 
+# read in data for 1980
 pop1980 <- read.csv("../data/raw_data/cencounts.csv") %>%
   select(pop1980, name) %>%
   filter(str_starts(name, "ID") & name != "ID Idaho") %>%
   mutate(name = str_remove(name, "ID "),
          name = str_remove(name, " County"))
 
+# combine 1980 data with data from above code chunk
 pop_change <- data.frame(county = c(pop1980$name,
                                     pop1990$name,
                                     pop2000$NAME,
@@ -2115,9 +2116,13 @@ pop_change <- data.frame(county = c(pop1980$name,
                                  pop2000$value,
                                  pop2010$value,
                                  pop2020$value))) %>%
+  # arrange by county and year
   arrange(county, year) %>%
+  # create lagged column with population 10 yrs previous
   mutate(pop_prev = lag(pop, 1),
+         # different between current and past population
          pop_change = pop - pop_prev,
+         # as a percent change
          perc_pop_change = pop_change / pop_prev * 100) %>%
   filter(year %in% c(1990,2000,2010,2020)) %>%
   select(county, year, perc_pop_change)
@@ -2136,406 +2141,65 @@ Fabian Eckert, Teresa C. Fort, Peter K. Schott, and Natalie J. Yang. "Imputing M
 
 2022 County Business Patterns data was downloaded with the `censusapi` package. SIC and NAICS codes were referenced here: https://www.census.gov/programs-surveys/cbp/technical-documentation/reference/naics-descriptions.html
 
-For public sector, we used ...
+For the public sector, we used data from the Annual Survey of Public Employment & Payroll (ASPEP) and the Quarterly Census of Employment and Wages (see Appendix A for more information).
 
 To add agricultural producers, not covered by CBP, we used the Census of Agriculture.
 
 ```{r}
 #| label: "employment sectors"
 
-# employment1997 <- rbind(
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "00"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "07"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "10"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "15"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "20"),
-#   # getCensus(name = "cbp",
-#   #           vintage = 1997,
-#   #           vars = c("EMP", "SIC_TTL"),
-#   #           region = "county:*",
-#   #           regionin = "state:16",
-#   #           sic = "40"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "4200"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "50"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "52"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "60"),
-#   # getCensus(name = "cbp",
-#   #           vintage = 1997,
-#   #           vars = c("EMP", "SIC_TTL"),
-#   #           region = "county:*",
-#   #           regionin = "state:16",
-#   #           sic = "70")
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "8100"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "8200"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "8000"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "8300"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "7000"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "5800"),
-#   getCensus(name = "cbp",
-#             vintage = 1997,
-#             vars = c("EMP", "SIC_TTL"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             sic = "7900")
-# )
-# 
-# employment2002 <- rbind(
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = "00"),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 11),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 21),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 23),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = "31-33"),
-#   # getCensus(name = "cbp", 
-#   #           vintage=2002,
-#   #           vars = c("EMP", "NAICS1997"),
-#   #           region = "county:*",
-#   #           regionin = "state:16",
-#   #           naics1997 = "48-49"),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 484),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 493),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 42),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = "44-45"),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 52),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 531),
-#   getCensus(name = "cbp", 
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 5411),
-#   getCensus(name = "cbp",
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 61),
-#   getCensus(name = "cbp",
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 514120),
-#   getCensus(name = "cbp",
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 62),
-#   getCensus(name = "cbp",
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 72),
-#   getCensus(name = "cbp",
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 71),
-#   getCensus(name = "cbp",
-#             vintage=2002,
-#             vars = c("EMP", "NAICS1997"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics1997 = 611620)
-# )
-# 
-# employment2012 <- rbind(
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = "00"),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 11),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 21),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 23),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = "31-33"),
-#   # getCensus(name = "cbp", 
-#   #           vintage=2012,
-#   #           vars = c("EMP", "NAICS2012"),
-#   #           region = "county:*",
-#   #           regionin = "state:16",
-#   #           naics2012 = "48-49"),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 484),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 493),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 42),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = "44-45"),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 52),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 531),
-#   getCensus(name = "cbp", 
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 5411),
-#   getCensus(name = "cbp",
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 61),
-#   getCensus(name = "cbp",
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 519120),
-#   getCensus(name = "cbp",
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 62),
-#   getCensus(name = "cbp",
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 72),
-#   getCensus(name = "cbp",
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 71),
-#   getCensus(name = "cbp",
-#             vintage=2012,
-#             vars = c("EMP", "NAICS2012"),
-#             region = "county:*",
-#             regionin = "state:16",
-#             naics2012 = 611620)
-# )
+##### read in and do initial clean of all raw data sources
 
+# read in employment data
 employment <- read.csv("../data/raw_data/employment/efsy_panel_naics.csv") %>%
+  # filter to Idaho and the right years
   filter(fipstate == 16 & year %in% c(1997, 2002, 2012)) %>%
   rename("state" = "fipstate",
          "county" = "fipscty")
 
+# query the 2022 CBP
 employment2022 <- getCensus(name = "cbp", 
                             vintage=2022,
                   vars = c("EMP", "NAICS2017"),
                   region = "county:*",
                   regionin = "state:16")
 
-# save a backup copy
-# write.csv(employment1997,
-#           "../data/API_data_download_backup/employment1997.csv",
-#           row.names = FALSE)
-# write.csv(employment2002,
-#           "../data/API_data_download_backup/employment2002.csv",
-#           row.names = FALSE)
-# write.csv(employment2012,
-#           "../data/API_data_download_backup/employment2012.csv",
-#           row.names = FALSE)
-# write.csv(employment2022,
-#           "../data/API_data_download_backup/employment2022.csv",
-#           row.names = FALSE)
-
+# create labels for ASPEP public sector employment data 1997
 loc_emp_1997_labs <- read.table("../data/raw_data/employment/97CEMPID.DAT",
                                 sep = ";", comment.char = "", quote = "") %>%
+  # filter to Idaho
   filter(str_starts(V1, "13")) %>%
+  # extract ID and GEOID (county) to label full dataset
   mutate(id = substr(V1, 1, 14),
          GEOID = substr(V1, 110, 114)) %>%
   select(-V1)
+# read in ASPEP public sector employment data
 loc_emp_1997 <- read_table("../data/raw_data/employment/97CEMPST.DAT",
                            na = "999999999",
                            col_names = c("id", "gov_func_code", "full_time_emp", "full_time_payroll", "part_time_emp", "part_time_payroll", "part_time_hours", "full_time_equivalent_emp")) %>%
+  # filter to Idaho
   filter(str_starts(id, "13")) %>%
+  # add GEOID labels
   left_join(loc_emp_1997_labs) %>%
+  # filter to employment codes of interest and filter out Idaho state employees (which are not broken down by county)
   filter(gov_func_code %in% c("025", "079", "032", "040", "061", "050", "012", "112", "052") & GEOID != "16   ") %>%
+  # relabel employment codes
   mutate(gov_func = factor(gov_func_code, 
                            levels = c("025", "079", "032", "040", "061", "050", "012", "112", "052"),
                            labels = c("Judicial & Legal", "Public Welfare", "Health", "Hospitals", "Parks & Recreation", "Housing & Community Development", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other", "Libraries"))) %>%
+  # re-categorize employment codes into the groups used in this analysis
   mutate(Industry = ifelse(gov_func == "Judicial & Legal", "Legal", NA),
          Industry = ifelse(gov_func %in% c("Libraries", "Education - Elementary and Secondary Instructional", "Education - Elementary and Secondary Other"), "Education and Libraries", Industry),
          Industry = ifelse(gov_func %in% c("Health", "Hospitals", "Housing & Community Development", "Public Welfare"), "Health and Social Services", Industry),
          Industry = ifelse(gov_func == "Parks & Recreation", "Recreation", Industry)) %>%
+  # group by county and new categories
   group_by(GEOID, Industry) %>%
+  # add together full time and part time employees in each industry category
   summarise(employed = sum(full_time_emp, part_time_emp, na.rm=TRUE)) %>%
+  # add year label
   mutate(year = 1997)
 
+# repeat 1997 process above for 2002-2022, with slight variations based on data differences
 loc_emp_2002_labs <- read.table("../data/raw_data/employment/02cempid.dat",
                                 sep = ";", comment.char = "", quote = "") %>%
   filter(str_starts(V1, "13")) %>%
@@ -2595,10 +2259,13 @@ loc_emp_2022 <- readxl::read_xlsx("../data/raw_data/employment/22emp.xlsx",
   ungroup() %>%
   select(GEOID, year, Industry, employed)
 
+# read in QCEW data for federal and state employees
 fed_state <- readxl::read_xlsx("../data/raw_data/employment/allhlcn97.xlsx") %>%
+  # combine other years
   rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn02.xlsx")) %>%
   rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn12.xlsx")) %>%
   rbind(readxl::read_xlsx("../data/raw_data/employment/allhlcn22.xlsx")) %>%
+  # filter to Idaho and federal or state government (local government from census of governments above)
   filter(`St Name` == "Idaho" & Ownership %in% c("Federal Government", "State Government")) %>%
   select(`Area\r\nCode`, Year, Ownership, `Annual Average Employment`) %>%
   rename("GEOID" = "Area\r\nCode",
@@ -2607,6 +2274,8 @@ fed_state <- readxl::read_xlsx("../data/raw_data/employment/allhlcn97.xlsx") %>%
          "employed" = "Annual Average Employment") %>%
   mutate(year = as.integer(year))
 
+# query NASS for operators/producers
+# switch from principal operators to producers means that 2022 numbers are inflated compared to other years
 producers <- nassqs(list(state_alpha = "ID",
                          agg_level_desc = "county",
                          year = c(1997, 2002, 2012, 2022),
@@ -2614,12 +2283,58 @@ producers <- nassqs(list(state_alpha = "ID",
                                         "Operators, principal, primary occupation, farming - number of operators",
                                         "Producers, primary occupation, (excl farming) - number of producers",
                                         "Producers, primary occupation, farming - number of producers"))) %>%
+  # create GEOID
   mutate(GEOID = paste0(state_fips_code, county_code)) %>%
   group_by(GEOID, year) %>%
+  # calculated total producers in each county and year
   summarise(employed = sum(Value)) %>%
+  # label for combination with other data
   mutate(Industry = "Agriculture, Forestry, Fishing and Hunting",
          year = as.integer(year))
 
+##### calculate total number of people employed, including in categories not included in the analysis
+
+# private sector total
+cbp_totals <- employment %>%
+  # create GEOID
+  mutate(county = str_pad(county, width=3, side="left", pad="0"),
+         GEOID = paste0(state, county)) %>%
+  group_by(GEOID, year) %>%
+  # add up all people employed in all industries
+  # in the imputed data, this means adding all rows
+  summarise(total_employed = sum(emp)) %>%
+  # combine with 2022 private sector data
+  rbind(employment2022 %>%
+          # in CBP raw data, there is one row for total employed (NAICS = 00)
+          # filter to this row for each county
+          filter(NAICS2017 == "00") %>%
+          mutate(GEOID = paste0(state, county),
+                 year=2022) %>%
+          rename("total_employed" = "EMP") %>%
+          select(GEOID, year, total_employed))
+# combine all ASPEP datasets for total employed in local government sectors
+loc_emp_totals <- rbind(loc_emp_1997, loc_emp_2002, loc_emp_2012, loc_emp_2022) %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(employed))
+# sum federal and state employees for each county and year
+fed_state_totals <- fed_state %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(employed))
+# sum producers for each county and year
+producers_totals <- producers %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(employed))
+
+# combine all sectors datasets for total number of people employed
+employment_totals <- rbind(cbp_totals, loc_emp_totals, fed_state_totals, producers_totals) %>%
+  group_by(GEOID, year) %>%
+  summarise(total_employed = sum(total_employed)) %>%
+  # label counties
+  mutate(county = recode(GEOID, !!!GEOID_names))
+
+#### clean and combine all employment data
+
+# create a lookup table to relabel NAICS codes from the CBP
 employment_codes <- tibble(sector = c("Total",
                                       "Agriculture, Forestry, Fishing and Hunting",
                                       "Mining, Quarrying, and Oil and Gas Extraction",
@@ -2639,21 +2354,15 @@ employment_codes <- tibble(sector = c("Total",
                                       "Education and Libraries",
                                       "Education and Libraries",
                                       "Health and Social Services",
-                                      "Health and Social Services",
-                                      "Accomodation and Food",
                                       "Accomodation and Food",
                                       "Recreation",
-                                      "Recreation"),
-                               # sic = c(0, 7, 10, 15, 20, 4200, 4200, 50, 52, 60, 60, 
-                               #         8100, 8200, 8200, 8200, 8000, 8300, 7000, 5800, 7900, 7900),  
+                                      "Recreation"),  
                            naics12 = c("00", 11, 21, 23, 31, 32, 33, 484, 493, 42, 44, 45, 52, 531, 
-                                     5411, 61, 519120, 514120, 62, 62, 72, 72, 71, 611620),
+                                     5411, 61, 519120, 514120, 62, 72, 71, 611620),
                            naics22 = c("00", 11, 21, 23, "31-33", "31-33", "31-33", 484, 493, 42, "44-45", "44-45", 52, 531, 
-                                     5411, 61, 519120, 514120, 62, 62, 72, 72, 71, 611620))
+                                     5411, 61, 519120, 514120, 62, 72, 71, 611620))
 
-# recode_sic_df <- unique(employment_codes[, c("sector", "sic")])
-# recode_sic <- recode_sic_df$sector
-# names(recode_sic) <- recode_sic_df$sic
+# create dplyr-friendly lookup vectors
 recode_naic12_df <- unique(employment_codes[, c("sector", "naics12")])
 recode_naic12 <- recode_naic12_df$sector
 names(recode_naic12) <- recode_naic12_df$naics12
@@ -2661,190 +2370,107 @@ recode_naic22_df <- unique(employment_codes[, c("sector", "naics22")])
 recode_naic22 <- recode_naic22_df$sector
 names(recode_naic22) <- recode_naic22_df$naics22
 
-# employment1997_clean <- employment1997 %>%
-#   mutate(GEOID = paste0(state, county),
-#          year=1997,
-#          Industry = recode(SIC, !!!recode_sic)) %>%
-#   group_by(GEOID, year, Industry) %>%
-#   summarise(employed = sum(EMP)) %>%
-#   rbind(loc_emp_1997) %>%
-#   rbind(filter(fed_state, year == 1997)) %>%
-#   rbind(filter(producers, year == 1997)) %>%
-#   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
-#   group_by(county, year, Industry) %>%
-#   summarise(employed = sum(employed)) %>%
-#   pivot_wider(id_cols = c("county", "year"),
-#               names_from = "Industry",
-#               values_from = "employed") %>%
-#   filter(county != 16999 & county != 16000) %>%
-#   select(-Total) %>%
-#   replace(is.na(.), 0) %>%
-#   ungroup() %>%
-#   mutate(Total = rowSums(.[3:ncol(.)])) %>%
-#   rowwise() %>%
-#   mutate(across(!c(county, year),
-#                 ~.x/Total * 100)) %>%
-#   select(-Total)
-# 
-# employment2002_clean <- employment2002 %>%
-#   mutate(GEOID = paste0(state, county),
-#          year=2002,
-#          NAICS1997 = str_remove_all(NAICS1997, " "),
-#          Industry = recode_factor(NAICS1997, !!!recode_naic)) %>%
-#   group_by(GEOID, year, Industry) %>%
-#   summarise(employed = sum(EMP)) %>%
-#   rbind(loc_emp_2002) %>%
-#   rbind(filter(fed_state, year == 2002)) %>%
-#   rbind(filter(producers, year == 2002)) %>%
-#   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
-#   group_by(county, year, Industry) %>%
-#   summarise(employed = sum(employed)) %>%
-#   pivot_wider(id_cols = c("county", "year"),
-#               names_from = "Industry",
-#               values_from = "employed") %>%
-#   filter(county != 16999 & county != 16000) %>%
-#   select(-Total) %>%
-#   replace(is.na(.), 0) %>%
-#   ungroup() %>%
-#   mutate(Total = rowSums(.[3:ncol(.)])) %>%
-#   rowwise() %>%
-#   mutate(across(!c(county, year),
-#                 ~.x/Total * 100)) %>%
-#   select(-Total)
-# 
-# employment_industries <- rbind(employment1997_clean, employment2002_clean)
-# 
-# employment2012_clean <- employment2012 %>%
-#   mutate(GEOID = paste0(state, county),
-#          year=2012,
-#          NAICS2007 = str_remove_all(NAICS2012, " "),
-#          Industry = recode_factor(NAICS2012, !!!recode_naic)) %>%
-#   group_by(GEOID, year, Industry) %>%
-#   summarise(employed = sum(EMP)) %>%
-#   rbind(loc_emp_2012) %>%
-#   rbind(filter(fed_state, year == 2012)) %>%
-#   rbind(filter(producers, year == 2012)) %>%
-#   mutate(county = ifelse(is.na(county), recode(GEOID, !!!GEOID_names), county)) %>%
-#   group_by(county, year, Industry) %>%
-#   summarise(employed = sum(employed)) %>%
-#   pivot_wider(id_cols = c("county", "year"),
-#               names_from = "Industry",
-#               values_from = "employed") %>%
-#   filter(county != 16999 & county != 16000) %>%
-#   select(-Total) %>%
-#   replace(is.na(.), 0) %>%
-#   ungroup() %>%
-#   mutate(Total = rowSums(.[3:ncol(.)])) %>%
-#   rowwise() %>%
-#   mutate(across(!c(county, year),
-#                 ~.x/Total * 100)) %>%
-#   select(-Total)
-# 
-# employment_industries <- rbind(employment_industries, employment2012_clean)
-
-## add total employed
-cbp_totals <- employment %>%
-  mutate(county = str_pad(county, width=3, side="left", pad="0"),
-         GEOID = paste0(state, county)) %>%
-  group_by(GEOID, year) %>%
-  summarise(total_employed = sum(emp)) %>%
-  rbind(employment2022 %>%
-          filter(NAICS2017 == "00") %>%
-          mutate(GEOID = paste0(state, county),
-                 year=2022) %>%
-          rename("total_employed" = "EMP") %>%
-          select(GEOID, year, total_employed))
-loc_emp_totals <- rbind(loc_emp_1997, loc_emp_2002, loc_emp_2012, loc_emp_2022) %>%
-  group_by(GEOID, year) %>%
-  summarise(total_employed = sum(employed))
-fed_state_totals <- fed_state %>%
-  group_by(GEOID, year) %>%
-  summarise(total_employed = sum(employed))
-producers_totals <- producers %>%
-  group_by(GEOID, year) %>%
-  summarise(total_employed = sum(employed))
-
-employment_totals <- rbind(cbp_totals, loc_emp_totals, fed_state_totals, producers_totals) %>%
-  group_by(GEOID, year) %>%
-  summarise(total_employed = sum(total_employed)) %>%
-  mutate(county = recode(GEOID, !!!GEOID_names))
-
+# clean and re-label private sector data
 employment_clean <- employment %>%
+  # create GEOID
   mutate(county = str_pad(county, width=3, side="left", pad="0"),
          GEOID = paste0(state, county),
+         # re-label NAICS codes with lookup table
+         # first, re-label all matching 6-character codes, otherwise NA
          industry_matches = ifelse(naics12 %in% employment_codes$naics12, naics12, NA)) %>%
+  # next find matches from the first 4, then 3, then 2 characters for broader categories
   mutate(industry_matches = ifelse(str_sub(naics12, 1, 4) %in% employment_codes$naics12, str_sub(naics12, 1, 4), industry_matches)) %>%
   mutate(industry_matches = ifelse(str_sub(naics12, 1, 3) %in% employment_codes$naics12, str_sub(naics12, 1, 3), industry_matches)) %>%
   mutate(industry_matches = ifelse(str_sub(naics12, 1, 2) %in% employment_codes$naics12, str_sub(naics12, 1, 2), industry_matches)) %>%
+  # re-label categories
   mutate(Industry = recode_factor(industry_matches, !!!recode_naic12)) %>%
+  # filter to only industries of interest
   filter(Industry %in% employment_codes$sector) %>%
   group_by(GEOID, year, Industry) %>%
+  # total employees by industry category
   summarise(employed = sum(emp)) %>%
+  # combine with local government employees
   rbind(loc_emp_1997) %>%
   rbind(loc_emp_2002) %>%
   rbind(loc_emp_2012) %>%
+  # combine with federal and state employees (2022 will be done separately below)
   rbind(filter(fed_state, year != 2022)) %>%
   rbind(filter(producers, year != 2022)) %>%
+  # better county labels
   mutate(county = recode(GEOID, !!!GEOID_names), county) %>%
   group_by(county, year, Industry) %>%
+  # another sum of total employed by industry as some private and public sector categories overlap
   summarise(employed = sum(employed)) %>%
+  # pivot so that each industry is its own column
   pivot_wider(id_cols = c("county", "year"),
               names_from = "Industry",
               values_from = "employed") %>%
+  # filter out unspecified county and Idaho total
   filter(county != 16999 & county != 16000) %>%
+  # replace all NAs with 0
   replace(is.na(.), 0) %>%
   ungroup() %>%
-  # mutate(Total = rowSums(.[3:ncol(.)])) %>%
+  # join total jobs
   left_join(employment_totals[,-1], by = c("county", "year")) %>%
   rowwise() %>%
+  # get percent employed in each industry compared to total jobs
   mutate(across(!c(county, year),
                 ~.x/total_employed * 100)) %>%
   select(-total_employed)
   
-
+# clean and combine 2022 employment data
 employment2022_clean <- employment2022 %>%
+  # create clean label data
   mutate(GEOID = paste0(state, county),
          year=2022,
          NAICS2017 = str_remove_all(NAICS2017, " "),
          Industry = recode_factor(NAICS2017, !!!recode_naic22)) %>%
+  # filter to industries of interest
   filter(Industry %in% employment_codes$sector) %>%
   group_by(GEOID, year, Industry) %>%
+  # sum jobs by industry
   summarise(employed = sum(EMP)) %>%
+  # add on other 2022 data from public sector, producers
   rbind(loc_emp_2022) %>%
   rbind(filter(fed_state, year == 2022)) %>%
   rbind(filter(producers, year == 2022)) %>%
+  # add county labels
   mutate(county = recode(GEOID, !!!GEOID_names), county) %>%
   group_by(county, year, Industry) %>%
+  # another sum of total employed by industry as some private and public sector categories overlap
   summarise(employed = sum(employed)) %>%
+  # pivot so that each industry is its own column
   pivot_wider(id_cols = c("county", "year"),
               names_from = "Industry",
               values_from = "employed") %>%
+  # filter out unspecified county and Idaho total
   filter(county != 16999 & county != 16000) %>%
   select(-Total) %>%
+  # replace all NAs with 0
   replace(is.na(.), 0) %>%
   ungroup() %>%
-  # mutate(Total = rowSums(.[3:ncol(.)])) %>%
+  # join total jobs
   left_join(employment_totals[,-1], by = c("county", "year")) %>%
   rowwise() %>%
+  # get percent employed in each industry compared to total jobs
   mutate(across(!c(county, year),
                 ~.x/total_employed * 100)) %>%
   select(-total_employed)
 
-# employment_industries <- rbind(employment_industries, employment2022_clean)
-# employment_industries_update <- rbind(employment_clean, employment2022_clean)
-employment_industries_update_new_totals <- rbind(employment_clean, employment2022_clean)
+employment_industries <- rbind(employment_clean, employment2022_clean)
 
-employ_pca <- prcomp(employment_industries_update_new_totals[,-c(1:2)])
+employ_pca <- prcomp(employment_industries[,-c(1:2)])
 summary(employ_pca)
 #biplot(employ_pca)
 
 # join components explaining >70% of variance
-a_data <- cbind(employment_industries_update_new_totals, employ_pca$x[,1:4]) %>%
+a_data <- cbind(employment_industries, employ_pca$x[,1:4]) %>%
   select(county, year, PC1, PC2, PC3, PC4) %>%
   rename("emply_pc1" = "PC1",
          "emply_pc2" = "PC2",
          "emply_pc3" = "PC3",
          "emply_pc4" = "PC4") %>%
+  # match years
   mutate(year = ifelse(year == 1997, 1990, year-2)) %>%
   right_join(a_data, by=c("county", "year"))
 ```
@@ -2856,60 +2482,73 @@ Data for 2000-2020 were downloaded via API call using `tidycensus`. Data from 19
 ```{r}
 #| label: "percent retired"
 
+# read in digitized data
 retired1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
   rowwise() %>%
-  mutate(perc_retired = sum(Males_65_69_not_in_labor_force,
+  mutate(num_retired = sum(Males_65_69_not_in_labor_force,
                             Males_70plus_not_in_labor_force,
                             Females_65_69_not_in_labor_force,
-                            Females_70plus_not_in_labor_force) /
-           sum(Pop_urban, Pop_rural) * 100) %>%
+                            Females_70plus_not_in_labor_force)) %>%
   rename("county" = "County",
          "year" = "Year") %>%
-  select(county, year, perc_retired)
+  select(county, year, num_retired)
 
+# query US Census data for males and females not in labor force >65 years old
 retired2000 <- get_decennial(geography = "county",
                              table = "PCT035",
                              year = 2000,
-                             state = "ID") %>%
-  filter(variable %in% c("PCT035001", "PCT035079", "PCT035086", "PCT035093", "PCT035171", "PCT035178", "PCT035185")) %>%
+                             state = "ID",
+                             sumfile = "sf3") %>%
+  filter(variable %in% c("PCT035079", "PCT035086", "PCT035093", "PCT035171", "PCT035178", "PCT035185")) %>%
   pivot_wider(id_cols = c("GEOID", "NAME"),
               names_from = "variable",
               values_from = "value") %>%
   rowwise() %>%
-  mutate(perc_retired = sum(PCT035079, PCT035086, PCT035093, PCT035171, PCT035178, PCT035185) / PCT035001 * 100) %>%
+  mutate(num_retired = sum(PCT035079, PCT035086, PCT035093, PCT035171, PCT035178, PCT035185)) %>%
+  # clean labels
   mutate(county = str_remove(NAME, " County, Idaho"),
          year = 2000) %>%
-  select(county, year, perc_retired)
+  select(county, year, num_retired)
 
 retired2010 <- get_acs(geography = "county",
                        table = "B23001",
                        year = 2010,
                        state = "ID") %>%
-  filter(variable %in% c("B23001_001", "B23001_077", "B23001_082", "B23001_087", "B23001_163", "B23001_168", "B23001_173")) %>%
+  filter(variable %in% c("B23001_077", "B23001_082", "B23001_087", "B23001_163", "B23001_168", "B23001_173")) %>%
   pivot_wider(id_cols = c("GEOID", "NAME"),
               names_from = "variable",
               values_from = "estimate") %>%
   rowwise() %>%
-  mutate(perc_retired = sum(B23001_077, B23001_082, B23001_087, B23001_163, B23001_168, B23001_173) / B23001_001 * 100) %>%
+  mutate(num_retired = sum(B23001_077, B23001_082, B23001_087, B23001_163, B23001_168, B23001_173)) %>%
+  # clean labels
   mutate(county = str_remove(NAME, " County, Idaho"),
          year = 2010) %>%
-  select(county, year, perc_retired)
+  select(county, year, num_retired)
 
 retired2020 <- get_acs(geography = "county",
                        table = "B23001",
                        year = 2020,
                        state = "ID") %>%
-  filter(variable %in% c("B23001_001", "B23001_077", "B23001_082", "B23001_087", "B23001_163", "B23001_168", "B23001_173")) %>%
+  filter(variable %in% c("B23001_077", "B23001_082", "B23001_087", "B23001_163", "B23001_168", "B23001_173")) %>%
   pivot_wider(id_cols = c("GEOID", "NAME"),
               names_from = "variable",
               values_from = "estimate") %>%
   rowwise() %>%
-  mutate(perc_retired = sum(B23001_077, B23001_082, B23001_087, B23001_163, B23001_168, B23001_173) / B23001_001 * 100) %>%
+  mutate(num_retired = sum(B23001_077, B23001_082, B23001_087, B23001_163, B23001_168, B23001_173)) %>%
+  # clean labels
   mutate(county = str_remove(NAME, " County, Idaho"),
          year = 2020) %>%
+  select(county, year, num_retired)
+
+perc_retired <- rbind(retired1990, retired2000, retired2010, retired2020) %>%
+  # total population created in code chunk above (population density)
+  left_join(pop) %>%
+  rowwise() %>%
+  mutate(perc_retired = num_retired / as.numeric(pop) * 100) %>%
   select(county, year, perc_retired)
 
-a_data <- rbind(retired1990, retired2000, retired2010, retired2020) %>%
+# join
+a_data <- perc_retired %>%
   right_join(a_data, by = c("county", "year"))
 ```
 
@@ -2920,9 +2559,11 @@ Age data downloaded from https://seer.cancer.gov/popdata/download.html.
 ```{r}
 #| label: "average age"
 
+# read in raw data
 age_raw <- read.table(file = gzfile("../data/raw_data/id.1969_2023.singleages.through89.90plus.txt.gz"),
                       sep = "\n", strip.white = TRUE)
 
+# use string subsetting and metadata to format raw data
 age_formatted <- age_raw %>%
   mutate(year = as.integer(substr(V1, 1, 4)),
          GEOID = substr(V1, 7, 11),
@@ -2930,9 +2571,12 @@ age_formatted <- age_raw %>%
          Pop = as.numeric(substr(V1, 19, 19+8)))
 
 age <- age_formatted %>%
+  # filter to years of interest
   filter(year %in% c(1990, 2000, 2010, 2020)) %>%
+  # label counties
   mutate(county = recode(GEOID, !!!GEOID_names)) %>%
   group_by(county, year) %>%
+  # find weighted mean for each county-year given an age and the number of people that age
   summarise(avg_age = weighted.mean(Age, Pop))
 
 a_data <- left_join(a_data, age, by = c("county", "year"))
@@ -2953,17 +2597,21 @@ cpiu_general_west_dec_2000 <- 177.1
 cpiu_general_west_dec_2010 <- 222.081
 cpiu_general_west_dec_2020 <- 276.593
 
+# read in digitized data
 medinc1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
   rename("county" = "County",
          "year" = "Year",
          "med_income" = "Median_household_income") %>%
+  # add CPI for 1990
   mutate(cpiu = cpiu_general_west_dec_1990) %>%
   select(county, year, med_income, cpiu)
 
+# query US Census for median income
 medinc2000 <- get_decennial(geography = "county",
                             variables = "P053001",
                             year = 2000,
-                            state = "ID") %>%
+                            state = "ID",
+                            sumfile = "sf3") %>%
   mutate(county = str_remove(NAME, " County, Idaho"),
          year = 2000,
          cpiu = cpiu_general_west_dec_2000) %>%
@@ -2990,9 +2638,12 @@ medinc2020 <- get_acs(geography = "county",
   rename("med_income" = "estimate") %>%
   select(county, year, med_income, cpiu)
 
+# combine data years
 medinc <- rbind(medinc1990, medinc2000, medinc2010, medinc2020) %>%
   rowwise() %>%
+  # compute CPI ratios
   mutate(cpiu_ratio = cpiu_general_west_dec_2020 / cpiu,
+         # adjust median incomes for inflation to 2020 dollars using CPI ratios
          med_income_in_2020_USD = med_income * cpiu_ratio) %>%
   select(county, year, med_income_in_2020_USD)
 
@@ -3001,23 +2652,29 @@ a_data <- left_join(a_data, medinc, by = c("county", "year"))
 
 ### Employment rate
 
-Raw unemployment data was downloaded from https://download.bls.gov/pub/time.series/la/ (`la.data.64.County`).
+Raw unemployment data was downloaded from https://download.bls.gov/pub/time.series/la/ (`la.data.64.County`). Metadata can be viewed at https://download.bls.gov/pub/time.series/la/la.txt and https://download.bls.gov/pub/time.series/la/la.series
 
 ```{r}
+#| label: "unemployment"
+
+# read in raw data
 unemployment_raw <- read.table(file = gzfile("../data/raw_data/la.data.64.County.txt.gz"),
                                header = TRUE,
                                sep = "\t")
 
+# use string subsetting and metadata to format raw data
 unemployment_clean <- unemployment_raw %>%
+  # filter to unemployment rates only and years of interest
   filter(str_detect(series_id, "0000000003") &
            year %in% c(1990, 2000, 2010, 2020)) %>%
-  mutate(value = as.numeric(value),
+  mutate(unemployment_rate = as.numeric(value),
          GEOID = substr(series_id, 6, 10)) %>%
+  # filter to Idaho
   filter(str_starts(GEOID, "16")) %>%
-  group_by(GEOID, year) %>%
-  summarise(unemployment_rate = mean(value)) %>%
+  # get annual average
+  filter(period == "M13") %>%
+  # label counties
   mutate(county = recode(GEOID, !!!GEOID_names)) %>%
-  ungroup() %>%
   select(county, year, unemployment_rate)
 
 # join
@@ -3034,7 +2691,9 @@ Population data for 2000-2020 were downloaded via `tidycensus`. Data for 1990 we
 ```{r}
 #| label: "education level"
 
+# read in IPUMS data
 educ1990 <- read.csv("../data/raw_data/nhgis0009_csv/nhgis0009_ds123_1990_county.csv") %>%
+  # filter to Idaho
   filter(STUSAB == "ID") %>%
   rename("county" = "COUNTY",
          "year" = "YEAR",
@@ -3042,6 +2701,7 @@ educ1990 <- read.csv("../data/raw_data/nhgis0009_csv/nhgis0009_ds123_1990_county
          "bachelors" = "E33006") %>%
   select(county, year, high_school, bachelors)
 
+# query census
 educ2000 <- get_decennial(geography = "county",
                           variables = c("P037011", "P037015", "P037028", "P037032"),
                           year = 2000,
@@ -3089,43 +2749,17 @@ educ2020 <- get_acs(geography = "county",
 
 educ_level <- rbind(educ1990, educ2000, educ2010, educ2020)
 
-pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
-  select(pop1990, name) %>%
-  filter(str_starts(name, "ID") & name != "ID Idaho") %>%
-  mutate(name = str_remove(name, "ID "),
-         name = str_remove(name, " County"))
-pop2000 <- get_decennial(geography = "county",
-                        state = "ID",
-                        variables = "P001001",
-                        year = 2000) %>%
-  mutate(NAME = str_remove(NAME, " County, Idaho"))
-pop2010 <- get_decennial(geography = "county",
-                        state = "ID",
-                        variables = "P001001",
-                        year = 2010) %>%
-  mutate(NAME = str_remove(NAME, " County, Idaho"))
-pop2020 <- get_decennial(geography = "county",
-                        state = "ID",
-                        variables = "P1_001N",
-                        year = 2020) %>%
-  mutate(NAME = str_remove(NAME, " County, Idaho"))
-pop_tot <- data.frame(county = c(pop1990$name,
-                                  pop2000$NAME,
-                                  pop2010$NAME,
-                                  pop2020$NAME),
-                            year = rep(seq(1990, 2020, 10), each = nrow(pop1990)),
-                            pop = as.numeric(c(pop1990$pop1990,
-                                    pop2000$value,
-                                    pop2010$value,
-                                    pop2020$value)))
+# pop = population (generated above in population density code chunk)
 
-educ_level <- left_join(educ_level, pop_tot) %>%
+# combine with population to get percentages
+educ_level <- left_join(educ_level, pop) %>%
   rowwise() %>%
-  mutate(high_school = high_school/pop * 100,
-         bachelors = bachelors/pop * 100)
+  mutate(high_school = high_school/as.numeric(pop) * 100,
+         bachelors = bachelors/as.numeric(pop) * 100) %>%
+  select(-pop)
 
 # join
-a_data <- left_join(a_data, edu_level, by = c("county", "year"))
+a_data <- left_join(a_data, educ_level, by = c("county", "year"))
 ```
 
 ### Racial Composition
@@ -3135,17 +2769,21 @@ Data for 2000-2020 were downloaded via API call using `tidycensus`. Data for 199
 ```{r}
 #| label: "racial composition"
 
+# read in digitized data
 races1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
   rowwise() %>%
+  # divide each category by total population
   mutate(across(Persons_white:Persons_other, ~.x / sum(Pop_urban, Pop_rural) * 100)) %>%
   rename("county" = "County",
          "year" = "Year") %>%
   select(county, year, Persons_AmericanIndian_Eskimo_Aleut, Persons_Asian, Persons_Black, Persons_PacificIslander, Persons_other, Persons_white)
 
+# query census API
 races2000 <- get_decennial(geography = "county",
                            table = "P003",
                            year = 2000,
                            state = "ID") %>%
+  # re-label
   mutate(variable = str_replace(variable, "P003001", "Total"),
          variable = str_replace(variable, "P003003", "Persons_white"),
          variable = str_replace(variable, "P003004", "Persons_Black"),
@@ -3161,11 +2799,13 @@ races2000 <- get_decennial(geography = "county",
               names_from = "variable",
               values_from = "value") %>%
   rowwise() %>%
+  # calculate percentage
   mutate(across(Persons_AmericanIndian_Eskimo_Aleut:Persons_white,
                 ~.x / Total * 100)) %>%
   mutate(year = 2000) %>%
   select(county, year, Persons_AmericanIndian_Eskimo_Aleut:Persons_white)
 
+# repeat process for 2010-20
 races2010 <- get_decennial(geography = "county",
                            table = "P003",
                            year = 2010,
@@ -3218,6 +2858,7 @@ races2020 <- get_decennial(geography = "county",
 races_all <- rbind(races1990, races2000, races2010, races2020)
 
 races_pca <- prcomp(races_all[,-c(1:2)])
+summary(races_pca)
 
 races_pc_results <- cbind(races_all[,c("county", "year")], races_pca$x[, "PC1"]) %>%
   rename("races_PC1" = 'races_pca$x[, "PC1"]')
@@ -3232,13 +2873,16 @@ Data for 2000-2020 were downloaded via API call using `tidycensus`. Data for 199
 ```{r}
 #| label: "ethnicity"
 
+# read in digitized data
 eth1990 <- read.csv("../data/1990_US_Census_data.csv") %>%
   rowwise() %>%
+  # calculate percentage
   mutate(perc_hispanic = Persons_Hispanic / sum(Pop_urban, Pop_rural) * 100) %>%
   rename("county" = "County",
          "year" = "Year") %>%
   select(county, year, perc_hispanic)
 
+# query census API for hispanic ethnicity
 ethn2000 <- get_decennial(geography = "county",
                           variables = c("P004001", "P004002"),
                           year = 2000,
@@ -3294,37 +2938,42 @@ Percent of farms full-owned, part-owned, or tenant operated. We use PCA scores s
 ```{r}
 #| label: "farm tenure"
 
+# list parameters for NASS API query
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
                year = c(2002, 2012, 2022),
                commodity_desc = "Farm operations",
                short_desc = "Farm operations - number of operations",
                domain_desc = "tenure")
-# retrieve and clean
+# retrieve
 farm_own <- nassqs(params)
-# save a backup copy
-# write.csv(farm_own,
-#           "../data/API_data_download_backup/farm_own.csv",
-#           row.names = FALSE)
 
+# clean
 farm_own_perc <- farm_own %>%
   select(county_name, year, Value, domaincat_desc) %>%
   pivot_wider(id_cols = county_name:year,
               names_from = domaincat_desc,
               values_from = Value) %>%
   rowwise() %>%
+  # calculate total farms
   mutate(total_farms = sum(c_across(`TENURE: (FULL OWNER)`:`TENURE: (TENANT)`))) %>%
+  # find percent farms in each tenure category
   mutate(across(`TENURE: (FULL OWNER)`:`TENURE: (TENANT)`,
-                ~.x / total_farms * 100)) %>%
+                ~.x / total_farms * 100),
+         year = as.integer(year)) %>%
+  # re-label
   rename("Num_full_owned" = "TENURE: (FULL OWNER)",
          "Num_part_owned" = "TENURE: (PART OWNER)",
          "Num_tenant" = "TENURE: (TENANT)",
          "county" = "county_name") %>%
   select(-total_farms)
 
+# read in digitized data on tenure
 farm_tenure_1992 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
+  # join with total number of farms
   left_join(read.csv("../data/Farm_size_1925-1992.csv")) %>%
   filter(Size == "all farms") %>%
+  # calculate percent farms in each category
   mutate(across(starts_with("Num_"), ~.x/Num_farms * 100)) %>%
   rename("county" = "County",
          "year" = "Year") %>%
@@ -3332,16 +2981,16 @@ farm_tenure_1992 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
 
 #combine
 farm_own_perc <- rbind(farm_own_perc, farm_tenure_1992) %>%
+  # data withheld for Shoshone county
   na.omit()
-
-
 
 # for categories that add to 1, add PCA components to clustering data
 farm_own_pca <- prcomp(farm_own_perc[,3:5])
+summary(farm_own_pca)
 
 # join
 a_data <- farm_own_perc %>%
-  cbind(., farm_own_pca$x[,1]) %>% # adding components that explain >90% of variance
+  cbind(., farm_own_pca$x[,1]) %>% # adding components that explain >70% of variance
   rename('tenure_pc1' = 'farm_own_pca$x[, 1]') %>%
   select(county, year, tenure_pc1) %>%
   mutate(county = str_to_title(county),
@@ -3355,6 +3004,8 @@ Data for 2002-2022 were downloaded from the NASS API. Data for 1992 were digitiz
 
 ```{r}
 #| label: "farms with loss - actors"
+
+# same code used for RU4 farms with net loss
 
 params <- list(agg_level_desc = "county",
                state_name = "Idaho",
@@ -3395,6 +3046,8 @@ a_data <- farms_w_loss %>%
 ```{r}
 #| label: "hired ag workers"
 
+# same code used in RU4 agriculture support jobs
+
 hired1990 <- read.csv("../data/1992_CensOfAg_data.csv") %>%
   mutate(year = as.integer(Year)-2) %>%
   select(c(County, year, Hired_workers)) %>%
@@ -3424,42 +3077,37 @@ a_data <- left_join(a_data, hired_clean, by = c("county", "year"))
 
 ## A4 -- Location
 
-### Population in urban and rural areas
+### Geographical Isolation
 
-Use RUCA counts instead? https://www.ers.usda.gov/data-products/rural-urban-commuting-area-codes and paper that uses it: https://doi.org/10.1111/ruso.70012
-
-RUCA codes are a proxy for geographic isolation
-
-RUCA codes are not comparable across years.
-
-United States Department of Commerce, Bureau of the Census (1990). Census
-Transportation Planning Package (CTPP) 1990: Urban Element: Parts 1, 2, and 3
-[datasets]. United States Department of Transportation, Bureau of Transportation
-Statistics [distributor] https://doi.org/10.21949/1524186
-
-RUCA is made of two items at the tract level: presence in a metropolitan, micropolitan, small town, or rural area and commuting flows to these types of areas. Unfortunately, 1990 data is only available statewide at the county level, so I have modified this measure for the county level.
+RUCA codes are a proxy for geographical isolation, but RUCA codes are not comparable across years. RUCA is made of two items at the tract level: presence in a metropolitan, micropolitan, small town, or rural area and commuting flows to these types of areas. Unfortunately, 1990 data is only available statewide at the county level, so I have modified this measure for the county level.
 
 Data for [1990](https://www.census.gov/data/datasets/1990/demo/commuting/worker-flow.html), [2000](https://www.census.gov/data/tables/2000/dec/county-to-county-worker-flow-files.html), [2010](https://www.census.gov/data/tables/2010/demo/metro-micro/commuting-employment-2010.html), and [2020](https://www.census.gov/data/tables/2020/demo/metro-micro/commuting-flows-2020.html)
 
 ```{r}
 #| label: "urban rural pop"
 
-# label counties by urbanicity
+###### label counties by urbanicity
 
+# retrieve all US counties
 us_counties <- tigris::counties()
-
+# create 150 mile buffer around Idaho
 id_buff <- st_union(county_shapes) %>% st_buffer(units::set_units(150, "mi"))
-  
+# use only counties falling within buffer
 near_counties <- st_filter(us_counties, id_buff, .predicate = st_covered_by)
 
-# get block data from urban land code chunk
+###### get block data from urban land code chunk
 
+# for each year of analysis:
 years <- seq(1990, 2020, 10)
+# need the block data list from urban areas code chunk, but only the first version (do not need distance from urban labels)
 counties_urb <- mapply(function(blocks, year) {
+  # read in urban areas data saved from the urban land code chunk - RS3
   UAs <- st_read(paste0("../data/urb_areas_thresholded/urb_areas_thresholded_", year, ".shp"))
   
+  # retain blocks in urban areas
   UA_blocks <- st_join(blocks, UAs, join = st_covered_by)
   
+  # get population of each urban area to categorize as metropolitan, micropolitan, small town
   UA_pops <- UA_blocks %>%
     st_drop_geometry() %>%
     group_by(FID) %>%
@@ -3468,7 +3116,9 @@ counties_urb <- mapply(function(blocks, year) {
     right_join(UAs) %>%
     st_as_sf()
   
+  # determine which urban areas are in each county
   county_UAs <- st_intersects(us_counties, st_transform(UA_pops, st_crs(us_counties)))
+  # find the largest urban area in each county
   county_UAs_max_pop <- unlist(lapply(county_UAs, function(x) {
     if(length(x) == 0) {
       return_val <- NA
@@ -3479,8 +3129,10 @@ counties_urb <- mapply(function(blocks, year) {
     return(return_val)
   }))
   
+  # label counties by their largest urban area population
   us_counties$max_urb_pop <- county_UAs_max_pop
   
+  # add RUCA-style labels based on population
   county_UAs_labels <- us_counties %>%
     mutate(urb_label = ifelse(!(GEOID %in% near_counties$GEOID), ">150 mi commute", NA)) %>%
     mutate(urb_label = ifelse(max_urb_pop >= 50000 & !is.na(max_urb_pop), "Metropolitan", urb_label)) %>%
@@ -3490,24 +3142,28 @@ counties_urb <- mapply(function(blocks, year) {
   
   return(county_UAs_labels)
 }, blocks = block_data_list, year = years, SIMPLIFY = FALSE)
+# returns a list of counties labeled by urbanicity for each year
 
 
 
 # get commuting flows
-commutes_1990 <- read.table("https://www2.census.gov/programs-surveys/commuting/datasets/1990/worker-flow/idresco.txt",
-                                   sep = "\t", strip.white = TRUE) %>%
+commutes_1990 <- read.table("https://www2.census.gov/programs-surveys/commuting/datasets/1990/worker-flow/idresco.txt", sep = "\t", strip.white = TRUE) %>%
+  # format data with string splitting based on metadata
   mutate(allinfo = str_squish(V1),
          ResFIPS = str_replace_all(str_sub(allinfo, 1, 6), " ", ""),
          WorkFIPS = str_replace_all(str_sub(allinfo, 14, 19), " ", ""),
          Workers = as.integer(str_extract(str_extract(allinfo, " \\d+ [A-Z]"), "\\d+"))) %>%
+  # join 1990 county urbanicity data for resident counties
   left_join(st_drop_geometry(counties_urb[[1]])[,c("GEOID", "NAME", "urb_label", "max_urb_pop")], by = c("ResFIPS" = "GEOID")) %>%
   rename("ResUrbStatus" = "urb_label",
          "ResUrbPop" = "max_urb_pop",
          "county" = "NAME") %>%
+  # join 1990 county urbanicity data for work counties
   left_join(st_drop_geometry(counties_urb[[1]])[,c("GEOID", "urb_label", "max_urb_pop")], by = c("WorkFIPS" = "GEOID")) %>%
   rename("WorkUrbStatus" = "urb_label",
          "WorkUrbPop" = "max_urb_pop") %>%
   rowwise() %>%
+  # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
                           paste(ResUrbStatus, "Stay", sep="_"),
@@ -3522,17 +3178,22 @@ commutes_1990 <- read.table("https://www2.census.gov/programs-surveys/commuting/
   summarise(workers = sum(Workers))
 
 commutes_2000 <- readxl::read_xls("../data/raw_data/2kresco_id.xls",
+                                  # leave out empty rows
                                   range = "A5:K1388") %>%
   rowwise() %>%
+  # format data with string splitting based on metadata
   mutate(ResFIPS = paste0(`Res State`, `Res County`),
          WorkFIPS = paste0(str_sub(`Work State`, 2,3), `Work County`)) %>%
+  # join 2000 county urbanicity data for resident counties
   left_join(st_drop_geometry(counties_urb[[2]])[,c("GEOID", "NAME", "urb_label", "max_urb_pop")], by = c("ResFIPS" = "GEOID")) %>%
   rename("ResUrbStatus" = "urb_label",
          "ResUrbPop" = "max_urb_pop",
          "county" = "NAME") %>%
+  # join 2000 county urbanicity data for work counties
   left_join(st_drop_geometry(counties_urb[[2]])[,c("GEOID", "urb_label", "max_urb_pop")], by = c("WorkFIPS" = "GEOID")) %>%
   rename("WorkUrbStatus" = "urb_label",
          "WorkUrbPop" = "max_urb_pop") %>%
+  # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
                           paste(ResUrbStatus, "Stay", sep="_"),
@@ -3547,19 +3208,25 @@ commutes_2000 <- readxl::read_xls("../data/raw_data/2kresco_id.xls",
   summarise(workers = sum(Count))
 
 commutes_2010 <- readxl::read_xlsx("../data/raw_data/table1 (2010).xlsx",
+                                   # leave out empty rows, undesired column names
                                   range = "A6:J26342",
+                                  # manually name columns
                                   col_names = c("Res_State_FIPS", "Res_County_FIPS", "Work_State_FIPS", "Work_County_FIPS", "Workers", "MOE", "Res_State", "Res_County", "Work_State", "Work_County")) %>%
+  # filter to Idaho
   filter(Res_State == "Idaho") %>%
   rowwise() %>%
   mutate(ResFIPS = paste0(Res_State_FIPS, Res_County_FIPS),
          WorkFIPS = paste0(str_sub(Work_State_FIPS, 2,3), Work_County_FIPS)) %>%
+  # join 2010 county urbanicity data for resident counties
   left_join(st_drop_geometry(counties_urb[[3]])[,c("GEOID", "NAME", "urb_label", "max_urb_pop")], by = c("ResFIPS" = "GEOID")) %>%
   rename("ResUrbStatus" = "urb_label",
          "ResUrbPop" = "max_urb_pop",
          "county" = "NAME") %>%
+  # join 2010 county urbanicity data for work counties
   left_join(st_drop_geometry(counties_urb[[3]])[,c("GEOID", "urb_label", "max_urb_pop")], by = c("WorkFIPS" = "GEOID")) %>%
   rename("WorkUrbStatus" = "urb_label",
          "WorkUrbPop" = "max_urb_pop") %>%
+  # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
                           paste(ResUrbStatus, "Stay", sep="_"),
@@ -3574,19 +3241,25 @@ commutes_2010 <- readxl::read_xlsx("../data/raw_data/table1 (2010).xlsx",
   summarise(workers = sum(Workers))
 
 commutes_2020 <- readxl::read_xlsx("../data/raw_data/table1 (2020).xlsx",
+                                   # leave out empty rows, undesired column names
                                   range = "A9:J23788",
+                                  # manually rename columns
                                   col_names = c("Res_State_FIPS", "Res_County_FIPS", "Res_State", "Res_County", "Work_State_FIPS", "Work_County_FIPS", "Work_State", "Work_County", "Workers", "MOE" )) %>%
+  # filter to Idaho
   filter(Res_State == "Idaho") %>%
   rowwise() %>%
   mutate(ResFIPS = paste0(Res_State_FIPS, Res_County_FIPS),
          WorkFIPS = paste0(str_sub(Work_State_FIPS, 2,3), Work_County_FIPS)) %>%
+  # join 2020 county urbanicity data for resident counties
   left_join(st_drop_geometry(counties_urb[[4]])[,c("GEOID", "NAME", "urb_label", "max_urb_pop")], by = c("ResFIPS" = "GEOID")) %>%
   rename("ResUrbStatus" = "urb_label",
          "ResUrbPop" = "max_urb_pop",
          "county" = "NAME") %>%
+  # join 2020 county urbanicity data for work counties
   left_join(st_drop_geometry(counties_urb[[4]])[,c("GEOID", "urb_label", "max_urb_pop")], by = c("WorkFIPS" = "GEOID")) %>%
   rename("WorkUrbStatus" = "urb_label",
          "WorkUrbPop" = "max_urb_pop") %>%
+  # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
                           paste(ResUrbStatus, "Stay", sep="_"),
@@ -3600,129 +3273,28 @@ commutes_2020 <- readxl::read_xlsx("../data/raw_data/table1 (2020).xlsx",
   group_by(county, year, commute) %>%
   summarise(workers = sum(Workers))
 
+# combine data from all years
 commutes_all <- do.call(rbind, list(commutes_1990, commutes_2000, commutes_2010, commutes_2020)) %>%
   group_by(county, year) %>%
+  # find total workers for each county-year
   mutate(tot_workers = sum(workers)) %>%
   rowwise() %>%
+  # percent workers with each type of commute in each county-year
   mutate(perc_workers = workers / tot_workers * 100) %>%
+  # pivot so that each commute type is a column, fill NAs with 0
   pivot_wider(id_cols = c("county", "year"),
               names_from = "commute",
               values_from = "perc_workers",
               values_fill = 0)
 
 ruca_proxy_pca <- prcomp(commutes_all[,-c(1:2)])
+summary(ruca_proxy_pca)
 
-# PCs 1-2 explain ~80% of variance
+# PCs 1-2 explain >70% of variance
 a_data <- cbind(commutes_all[,c(1:2)], ruca_proxy_pca$x[,c(1:2)]) %>%
   rename("ruca_proxy_pc1" = "PC1",
          "ruca_proxy_pc2" = "PC2") %>%
   right_join(a_data, by = c("county", "year"))
-
-# ruca_1990 <- readxl::read_xls("../data/ruca1990.xls",
-#                               sheet = "Data") %>%
-#   mutate(FIPS = str_sub(`FIPS state-county-tract code`, 1, 5)) %>%
-#   filter(str_starts(FIPS, "16")) %>%
-#   group_by(FIPS) %>%
-#   mutate(tot_pop = sum(as.integer(`Census tract population, 1990`))) %>%
-#   rowwise() %>%
-#   mutate(tract_pop_perc = as.integer(`Census tract population, 1990`) / tot_pop * 100) %>%
-#   group_by(FIPS, `Rural-urban commuting area code`) %>%
-#   summarise(ruca_pop = sum(tract_pop_perc)) %>%
-#   ungroup() %>%
-#   mutate(county = recode(FIPS, !!!GEOID_names), 
-#          year=1990,
-#          .after = FIPS) %>%
-#   rename("RUCA" = "Rural-urban commuting area code") %>%
-#   select(-FIPS)
-#   
-# ruca_2000 <- readxl::read_xls("../data/ruca00.xls",
-#                               sheet= "Data") %>%
-#   select(`State-County FIPS Code`, `RUCA Secondary Code 2000`, `Tract Population 2000`) %>%
-#   filter(str_starts(`State-County FIPS Code`, "16")) %>%
-#   group_by(`State-County FIPS Code`) %>%
-#   mutate(tot_pop = sum(as.integer(`Tract Population 2000`))) %>%
-#   rowwise() %>%
-#   mutate(tract_pop_perc = as.integer(`Tract Population 2000`) / tot_pop * 100) %>%
-#   group_by(`State-County FIPS Code`, `RUCA Secondary Code 2000`) %>%
-#   summarise(ruca_pop = sum(tract_pop_perc)) %>%
-#   ungroup() %>%
-#   mutate(county = recode(`State-County FIPS Code`, !!!GEOID_names), 
-#          year=2000,
-#          .after = `State-County FIPS Code`) %>%
-#   rename("RUCA" = "RUCA Secondary Code 2000") %>%
-#   select(-`State-County FIPS Code`)
-# 
-# ruca_2010 <- readxl::read_xlsx("../data/ruca2010revised.xlsx",
-#                                sheet = "Data",
-#                                skip = 1) %>%
-#   select(`State-County FIPS Code`, `Secondary RUCA Code, 2010 (see errata)`, `Tract Population, 2010`) %>%
-#   filter(str_starts(`State-County FIPS Code`, "16")) %>%
-#   group_by(`State-County FIPS Code`) %>%
-#   mutate(tot_pop = sum(as.integer(`Tract Population, 2010`))) %>%
-#   rowwise() %>%
-#   mutate(tract_pop_perc = as.integer(`Tract Population, 2010`) / tot_pop * 100) %>%
-#   group_by(`State-County FIPS Code`, `Secondary RUCA Code, 2010 (see errata)`) %>%
-#   summarise(ruca_pop = sum(tract_pop_perc)) %>%
-#   ungroup() %>%
-#   mutate(county = recode(`State-County FIPS Code`, !!!GEOID_names), 
-#          year=2010,
-#          .after = `State-County FIPS Code`) %>%
-#   rename("RUCA" = "Secondary RUCA Code, 2010 (see errata)") %>%
-#   select(-`State-County FIPS Code`)
-# 
-# ruca_2020 <- readxl::read_xlsx("../data/RUCA-codes-2020-tract.xlsx",
-#                                sheet = "RUCA2020 Tract Data",
-#                                skip = 1) %>%
-#   select(CountyFIPS23, SecondaryRUCA, Population) %>%
-#   filter(str_starts(CountyFIPS23, "16")) %>%
-#   group_by(CountyFIPS23) %>%
-#   mutate(tot_pop = sum(as.integer(Population))) %>%
-#   rowwise() %>%
-#   mutate(tract_pop_perc = as.integer(Population) / tot_pop * 100) %>%
-#   group_by(CountyFIPS23, SecondaryRUCA) %>%
-#   summarise(ruca_pop = sum(tract_pop_perc)) %>%
-#   ungroup() %>%
-#   mutate(county = recode(CountyFIPS23, !!!GEOID_names), 
-#          year=2020,
-#          .after = CountyFIPS23) %>%
-#   rename("RUCA" = "SecondaryRUCA") %>%
-#   select(-CountyFIPS23)
-# 
-# ruca_all <- rbind(ruca_1990, ruca_2000, ruca_2010, ruca_2020) %>%
-#   rowwise() %>%
-#   mutate(primRUCA = ifelse(str_detect(RUCA, "\\."),
-#                                       str_remove_all(str_extract(RUCA, ".*\\."), "\\."),
-#                            RUCA)) %>%
-#   group_by(county, year, RUCA) %>%
-#   summarise(ruca_pop = sum(ruca_pop)) %>%
-#   pivot_wider(id_cols = c("county", "year"),
-#               names_from = "RUCA",
-#               names_prefix = "RUCA",
-#               values_from = "ruca_pop",
-#               values_fill = 0) %>%
-#   rowwise() %>%
-#   mutate(`RUCA10.0` = sum(`RUCA10`, `RUCA10.0`),
-#          `RUCA1.0` = sum(`RUCA1`, `RUCA1.0`),
-#          `RUCA2.0` = sum(`RUCA2`, `RUCA2.0`),
-#          `RUCA7.0` = sum(`RUCA7`, `RUCA7.0`),
-#          `RUCA8.0` = sum(`RUCA8`, `RUCA8.0`),
-#          `RUCA4.0` = sum(`RUCA4`, `RUCA4.0`),
-#          `RUCA5.0` = sum(`RUCA5`, `RUCA5.0`)) %>%
-#   select(-c(`RUCA99.0`, `RUCA10`, `RUCA1`, `RUCA2`, `RUCA7`, `RUCA8`, `RUCA4`, `RUCA5`))
-# 
-# ##############
-# # principal components
-# ruca_pca <- prcomp(ruca_all[, -c(1:2)])
-# summary(ruca_pca)
-# biplot(ruca_pca)
-# 
-# # explain >75% variance
-# a_data <- cbind(ruca_all, ruca_pca$x[,1:3]) %>%
-#   rename("ruca_pc1" = "PC1",
-#          "ruca_pc2" = "PC2",
-#          "ruca_pc3" = "PC3") %>%
-#   select(county, year, ruca_pc1, ruca_pc2, ruca_pc3) %>%
-#   right_join(a_data, by = c("county", "year"))
 ```
 
 Save actors data:

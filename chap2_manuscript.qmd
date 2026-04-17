@@ -841,21 +841,9 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Percent employed in different industries {#sec-employ-indust-methods}
 
-<!-- We downloaded data for private sector jobs from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We summed jobs in the following categories based on which high-level SIC and NAICS codes were comparable:
+Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020 for all employment data.
 
-- Agriculture, Forestry, Fishing and Hunting: SIC code 7 (Agricultural Services, Forestry, and Fishing), NAICS code 11 (Agriculture, Forestry, Fishing and Hunting)
-- Mining, Quarrying, and Oil and Gas Extraction: SIC code 10 (Mining), NAICS code 21 (Mining, Quarrying, and Oil and Gas Extraction)
-- Construction: SIC code 15 (Construction), NAICS code 23 (Construction)
-- Manufacturing: SIC code 20 (Manufacturing), NAICS code "31-33" (Manufacturing)
-- Trucking and warehousing: SIC code 4200 (Trucking and warehousing), NAICS codes 484 (Truck Transportation) and 493 (Warehousing and Storage)
-- Wholesale Trade: SIC code 50 (Wholesale Trade), NAICS code 42 (Wholesale Trade)
-- Retail Trade: SIC code 52 (Retail Trade), NAICS code "44-45" (Retail Trade)
-- Finance, Insurance, and Real Estate: SIC code 60 (Finance, Insurance, and Real Estate), NAICS codes 52 (Finance and Insurance) and 531 (Real Estate)
-- Legal: SIC code 8100 (Legal services), NAICS code 5411 (Legal Services)
-- Education and libraries: SIC code 8200 (Educational services), NAICS codes 61 (Educational Services) and 519120 (Libraries and Archives)
-- Health and social services: SIC codes 8000 (Health services) and 8300 (Social services), NAICS code 62 (Health Care and Social Assistance)
-- Accommodation and Food: SIC codes 7000 (Hotels and Other Lodging Places) and 5800 (Eating and drinking places), NAICS code 72 (Accommodation and Food Services)
-- Recreation: SIC code 7900 (Amusement and recreation services), NAICS codes 71 (Arts, Entertainment, and Recreation) and 611620 (Sports and Recreation Instruction) -->
+We used imputed values for private sector employment for 1997-2012 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded employment data for 2022 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi].
 
 The County Business Patterns data does not include public sector employees or agricultural producers. We used data from the Annual Survey of Public Employment & Payroll [@aspep1997; @aspep2002; @aspep2012; @aspep2022] to add public employees to the following categories:
 
@@ -864,9 +852,9 @@ The County Business Patterns data does not include public sector employees or ag
 - Health and social services: ASPEP government function categories "Health", "Hospitals", "Housing & Community Development", and "Public Welfare"
 - Recreation: ASPEP government function category "Parks & Recreation"
 
-We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state or federal government residing in each county. Finally, we added producer counts from the Census of Agriculture using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022 since the County Business Patterns data did not include agricultural production.
+We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state or federal government residing in each county. 
 
-Because the first available dataset from the Census of Governments, which provides a full dataset of employees in the public sector, is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 data for 1990, 2002 data for 2000, 2012 data for 2010, and 2022 data for 2020.
+Finally, we added producer counts from the Census of Agriculture using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022 since the County Business Patterns data did not include agricultural production. In 2022, the Census of Agriculture began reporting on the total number of producers rather than the number of principal operators. This resulted in slightly inflated counts of farmers in 2022. We deem this to be more acceptable than fully excluding agricultural producers from employment counts in this context, but caution should be used when interpreting these data in other contexts.
 
 We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first three components, which explained 73.1% of the variance.
 
