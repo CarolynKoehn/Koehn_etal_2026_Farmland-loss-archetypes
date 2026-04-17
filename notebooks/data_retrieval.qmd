@@ -1518,9 +1518,9 @@ hired_clean <- hired %>%
   rbind(hired1990)
 
 # read in interpolated private employment data
-agsupport9712 <- read.csv("../data/raw_data/employment/efsy_panel_naics.csv") %>%
+agsupport9212 <- read.csv("../data/raw_data/employment/efsy_panel_naics.csv") %>%
   # filter to Idaho and current years
-  filter(fipstate == 16 & year %in% c(1997, 2002, 2012)) %>%
+  filter(fipstate == 16 & year %in% c(1992, 2002, 2012)) %>%
   # filter to ag support professions
   filter(naics12 %in% c(unique(.$naics12[str_starts(.$naics12, "1151")]),
                         unique(.$naics12[str_starts(.$naics12, "1152")]))) %>%
@@ -1546,11 +1546,13 @@ agsupport2022 <- getCensus(name = "cbp",
   summarise(ag_workers = sum(EMP))
 
 # combine private ag workers data
-agsupport <- do.call(rbind, list(agsupport9712, agsupport2022)) %>%
-  mutate(county = recode(GEOID, !!!GEOID_names))
+agsupport <- do.call(rbind, list(agsupport9212, agsupport2022)) %>%
+  mutate(county = recode(GEOID, !!!GEOID_names)) %>%
+  # match years
+  mutate(year = as.integer(year)-2)
 
 # get population (more info in actors section)
-pop1990 <- read.csv("../data/cencounts.csv") %>%
+pop1990 <- read.csv("../data/raw_data/cencounts.csv") %>%
   select(pop1990, name) %>%
   filter(str_starts(name, "ID") & name != "ID Idaho") %>%
   mutate(name = str_remove(name, "ID "),
