@@ -35,7 +35,9 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
 # see notebooks/data_retrieval.qmd for all methods
 ru_data <- read.csv("../data/RU_data.csv")
 rs_data <- read.csv("../data/RS_data.csv")
-resource <- left_join(ru_data, rs_data, by = c("county", "year")) %>%
+resource <- left_join(ru_data, rs_data, by = c("county", "year", 
+                                               # shared indicators
+                                               "farms_per_acre", "dist_to_ski", "dist_to_NP", "perc_rec", "housing_units_per_acre")) %>%
   filter(county %in% aoi$NAME)
 actors <- read.csv("../data/Actor_data.csv") %>%
   filter(county %in% aoi$NAME)
@@ -50,16 +52,19 @@ I scaled these data by mean normalization (divided by the range), so that all va
 ```{r}
 #| label: "scale data"
 
+# for each dataset:
 ses_data_list_sc <- lapply(ses_data_list, function(df) {
   df %>%
+    # omit rows with NAs (should be none)
     na.omit() %>%
     ungroup() %>%
+    # mean normalization
     mutate(across(!c(county, year),
                   ~ (.x - mean(.x)) / (max(.x) - min(.x))))
 })
 ```
 
-Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected. To account for this, I ran the variable selection algorithm 20 times and used the list of variables most frequently selected between the 20 runs.
+Before clustering begins, it is useful to select the most important variables for clustering. The `clustvarsel` package uses methods to select the most optimal subset of variables that contain cluster information and suggest variables that provide little extra information to drop. It's important to note that these are locally optimal -- depending on where in parameter space the algorithm randomly starts, it is possible that different variables may be selected. To account for this, I ran the variable selection algorithm 20 times and used the list of variables most frequently selected between the 20 runs. In the end, I'm not sure if this was necessary, since every run selected the same variables.
 
 I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal.
 
@@ -69,19 +74,26 @@ I tested for a range of 1-5 possible clusters. It's recommended to vary the numb
 #| label: "variable selection bootstrap"
 #| eval: false
 
+# for each scaled dataset:
 ses_var_sel <- mapply(function(df, ses_system) {
-  selected_vars <- data.frame(run = 1:2)
+  # create a data.frame to hold results of each data selection run
+  selected_vars <- data.frame(run = 1:20)
+  # add variable names as column names and fill with NA values to start
   selected_vars[,colnames(df)[-c(1:2)]] <- NA
   
-  for (i in 1:2) {
+  # for the 20 variable selection runs
+  for (i in 1:20) {
     varsel <- clustvarsel(data = df[,-c(1:2)],
               G = 1:5,
               search = "greedy",
               direction = "backward",
               fit = FALSE)
+    # record if each variable name was included in the varsel result
     newrow <- (colnames(df)[-c(1:2)] %in% names(varsel$subset))
+    # fill selected_vars data.frame with T/F values based on if variable was selected
     selected_vars[i,2:ncol(selected_vars)] <- newrow
   }
+  # save results for each dataset
   write.csv(selected_vars,
             paste0("../data/bootstrap/", ses_system, "_var_sel.csv"),
             row.names = FALSE)
