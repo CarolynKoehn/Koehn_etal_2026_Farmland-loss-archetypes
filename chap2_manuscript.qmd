@@ -769,7 +769,7 @@ First, we downloaded primary and secondary road shapefiles from the US Census TI
 
 We downloaded data for public sector health workers from the Census of Governments [@aspep1997; @aspep2002; @aspep2012; @aspep2022]. We added local government employees in the "Health" and "Hospitals" categories. Because the first available dataset from the Census of Governments is from 1997, and subsequent Census of Governments data collection happens in years ending with -2, we used 1997 employment data for 1990, 2002 employment data for 2000, 2012 employment data for 2010, and 2022 employment data for 2020.
 
-We used imputed values for private sector health workers from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We used the following NAICS codes: 621111 (Offices of physicians exc mental health), 622 (Hospitals), 623 (Nursing and Residential Care Facilities), and 621610 (Home health care services).
+We used imputed values for private sector health workers for 1997-2012 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded data for private sector health workers for 2022 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used the following NAICS codes: 621111 (Offices of physicians exc mental health), 622 (Hospitals), 623 (Nursing and Residential Care Facilities), and 621610 (Home health care services). 
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of healthcare workers by the total population count in each county and decade.
 
@@ -809,7 +809,7 @@ Farms with net loss and total farms data for 2002-2022 are available in the Cens
 
 #### Agriculture support jobs {#sec-ag-support-jobs-methods}
 
-We used imputed values for private sector health workers from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We used the following NAICS codes: 1151 (Support Activities for Crop Production) and 1152 (Support Activities for Animal Production).
+We used imputed values for private sector agriculture support workers for 1992-2012 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded data for private sector agriculture support workers for 2022 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used the following NAICS codes: 1151 (Support Activities for Crop Production) and 1152 (Support Activities for Animal Production). 
 
 We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
 
@@ -817,10 +817,7 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Hotel and restaurant jobs {#sec-hospitality-jobs-methods}
 
-We downloaded data from the County Business Patterns series [@cbp1997; @cbp2002; @cbp2012; @cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used comparable SIC and NAICS codes to sum the total hospitality workers in each county for each year:
-
-- 1990: SIC codes 7000 (Hotels and Other Lodging Places), 5800 (Eating and drinking places)
-- 2000-2020: NAICS code 72 (Accommodation and food services)
+We used imputed values for accomodation and food service workers for 1990-2010 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded data for accomodation and food service workers for 2020 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used NAICS code 72 (Accommodation and Food Services).
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of hospitality workers by the total population count in each county and year.
 
