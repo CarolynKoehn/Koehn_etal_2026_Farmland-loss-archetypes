@@ -277,7 +277,7 @@ clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv
 
 # create nice labels for variables
 var_labs_R <- data.frame(indicator = colnames(clust_dat$Resource)[order(colnames(clust_dat$Resource))],
-                         pretty_label = c("Jobs in Hospitality", "Jobs Supporting Ag", "Average Slope", "Cluster", "County", "Cropland Loss/Gain", "Developed Land Gain", "Distance to a National Park", "Distance to a Ski Area", "Farm Size (PC1)", "Farm Size (PC2)", "Farm Density", "Forest Loss/Gain", "GEOID", "geometry", "Jobs in Healthcare", "Housing Density", "Lake Area", "Land in Farms", "Med Home Value", "Land in Farms Loss/Gain", "Farm Loss/Gain", "Farms with Net Loss", "Federal Land", "Non-Federal Land near Highway", "Recreation Land", "Cropland", "Developed Land", "Forest", "Shrubland", "Length of Rivers", "Shrubland Loss/Gain", "Distance from Urban (PC1)", "Distance from Urban (PC2)", "Year"))
+                         pretty_label = c("RU4 - Jobs in Hospitality", "RU4 - Jobs Supporting Ag", "RS9 - Average Slope", "Cluster", "County", "RU2 - Cropland Loss/Gain", "RU2 - Developed Land Gain", "RS4 - Distance to a National Park", "RS4 - Distance to a Ski Area", "RU6 - Farm Size (PC1)", "RU6 - Farm Size (PC2)", "RS4, RU5 - Farm Density", "RU2 - Forest Loss/Gain", "GEOID", "geometry", "RS4 - Jobs in Healthcare", "RS4, RU5 - Housing Density", "RS3 - Lake Area", "RS3 - Land in Farms", "RU4 - Med Home Value", "RU2 - Land in Farms Loss/Gain", "RU2 - Farm Loss/Gain", "RU4 - Farms with Net Loss", "RS3 - Federal Land", "RS4 - Non-Federal Land near Highway", "RS4 - Recreation Land", "RS3 - Cropland", "RS3 - Developed Land", "RS3 - Forest", "RS3 - Shrubland", "RS3 - Length of Rivers", "RU2 - Shrubland Loss/Gain", "RS3 - Distance from Urban (PC1)", "RS3 - Distance from Urban (PC2)", "Year"))
 
 rel_inf <- list()
 
@@ -301,9 +301,9 @@ rel_inf[["Actors"]] <- read.csv("data/model results/drmod_actors.csv") %>%
 # code for model output instead of raw data
 
 ci_clust$Resource %>%
-  # mutate(cluster = factor(cluster,
-  #                         levels = c("R1", "R3", "R2", "R5", "R4"),
-  #                         labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
+  mutate(cluster = factor(cluster,
+                          levels = c("R1", "R4", "R2", "R5", "R3"),
+                          labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
   mutate(input_data_name = factor(input_data_name,
                                   levels = rel_inf$Resource$indicator,
                                   labels = rel_inf$Resource$pretty_label)) %>%
@@ -313,9 +313,6 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
-
-  # scale_y_discrete(limits = rev(c("percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "rivers_km_per_km2", "percent_developed", "urb_dist_pc1", "urb_dist_pc2", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "avg_slope", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "developed_change", "perc_farms_w_net_loss", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2")),
-  #                  labels = rev(c("Cropland", "Forest", "Shrubland", "Federal Land", "Length of Rivers", "Developed Land", "Distance from Urban (PC1)", "Distance from Urban (PC2)", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Land Near Highways", "Healthcare Workers", "Average Slope", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Hospitality Jobs", "Home Value", "Farm Size (PC1)", "Farm Size (PC2)"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "") +
   theme_bw() +
   theme(text = element_text(size = 14),
@@ -406,7 +403,7 @@ Like A4, A5 contains rural counties with low population density, moderate popula
 
 resource_map <- clust_dat[["Resource"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("R1", "R3", "R2", "R5", "R4"),
+                          levels = c("R1", "R4", "R2", "R5", "R3"),
                           labels = c("R1: Flat land with accessible urban amenities",
                                      "R2: Flat land near natural and urban amenities",
                                      "R3: Access to mountain recreation and urban amenities",
@@ -414,7 +411,7 @@ resource_map <- clust_dat[["Resource"]] %>%
                                      "R5: Very isolated counties with few natural amenities"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
-  geom_sf_pattern(data = subset(clust_dat[["Resource"]], county=="Power"),
+  geom_sf_pattern(data = subset(clust_dat[["Resource"]], county=="Gem"),
                   pattern = 'stripe', pattern_density = 0.75,
                   fill = rev(viridis::turbo(5, begin=0.075, end=0.8))[3],
                   pattern_fill=rev(viridis::turbo(5, begin=0.075, end=0.8))[2],
@@ -467,7 +464,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                            by = c("county", "year"),
                            suffix = c(".R", ".A")) %>%
   mutate(cluster.R = factor(cluster.R,
-                            levels = c("R1", "R3", "R2", "R5", "R4"),
+                            levels = c("R1", "R4", "R2", "R5", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
                             levels = c("A1", "A4", "A5", "A2", "A3"),
