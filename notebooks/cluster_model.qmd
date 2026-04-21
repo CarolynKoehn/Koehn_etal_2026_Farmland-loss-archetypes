@@ -103,15 +103,21 @@ ses_var_sel <- mapply(function(df, ses_system) {
 ```{r}
 #| label: "variable selection"
 
+# filter out unselected variables
+# for each dataset:
 ses_data_sel <- mapply(function(df, ses_system) {
+  # find the correct variable selection results
   file.name <- list.files(full.names = TRUE, recursive = TRUE,
                           pattern = "var_sel.csv",
                           path = "..")
+  # read in variable selection results
   selected_vars <- read.csv(file.name[str_detect(file.name, ses_system)])
+  # make sure the same variables were selected every time, otherwise stop and throw warning
   if(nrow(unique(selected_vars[,-1])) == 1) {
     varsel <- unique(selected_vars[,-1])
   } else { stop("Multiple variable selection possibilities") }
   
+  # return the dataset with only the selected columns, as well as county and year
   return(df[,c(TRUE, TRUE, as.logical(varsel))])
 }, df=ses_data_list_sc, 
 ses_system = names(ses_data_list_sc),
@@ -123,6 +129,7 @@ From the Resource clusters, the following variables were removed: .
 ```{r}
 #| include: false
 
+# print the column names in the scaled data that are not in the selected variables data
 print(colnames(ses_data_list_sc[["Resource"]])[!(colnames(ses_data_list_sc[["Resource"]]) %in% colnames(ses_data_sel[["Resource"]]))])
 ```
 
@@ -131,6 +138,7 @@ From the Actors clusters, the following variables were removed: .
 ```{r}
 #| include: false
 
+# print the column names in the scaled data that are not in the selected variables data
 print(colnames(ses_data_list_sc[["Actors"]])[!(colnames(ses_data_list_sc[["Actors"]]) %in% colnames(ses_data_sel[["Actors"]]))])
 ```
 
@@ -182,31 +190,31 @@ factoextra::fviz_pca_biplot(
   addEllipses = TRUE)
 ```
 
+The mclust package also has built-in methods for principle component analysis of clusters:
+
 ```{r}
+# run dimension reduction for both models
 drmod_resource <- MclustDR(ses_mclustBIC$Resource$mod)
 drmod_actors <- MclustDR(ses_mclustBIC$Actors$mod)
 
+# view DR summary
 summary(drmod_resource)
-hist(as.numeric(summary(drmod_resource)$basis))
 
-# Identify rows with the value
-row_indices <- apply(summary(drmod_actors)$basis, 1, 
-                     function(row) any(row %in% c(as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis)>0.4],
-                                       as.numeric(summary(drmod_actors)$basis)[as.numeric(summary(drmod_actors)$basis) < -0.4])))
+########### method to find influential terms
 
-# Subset the data
-filtered_data <- summary(drmod_actors)$basis[row_indices, ]
-
-filtered_data
-
-# another method to find influential terms
+# general code
+# get cumulative influence of each dimension
 mults <- c(summary(drmod_actors)$evalues.cumperc[1], (summary(drmod_actors)$evalues.cumperc - lag(summary(drmod_actors)$evalues.cumperc))[2:length(summary(drmod_actors)$evalues.cumperc)]) / 100
 
+# total contribution of each variable = sum of its contributions to each variable weighted by overall contribution of each dimension
+# absolute value is used to equally weight negative and positive contribution to dimensions
 row_vals <- apply(summary(drmod_actors)$basis, 1, 
                      function(row) {
                        row_val <- sum(abs(row * mults))
                      })
+# add variable names to contributions
 names(row_vals) <- row.names(summary(drmod_actors)$basis)
+# view results
 print(row_vals[order(row_vals, decreasing=TRUE)])
 
 # influence - resources
@@ -217,6 +225,7 @@ row_vals <- apply(summary(drmod_resource)$basis, 1,
                        row_val <- sum(abs(row * mults))
                      })
 names(row_vals) <- row.names(summary(drmod_resource)$basis)
+# save results
 write.csv(data.frame(indicator = names(row_vals)[order(row_vals, decreasing=TRUE)],
                      influence = row_vals[order(row_vals, decreasing=TRUE)]),
           "../data/model results/drmod_resource.csv", 
@@ -230,6 +239,7 @@ row_vals <- apply(summary(drmod_actors)$basis, 1,
                        row_val <- sum(abs(row * mults))
                      })
 names(row_vals) <- row.names(summary(drmod_actors)$basis)
+# save results
 write.csv(data.frame(indicator = names(row_vals)[order(row_vals, decreasing=TRUE)],
                      influence = row_vals[order(row_vals, decreasing=TRUE)]),
           "../data/model results/drmod_actors.csv", 
@@ -241,31 +251,43 @@ write.csv(data.frame(indicator = names(row_vals)[order(row_vals, decreasing=TRUE
 #| label: "get CIs"
 #| include: false
 
+# for each cluster model, get confidence intervals for each variable:
 ci_clust <- mapply(function(mod, ses_system, input_data) {
+  # use bootstrapping to get CIs
   bootmod <- MclustBootstrap(mod$mod, nboot = 999, type = "wlbs")
   
+  # get mean value for each variable in each cluster
   clust_means <- as.data.frame(mod$mod$parameters$mean) %>%
-  mutate(input_data_name = rownames(.)) %>%
-  pivot_longer(cols = !input_data_name,
-               names_to = "cluster",
-               values_to = "mean") %>%
-  mutate(cluster = str_replace(cluster, "V", substr(ses_system,1,1)))
+    # convert variable names to a proper column instead of row names
+    mutate(input_data_name = rownames(.)) %>%
+    # convert to tidy format
+    pivot_longer(cols = !input_data_name,
+                 names_to = "cluster",
+                 values_to = "mean") %>%
+    # label with resource or actors model and cluster number
+    mutate(cluster = str_replace(cluster, "V", substr(ses_system,1,1)))
   
+  # get the CI lower and upper limits
   t(as.data.frame(summary(bootmod, "ci")$mean)) %>%
     as.data.frame() %>%
+    # label clusters and variables properly
     mutate(cluster = paste0(str_sub(ses_system, 1,1), str_sub(rownames(.), -1, -1)),
            input_data_name = str_sub(rownames(.), 1, -3),
+           # assign significance based on if CI contains 0
            sig = !(`2.5%`<0 & `97.5%`>0)) %>%
+    # join on variable means
     left_join(clust_means, by = c("input_data_name", "cluster"))
 }, mod = ses_mclustBIC, ses_system = names(ses_data_sel), input_data = ses_data_sel, SIMPLIFY = FALSE)
 
-# write.csv(ci_clust[["Resource"]], "../data/model results/ci_clust_resource.csv",
-#           row.names = FALSE)
-# write.csv(ci_clust[["Actors"]], "../data/model results/ci_clust_actors.csv",
-#           row.names = FALSE)
+# save results
+write.csv(ci_clust[["Resource"]], "../data/model results/ci_clust_resource.csv",
+          row.names = FALSE)
+write.csv(ci_clust[["Actors"]], "../data/model results/ci_clust_actors.csv",
+          row.names = FALSE)
 ```
 
 ```{r}
+# add cluster numbers to scaled data
 clust_dat_sc <- mapply(function(df, mod, system_name) {
   left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
     st_as_sf() %>%
@@ -274,17 +296,19 @@ clust_dat_sc <- mapply(function(df, mod, system_name) {
     select(-mod.mod.classification)
 }, df = ses_data_list_sc, mod = ses_mclustBIC, system_name=names(ses_data_list))
 
-# write.csv(st_drop_geometry(clust_dat_sc[["Resource"]]),
-#           "../data/model results/clust_dat_sc_resource.csv",
-#           row.names = FALSE)
-# write.csv(st_drop_geometry(clust_dat_sc[["Actors"]]),
-#           "../data/model results/clust_dat_sc_actors.csv",
-#           row.names = FALSE)
+# save results
+write.csv(st_drop_geometry(clust_dat_sc[["Resource"]]),
+          "../data/model results/clust_dat_sc_resource.csv",
+          row.names = FALSE)
+write.csv(st_drop_geometry(clust_dat_sc[["Actors"]]),
+          "../data/model results/clust_dat_sc_actors.csv",
+          row.names = FALSE)
 ```
 
 ```{r}
 #| label: "label county data"
 
+# add cluster numbers to county data for map figures
 clust_dat <- mapply(function(df, mod, system_name) {
   left_join(df, aoi[,c("NAME", "geometry")], by = c("county" = "NAME")) %>%
     st_as_sf() %>%
@@ -293,13 +317,15 @@ clust_dat <- mapply(function(df, mod, system_name) {
     select(-mod.mod.classification)
 }, df = ses_data_list, mod = ses_mclustBIC, system_name=names(ses_data_list))
 
-# write.csv(st_drop_geometry(clust_dat[["Resource"]]),
-#           "../data/model results/clust_dat_resource.csv",
-#           row.names = FALSE)
-# write.csv(st_drop_geometry(clust_dat[["Actors"]]),
-#           "../data/model results/clust_dat_actors.csv",
-#           row.names = FALSE)
+# save results
+write.csv(st_drop_geometry(clust_dat[["Resource"]]),
+          "../data/model results/clust_dat_resource.csv",
+          row.names = FALSE)
+write.csv(st_drop_geometry(clust_dat[["Actors"]]),
+          "../data/model results/clust_dat_actors.csv",
+          row.names = FALSE)
 
+# tables of mean, min, and max values for each variable in each cluster (not used)
 resource_means <- clust_dat$Resource %>%
   st_drop_geometry() %>%
   pivot_longer(!c(county, year, cluster),
