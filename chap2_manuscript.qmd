@@ -242,12 +242,6 @@ Qualitative data were collected in Idaho's Snake River Plain from 2023 to 2026. 
 
 # Results
 
-## Cluster Descriptions
-
-### Resource Clusters
-
-The most influential variables in the resource model were: (1) developed land, (2) housing density, (3) non-federal land near major roadways, and (4) federal land (@suppfigb-R-influential).
-
 ```{r}
 #| label: "read in model results data"
 #| include: false
@@ -279,14 +273,24 @@ clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv
 var_labs_R <- data.frame(indicator = colnames(clust_dat$Resource)[order(colnames(clust_dat$Resource))],
                          pretty_label = c("RU4 - Jobs in Hospitality", "RU4 - Jobs Supporting Ag", "RS9 - Average Slope", "Cluster", "County", "RU2 - Cropland Loss/Gain", "RU2 - Developed Land Gain", "RS4 - Distance to a National Park", "RS4 - Distance to a Ski Area", "RU6 - Farm Size (PC1)", "RU6 - Farm Size (PC2)", "RS4, RU5 - Farm Density", "RU2 - Forest Loss/Gain", "GEOID", "geometry", "RS4 - Jobs in Healthcare", "RS4, RU5 - Housing Density", "RS3 - Lake Area", "RS3 - Land in Farms", "RU4 - Med Home Value", "RU2 - Land in Farms Loss/Gain", "RU2 - Farm Loss/Gain", "RU4 - Farms with Net Loss", "RS3 - Federal Land", "RS4 - Non-Federal Land near Highway", "RS4 - Recreation Land", "RS3 - Cropland", "RS3 - Developed Land", "RS3 - Forest", "RS3 - Shrubland", "RS3 - Length of Rivers", "RU2 - Shrubland Loss/Gain", "RS3 - Distance from Urban (PC1)", "RS3 - Distance from Urban (PC2)", "Year"))
 
+var_labs_A <- data.frame(indicator = colnames(clust_dat$Actors)[order(colnames(clust_dat$Actors))],
+                         pretty_label = c("A2 - Average Age", "A2 - Residents with Bachelor's", "Cluster", "County", "A2 - Employment Sectors (PC1)", "A2 - Employment Sectors (PC2)", "A2 - Employment Sectors (PC3)", "A2 - Employment Sectors (PC4)", "GEOID", "geometry", "A2 - Residents with High School Education", "A2 - Median Income", "A2 - Hired Ag Workers", "A2 - Farms with Net Loss", "A2 - Hispanic Residents", "A1 - Population Change", "A2 - Retirees", "A1 - Population Density", "A2 - Racial Composition (PC1)", "A4 - Geographical Isolation (PC1)", "A4 - Geographical Isolation (PC2)", "A2 - Full Owned Farms", "A2 - Unemployment Rate", "Year"))
+
 rel_inf <- list()
 
 rel_inf[["Resource"]] <- read.csv("data/model results/drmod_resource.csv") %>%
   arrange(influence) %>%
   left_join(var_labs_R)
 rel_inf[["Actors"]] <- read.csv("data/model results/drmod_actors.csv") %>%
-  arrange(influence)
+  arrange(influence) %>%
+  left_join(var_labs_A)
 ```
+
+## Cluster Descriptions
+
+### Resource Clusters
+
+The most influential variables in the resource model were housing density and developed land (@suppfigb-R-influential).
 
 <!-- comment to ask: re-level in order of influence rather than methods tables? TTC says yes -->
 
@@ -359,14 +363,15 @@ ci_clust$Actors %>%
   mutate(cluster = factor(cluster,
                           levels = c("A1", "A4", "A5", "A2", "A3"),
                           labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Actors$indicator,
+                                  labels = rel_inf$Actors$pretty_label)) %>%
 ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
   geom_point(show.legend = FALSE) +
   geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
-  # scale_y_discrete(limits = rev(c("pop_per_acre", "emply_pc1", "emply_pc3", "Bachelors", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
-  #                  labels = rev(c("Population Density", "Employment Sectors (PC1)", "Employment Sectors (PC3)", "Hired Ag Workers", "Bachelors", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
   theme_bw() +
   theme(text = element_text(size = 14),
@@ -430,7 +435,7 @@ resource_map <- clust_dat[["Resource"]] %>%
 
 actor_map_data <- clust_dat[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A4", "A5", "A2", "A3"),
+                          levels = c("A1", "A3", "A4", "A5", "A2"),
                           labels = c("A1: Urban counties with high population growth",
                                      "A2: Small cities",
                                      "A3: Small town counties grow as quickly as small cities",
@@ -467,7 +472,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                             levels = c("R1", "R4", "R2", "R5", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
-                            levels = c("A1", "A4", "A5", "A2", "A3"),
+                            levels = c("A1", "A3", "A4", "A5", "A2"),
                             labels = c("A1", "A2", "A3", "A4", "A5")))
 
 assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.A, county_clusts$cluster.R)),
@@ -1177,14 +1182,9 @@ Medians and ranges from county data for each archetype, including data indicator
 #| label: suppfigb-R-influential
 #| message: false
 
-var_labs <- data.frame(indicator = rev(c("percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "rivers_km_per_km2", "percent_developed", "urb_dist_pc1", "urb_dist_pc2", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "avg_slope", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "developed_change", "perc_farms_w_net_loss", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2")),
-                   pretty_label = rev(c("Cropland", "Forest", "Shrubland", "Federal Land", "Length of Rivers", "Developed Land", "Distance from Urban (PC1)", "Distance from Urban (PC2)", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Land Near Highways", "Healthcare Workers", "Average Slope", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Hospitality Jobs", "Home Value", "Farm Size (PC1)", "Farm Size (PC2)")))
-
 read.csv("data/model results/drmod_resource.csv") %>%
-  left_join(var_labs) %>%
-  arrange(influence) %>%
-  mutate(pretty_label = factor(pretty_label, 
-                            levels = rev(pretty_label))) %>%
+  left_join(var_labs_R) %>%
+  mutate(pretty_label = fct_reorder(pretty_label, desc(influence))) %>%
   mutate(relative_influence = influence / sum(influence)) %>%
   ggplot(aes(x = pretty_label, y = relative_influence)) +
   geom_col() +
@@ -1217,9 +1217,13 @@ clust_dat_sc[["Actors"]] <- read.csv("data/model results/clust_dat_sc_actors.csv
   left_join(aoi, by = c("county" = "NAME")) %>%
   st_as_sf()
 
+label_order <- left_join(var_labs_R, rel_inf$Resource) %>%
+  arrange(desc(influence), pretty_label) %>%
+  filter(!(indicator %in% c("cluster", "county", "GEOID", "year", "geometry")))
+
 clust_dat_sc[["Resource"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("R1", "R3", "R2", "R5", "R4"),
+                          levels = c("R1", "R4", "R2", "R5", "R3"),
                           labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
   st_drop_geometry() %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
@@ -1231,8 +1235,8 @@ clust_dat_sc[["Resource"]] %>%
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
   geom_boxplot() +
   scale_x_continuous(limits = c(-1,1), name = "") +
-  scale_y_discrete(limits = rev(c("land_in_farms", "percent_cropland", "percent_forest", "percent_shrubland", "perc_fed", "lake_area_km2", "rivers_km_per_km2", "urb_dist_pc1", "urb_dist_pc2", "percent_developed", "farms_per_acre", "perc_rec", "dist_to_ski", "dist_to_NP", "housing_units_per_acre", "perc_non_fed_road_area_km2", "healthworkers_per_1000", "perc_farms_change", "Perc_change_land_in_farms", "cropland_change", "forest_change", "shrub_change", "developed_change", "perc_farms_w_net_loss", "ag_support_per_1000", "accom_food_per_1000", "med_home_val_in_2020_USD", "farm_size_pc1", "farm_size_pc2", "avg_slope")),
-                   labels = rev(c("Land in Farms", "Cropland", "Forest", "Shrubland", "Federal Land", "Lake Area", "Length of Rivers", "Distance from Urban (PC1)", "Distance from Urban (PC2)","Developed Land", "Farm Density", "Recreation Land", "Distance to a Ski Area", "Distance to a National Park", "Housing Density", "Non-Federal Land near Highway", "Healthcare Workers", "Farm Loss/Gain", "Land in Farms Loss/Gain", "Cropland Loss/Gain", "Forest Loss/Gain", "Shrubland Loss/Gain", "Developed Land Gain", "Farms with Net Loss", "Jobs Supporting Ag", "Jobs in Hospitality", "Med Home Value", "Farm Size (PC1)", "Farm Size (PC2)", "Average Slope"))) +
+  scale_y_discrete(limits = rev(label_order$indicator),
+                     labels = rev(label_order$pretty_label)) +
   scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
                     values = c("orchid3", "orchid3", "beige"),
                     labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
@@ -2061,20 +2065,16 @@ Summary statistics for counties in archetype R5. Bolded cluster means are signif
 #| label: suppfigb-A-influential
 #| message: false
 
-var_labs <- data.frame(indicator = rev(c("pop_per_acre", "emply_pc1", "emply_pc3", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2", "Bachelors")),
-                   pretty_label = rev(c("Population Density", "Employment Sectors (PC1)", "Employment Sectors (PC3)", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)", "Residents with Bachelors")))
-
 read.csv("data/model results/drmod_actors.csv") %>%
-  left_join(var_labs) %>%
+  left_join(var_labs_A) %>%
   arrange(influence) %>%
-  mutate(pretty_label = factor(pretty_label, 
-                            levels = rev(pretty_label))) %>%
+  mutate(pretty_label = fct_reorder(pretty_label, desc(influence))) %>%
   mutate(relative_influence = influence / sum(influence)) %>%
   ggplot(aes(x = pretty_label, y = relative_influence)) +
   geom_col() +
   scale_x_discrete(guide = guide_axis(angle=90), name = "Indicator") +
   scale_y_continuous(name = "Relative Influence", expand = expansion(add=0),
-                     limits = c(0,0.4)) +
+                     limits = c(0,0.3)) +
   theme_classic()
   
 ```
@@ -2091,9 +2091,13 @@ we used dimension reduction to maximally separate clusters, which is similar to 
 #| fig-height: 7
 #| fig-width: 7.5
 
+label_order <- left_join(var_labs_A, rel_inf$Actors) %>%
+  arrange(desc(influence), pretty_label) %>%
+  filter(!(indicator %in% c("cluster", "county", "GEOID", "year", "geometry")))
+
 clust_dat_sc[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A4", "A5", "A2", "A3"),
+                          levels = c("A1", "A3", "A4", "A5", "A2"),
                           labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
   st_drop_geometry() %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
@@ -2105,8 +2109,8 @@ clust_dat_sc[["Actors"]] %>%
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
   geom_boxplot() +
   scale_x_continuous(limits = c(-1,1)) +
-  scale_y_discrete(limits = rev(c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2")),
-                   labels = rev(c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) +
+  scale_y_discrete(limits = rev(label_order$indicator),
+                   labels = rev(label_order$pretty_label)) +
   scale_fill_manual(limits = c("TRUE", "FALSE", "Not in model"),
                     values = c("orchid3", "orchid3", "beige"),
                     labels = c("Yes", "No", "Not in model\n(removed during\nvariable selection)"),
