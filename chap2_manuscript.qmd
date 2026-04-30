@@ -1067,7 +1067,7 @@ a1_means <- a1 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
                                  labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
@@ -1845,7 +1845,7 @@ a1_means <- a1 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
                                  labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
@@ -1959,7 +1959,7 @@ a2_means <- a2 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
                                  labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
@@ -2072,7 +2072,7 @@ a3_means <- a3 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
                                  labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
@@ -2187,7 +2187,7 @@ a4_means <- a4 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
                                  labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
@@ -2301,7 +2301,7 @@ a5_means <- a5 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "High.school", "Bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
                                  labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
@@ -2350,10 +2350,10 @@ The counties in A5 are Adams, Camas, Clark, Lincoln, Owyhee (2000-2020), Power (
 | Indicator  | Mean | Median  | Minimum  |  Maximum |
 |----------|---|---|---|---|
 |  Live and work in same rural county (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%  |
-|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
 |  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%  |
+|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
 |  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
-|  Population density (persons per $km^2$) |  `r round(subset(a5_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)` | `r round(subset(a5_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a5_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a5_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
+|  Population density (persons per $km^2$) |  `r round(subset(a5_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)` | `r round(subset(a5_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a5_means, var_name_clean == "Population Density")$min*247.1053814672, 1)` | `r round(subset(a5_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`%  |
 |  Jobs in health and social services |  `r round(mean(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Health.and.Social.Services")$perc_workers), 0)`%  |
