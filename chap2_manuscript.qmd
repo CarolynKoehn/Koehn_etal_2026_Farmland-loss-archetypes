@@ -141,74 +141,89 @@ The localized and overall effects of industrial expansion have not been included
 
 ## Study Area
 
-The Snake River Plain ecoregion of the United States [@ecoregions] intersects with 26 Idaho counties (109,700 km$^2$). It contains  productive croplands [@freedgood2020], localized yet rapidly growing highly developed urban areas [@census_metro], and public rangelands grazed by livestock (@freedgood2020). This region features two primary ecological zones, the river plain and the shrub steppe, and a diverse range of social systems, from urban and exurban systems to dryland agriculture and rural public lands, that together form a diverse array of social-ecological systems [@aho2022]. 
+The Snake River Plain ecoregion of the United States [@ecoregions] intersects with 26 counties in the state of Idaho (109,700 km$^2$). It contains  productive croplands [@freedgood2020], localized yet rapidly growing highly developed urban areas [@census_metro], and public rangelands grazed by livestock (@freedgood2020). This region features two primary ecological zones, the river plain and the shrub steppe, and a diverse range of social systems, from urban and exurban systems to dryland agriculture and rural public lands, that together form a diverse array of social-ecological systems [@aho2022]. 
 
 Farmland protection in southern Idaho is based on the 1981 Right to Farm section of Idaho Code, which protects farmlands from nuisance lawsuits [@IDRightToFarm], and the 1975 Local Land Use Planning Act, which mandates that cities and counties must plan and zone [@IDLLUPA; @meyer2025]. Therefore, farmland protection actions and funding from 1990-2020 in southern Idaho occur at the county level or lower. Farmland protection is mainly accomplished through zoning that prevents development on farmland or, rarely, costly perpetual easements established in partnership with land trusts or local government [@pald]. Before 2020, Idaho's Snake River Plain contained 64 agricultural easements totaling 271 $km^2$, or 0.2% of the total study area [@pald].
 
 ## Data Selection
 
-The social-ecological systems [SES] framework first published in 2007 by Elinor Ostrom is a conceptual framework that provides a list of variables that may affect the outcome of a SES [@ostrom2009; @partelow2018]. For comparative analysis of multiple case studies, it provides structure and variables for comparison [@oberlack2016; @partelow2018]. The framework introduces variables describing four major subsystems in a SES: resource systems, resource units, governance systems, and actors, as well as variables describing the interactions of these systems, the related ecosystem, and the social, economic, and political setting [@ostrom2009]. Readily-available public data can describe some of these systems comprehensively, while it is difficult to quantify indicators for others [@partelow2018]. We chose to focus on three subsystems that are easily described by quantitative public data: the resource system and resource units, which we combine into a single resource model, and the actors. We linked data available from 1990-2020 to second-tier variables in these subsystems of the SES framework based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found, but it is common to analyze subsets of SES variables in the SES literature [@partelow2018]. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
+The social-ecological systems [SES] framework first published in 2007 by Elinor Ostrom is a conceptual framework that provides a list of variables that may affect the outcome of a SES [@ostrom2009; @partelow2018]. For comparative analysis of multiple case studies, it provides structure and variables for comparison [@oberlack2016; @partelow2018]. The framework introduces variables describing four major subsystems in a SES: resource systems, resource units, governance systems, and actors, as well as variables describing the interactions of these systems, the related ecosystem, and the social, economic, and political setting [@ostrom2009]. Readily-available public data can describe some of these systems comprehensively, while it is difficult to quantify indicators for others [@partelow2018]. We chose to focus on three subsystems: the resource system and resource units, which we combine into a single resource model, and the actors. We assume the fourth subsystem, governance, is fairly similar across the study area, since all counties have a similar county government structure and adhere to the same state and national laws. We linked data available from 1990-2020 to second-tier variables in these subsystems of the SES framework based on expert knowledge from the authors. Some second-tier variables are excluded because no relevant data sources could be found, but it is common to analyze subsets of SES variables in the SES literature [@partelow2018]. We scaled all data by mean normalization [@hennig2016]. Detailed data sources and processing steps for each indicator and year can be found in Appendix A.
 
-::: {#tbl-datasel-R}
+::: {#tbl-datasel}
 
-| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source | Methods |
-|--|---|---|---|---|
+| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
+|--|---|---|---|
 | RS1 -- Sector | Agriculture, Natural Amenities, Urban / Residential | | | |
-| RS3 -- Size of Resource System | Agriculture  | Percent land in farms | US Census of Agriculture | @sec-land-in-farms-methods |
-| | | Percent cropland | National Land Cover Database (NLCD) | @sec-perc-cropland-methods |
-| | Natural Amenities | Percent forestland | NLCD | @sec-perc-forest-methods |
-| | | Percent shrubland | NLCD | @sec-perc-shrubland-methods |
-| | | Percent federally managed land | US Bureau of Land Management | @sec-fedlands |
-| | | Lake area | HydroSHEDS | @sec-lake-area-methods |
-| | | River length | HydroSHEDS | @sec-river-miles-methods |
-| | Urban / Residential | Percent developed land | NLCD | @sec-dev-land-methods |
-| | | Land in, nearby, and far from urban areas | IPUMS | @sec-urbareas |
-| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Number farms per unit area | US Census of Agriculture | @sec-farm-density-methods |
-| | Natural Amenities | Percent land in recreation areas | Protected Areas Database - US (PAD-US) | @sec-rec-area-methods |
-| | | Distance to nearest national park | PAD-US | @sec-dist-nat-park-methods |
-| | | Distance to nearest ski area | PAD-US | @sec-dist-ski-area-methods |
-| | Urban / Residential | Number houses per unit area | US Decennial Census | @sec-hous-dens-methods |
-| | | Percent non-federal land within 10km of a major roadway | US Decennial Census, PAD-US | @sec-major-roads-methods |
-| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP), US Census of Governments | @sec-health-jobs-methods |
-| RS9 -- Location | All | Average slope | OpenTopography | @sec-slope-methods |
-| RU2 -- Growth / Replacement Rate | Agriculture | Percent change in number of farms (5-year period) | US Census of Agriculture | @sec-num-farms-change-methods |
-| | | Percent change of land area in farms | US Census of Agriculture | @sec-land-in-farms-change-methods |
-| | | Percent change of land cover in cropland (5 year period) | NLCD | @sec-cropland-change-methods |
-| | Natural Amenities | Percent change of land cover in forest (5 year period) | NLCD | @sec-forest-change-methods |
-| | | Percent change of land cover in shrubland (5 year period) | NLCD | @sec-shrubland-change-methods |
-| | Urban / Residential | Percent change of land cover in developed land (5 year period) | NLCD | @sec-dev-land-change-methods |
-| RU4 -- Economic Value | Agriculture | Percent farms with net loss | US Census of Agriculture | @sec-farm-net-loss-methods |
-| | | Agriculture support jobs per 1000 residents | US Census of Agriculture | @sec-ag-support-jobs-methods |
-| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | CBP | @sec-hospitality-jobs-methods |
-| | Urban / Residential | Median home value | US Decennial Census | @sec-home-value-methods |
-| RU6 -- Distinctive Characteristics | Agriculture | Percent farms in different size classes (e.g. percent farms <10 acres)* | US Census of Agriculture | @sec-farm-size-methods |
+| RS3 -- Size of Resource System | Agriculture  | Land in farms (%) | US Census of Agriculture |
+| | | Cropland (%) | National Land Cover Database (NLCD) |
+| | Natural Amenities | Forestland (%) | NLCD |
+| | | Shrubland (%) | NLCD |
+| | | Federally managed land (%) | US Bureau of Land Management |
+| | | Lake area (km$^2$) | HydroSHEDS |
+| | | River length (km/km$^2$) | HydroSHEDS |
+| | Urban / Residential | Developed land (%) | NLCD |
+| | | Land in, nearby, and far from urban areas (%)* | IPUMS |
+| RS4 -- Human Constructed Facilities; RU5 -- Number of units | Agriculture | Farms density (farms/km$^2$) | US Census of Agriculture |
+| | Natural Amenities | Land in recreation areas (%) | Protected Areas Database - US (PAD-US) |
+| | | Distance to nearest national park (km) | PAD-US |
+| | | Distance to nearest ski area (km) | PAD-US |
+| | Urban / Residential | Housing density (houses/km$^2$) | US Decennial Census |
+| | | Non-federal land within 10km of a major roadway (%) | US Decennial Census, PAD-US |
+| | | Healthcare workers per 1000 residents | US Census County Business Patterns (CBP), US Census of Governments |
+| RS9 -- Location | All | Average slope ($^o$) | OpenTopography |
+| RU2 -- Growth / Replacement Rate | Agriculture | Change in number of farms (5-year period, %) | US Census of Agriculture |
+| | | Change of land area in farms (5-year period, %) | US Census of Agriculture |
+| | | Change of land cover in cropland (5-year period, %) | NLCD |
+| | Natural Amenities | Change of land cover in forest (5-year period, %) | NLCD |
+| | | Change of land cover in shrubland (5-year period, %) | NLCD |
+| | Urban / Residential | Change of land cover in developed land (5-year period, %) | NLCD |
+| RU4 -- Economic Value | Agriculture | Farms with net loss (%) | US Census of Agriculture |
+| | | Agriculture support jobs per 1000 residents | US Census of Agriculture |
+| | Natural Amenities | Hotel and restaurant jobs per 1000 residents | CBP |
+| | Urban / Residential | Median home value (\$USD) | US Decennial Census |
+| RU6 -- Distinctive Characteristics | Agriculture | Farms in different size classes (e.g. farms <10 acres, %)* | US Census of Agriculture |
+| A1 -- Number of Relevant Actors | All | Population density (persons/km$^2$) | US Decennial Census |
+| | | Population change (10-year period, %) | US Decennial Census |
+| A2 -- Socioeconomic Attributes | All | Employment in different industries (%)* | CBP, Census of Governments, US Census of Agriculture |
+| | | Population 65+ and not in labor force (%) | US Decennial Census |
+| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program |
+| | | Median household income (\$USD) | US Decennial Census |
+| | | Unemployment rate (%) | US Bureau of Labor Statistics |
+| | | Population with high school, Bachelor's degree (%) | US Decennial Census |
+| | | Racial composition of population (%)* | US Decennial Census |
+| | | Population with Hispanic ethnicity (%) | US Decennial Census |
+| | Agriculture | Farms full- or part-owned, or tenant operated (%)* | US Census of Agriculture |
+| | | Farms with net loss (%) | US Census of Agriculture |
+| | | Hired workers (total) | US Census of Agriculture |
+| A4 -- Location | All | Geographical isolation (%)* | IPUMS, US Decennial Census |
 
-Resource data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units. * indicates that principal components were used to reduce dimensions.
+Data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System and Resource Units (R) and Actors (A). * indicates that principal components were used to reduce dimensions. Refer to Appendix A, sections 1.1 and 1.2 for full methods.
 
 :::
-
+<!--
 ::: {#tbl-datasel-A}
 
-| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source | Methods |
-|--|--|---|---|---|
-| A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census | @sec-pop-dens-methods |
-| | | Percent population change (10 year period) | US Decennial Census | @sec-pop-change-methods |
-| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | CBP, Census of Governments, US Census of Agriculture | @sec-employ-indust-methods |
-| | | Percent population 65+ and not in labor force | US Decennial Census | @sec-retired-methods |
-| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program | @sec-avg-age-methods |
-| | | Median household income | US Decennial Census | @sec-avg-income-methods |
-| | | Unemployment rate | US Bureau of Labor Statistics | @sec-unemployment-methods |
-| | | Percent population with high school, Bachelor's degree | US Decennial Census | @sec-education-methods |
-| | | Racial composition of population* | US Decennial Census | @sec-race-methods |
-| | | Percent population with Hispanic ethnicity | US Decennial Census | @sec-ethnicity-methods |
-| | Agriculture | Percent farms full- or part-owned, or tenant operated* | US Census of Agriculture | @sec-farm-tenure-methods |
-| | | Percent farms with net loss | US Census of Agriculture | @sec-farm-net-loss-methods |
-| | | Number of hired workers | US Census of Agriculture | @sec-hired-workers-methods |
-| A4 -- Location | All | Geographical isolation* | IPUMS, US Decennial Census | @sec-isolation-methods |
+| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
+|--|--|---|---|
+| A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census |
+| | | Percent population change (10 year period) | US Decennial Census |
+| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | CBP, Census of Governments, US Census of Agriculture |
+| | | Percent population 65+ and not in labor force | US Decennial Census |
+| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program |
+| | | Median household income | US Decennial Census |
+| | | Unemployment rate | US Bureau of Labor Statistics |
+| | | Percent population with high school, Bachelor's degree | US Decennial Census |
+| | | Racial composition of population* | US Decennial Census |
+| | | Percent population with Hispanic ethnicity | US Decennial Census |
+| | Agriculture | Percent farms full- or part-owned, or tenant operated* | US Census of Agriculture |
+| | | Percent farms with net loss | US Census of Agriculture |
+| | | Number of hired workers | US Census of Agriculture |
+| A4 -- Location | All | Geographical isolation* | IPUMS, US Decennial Census |
 
 Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors. * indicates that principal components were used to reduce dimensions.
 
 :::
+-->
 
 ## Gaussian Mixed Model Clustering
 
@@ -541,7 +556,7 @@ Development outcomes are mediated by both resource and actor archetypes (@fig-re
 
 ## Insights from Changing Communities
 
-For the following results, we combine insights from longitudinal public data used to generate the quantitative archetypes (described in Tables [-@tbl-datasel-R]-[-@tbl-datasel-A], A[-@supptbla-R-data]-A[-@supptbla-A-means]) and qualitative data from interviews and participant observations in three key counties in different archetypes.
+For the following results, we combine insights from longitudinal public data used to generate the quantitative archetypes (described in @tbl-datasel, A[-@supptbla-R-data]-A[-@supptbla-A-means]) and qualitative data from interviews and participant observations in three key counties in different archetypes.
 
 ### Urban Sprawl in Canyon County {#sec-canyon}
 
