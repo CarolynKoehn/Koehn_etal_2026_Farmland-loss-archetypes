@@ -117,15 +117,13 @@ The second main driver of agricultural land loss is industrial development, ofte
 
 The third major pathway to rural land change is amenity migration, i.e. the migration of urban dwellers to rural areas for specific lifestyle amenities [@abrams2012], described by middle range theories such as rural gentrification [@gosnell2011]. Rural sprawl associated with amenity migration tends to be less dense than urban sprawl, resulting in larger areas of land affected, but with less intensity and sometimes further from population centers [@radeloff2005; @hammer2004]. Amenity migrants with agricultural estates do not rely on agricultural production as a means of income; though they may engage in some form of farming (including hobby farms) or lease lands to local producers, they may also use their lands exclusively for non-production uses like recreation and conservation [@abrams2012; @abrams2013; @matarrita2025]. Local jobs in areas with amenity migration are primarily low-wage service jobs, and this combined with rising property values can push low-income households farther out of the high-amenity community [@sherman2018; @loeffler2007; @abrams2012]. Thus, agricultural producers may face rising land costs and falling off-farm wages, the need to lease land, and the fragmentation of agricultural lands by migrant estates and commuter roads. Amenity migrants also change the cultural and political makeup of the communities in which they relocate by bringing different expectations and values [@abrams2012]. Clashing expectations can create tension between producers and migrants, yet farmers also may find receptive collaborators in amenity migrants who want to keep lands in agriculture [@matarrita2025; @abrams2013]. Amenity migration is a distinct pathway to agricultural land loss that differs in cause and effects from urban sprawl and industrial expansion, and requires different policy and planning approaches to address.
 
-Since agricultural land conversion occurs via different processes in different contexts, farmland loss may be well described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019]. The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, are distinct phenomena that require context-specific policies to manage farmland conversion. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
-<!-- add notes on qualitative data? -->
+Since agricultural land conversion occurs via distinct processes in distinct spatiotemporal contexts, farmland loss may be well described by archetype analysis. Archetypes are recurring patterns of social-ecological variables that build towards middle-range theories -- generalizations that describe causal pathways within a well-bounded range of phenomena [@meyfroidt2018; @oberlack2019].  Archetype analyses may use quantitative, qualitative, or mixed methods, and often use multiple models to capture diversity within cases of a phenomenon, rather than using a single model to explain all relationships between processes and outcomes [@oberlack2019; @sietz2019]. For example, @magliocca2019 constructed 12 multi-component archetypes of land use change outcomes stemming from economic land concessions by combining a quantitative survival analysis and a qualitative comparative analysis of case studies. An emerging application of archetype analysis is dynamic archetype analysis, which not only identifies recurring social-ecological patterns across space but also through time [@orozco2024]. While dynamic archetype analysis could be very useful to illuminate farmland loss dynamics, it has not yet been applied in this context.
 
-The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. We hypothesize that land use change is occurring due to urban/suburban sprawl, amenity migration, and agricultural industrialization in different areas across the region. This research will aid in identifying where distinct processes of land use change are occurring, contributing to a diverse toolbox for agricultural lands protection in diverse localities. We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. Our research questions were:
+The overarching goal of this research is to identify and describe archetypes, or recurring patterns, of agricultural land loss, which will aid in identifying where distinct processes of land use change are occurring and will contribute to a diverse toolbox for agricultural lands protection in diverse localities. The Snake River Plain of Idaho is an ideal place to study multiple processes of farmland loss because it is experiencing different drivers of agricultural land conversion across its counties. Based on in-depth knowledge of the study area, we hypothesized that land use change is occurring in different areas across the region, due to three different processes described in the farmland loss literature: urban/suburban sprawl, agricultural industrialization, and amenity migration. We then tested this hypothesis with an archetype analysis that combines quantitative clustering analysis and qualitative deductive/inductive analysis of semi-structured interviews within focal communities of the study area. Our research questions were:
 
-1. Are there identifiable archetypes of social-ecological subsystems (resource and actors) in Idaho's Snake River Plain, and which demographic, economic, and remotely sensed indicators are the most important characteristics of those archetypes?
-2. What is the relationship between these archetypes and farmland loss, and do the archetypes identify cases of urban sprawl, amenity migration, and industrialization?
-3. In what ways do actors in select counties describe drivers of community change, and can these insights validate archetypes indicating urban sprawl, amenity migration, or industrialization?
-4. Are there counties that have shifted archetypes through time, and what are their characteristics?
+1. Are there recurrent combinations of social-ecological indicators, i.e. archetypes, in Idaho's Snake River Plain, and do these archetypes identify cases of urban sprawl, industrialization, and amenity migration?
+2. In what ways do actors in select counties describe drivers of community change, and do these insights validate archetypes indicating urban sprawl, industrialization, or amenity migration?
+3. Are there counties that have shifted archetypes through time, and what are their characteristics?
 
 <!-- 
 
@@ -134,6 +132,12 @@ Cuts:
 I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
 
 The localized and overall effects of industrial expansion have not been included in spatial predictions of agricultural lands loss, which are based on population growth models [@xie2023; @chen2020; @haney2015; @meiyappan2014]. It is critical to identify and characterize the distinct pathway of agricultural lands loss via industrial expansion to improve predictions about threatened agricultural lands and identify where different approaches to protected agricultural lands may be effective.
+
+We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. 
+
+The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, are distinct phenomena that require context-specific policies to manage farmland conversion. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
+
+For example, @magliocca2019 combined a quantitative survival analysis that linked economic, ecological, and agricultural variables with land use change and a qualitative comparative analysis of case studies that linked economic land concessions and socioeconomic consequences to construct 12 multi-component archetypal pathways from economic land concession to either indirect land use change, or the prevention of indirect land use change.
 
 -->
 
@@ -226,6 +230,28 @@ Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's s
 -->
 
 ## Gaussian Mixed Model Clustering
+
+<!-- 
+K-means: 
+
+Aho, K., Parsons, S., Castro, A. J., & Lohse, K. A. (2022). Mapping socio‐ecological systems in Idaho: Spatial patterns and analytical considerations. Ecosphere, 13(10), e4242.
+
+Hierarchical:
+Lim-Camacho, L., Ariyawardana, A., Lewis, G.K. et al. Climate adaptation of food value chains: the implications of varying consumer acceptance. Reg Environ Change 17, 93–103 (2017). https://doi.org/10.1007/s10113-016-0976-5
+
+Aho, K., Parsons, S., Castro, A. J., & Lohse, K. A. (2022). Mapping socio‐ecological systems in Idaho: Spatial patterns and analytical considerations. Ecosphere, 13(10), e4242.
+
+Locatelli, B., Lavorel, S., Sloan, S., Tappeiner, U., & Geneletti, D. (2017). Characteristic trajectories of ecosystem services in mountains. Frontiers in Ecology and the Environment, 15(3), 150-159.
+
+Sequence hierarchecal (to initialize) -> k-means:
+
+Sietz, D., Ordoñez, J. C., Kok, M. T. J., Janssen, P., Hilderink, H. B., Tittonell, P., & Van Dijk, H. (2017). Nested archetypes of vulnerability in African drylands: where lies potential for sustainable agricultural intensification?. Environmental Research Letters, 12(9), 095006.
+
+Kok, M., Lüdeke, M., Lucas, P. et al. A new method for analysing socio-ecological patterns of vulnerability. Reg Environ Change 16, 229–243 (2016). https://doi.org/10.1007/s10113-014-0746-1
+
+Vidal Merino, M., Sietz, D., Jost, F., & Berger, U. (2019). Archetypes of climate vulnerability: a mixed-method approach applied in the Peruvian Andes. Climate and Development, 11(5), 418-434.
+
+-->
 
 We fit two separate cluster models, one with the resource variables and one with the actor variables, in order to characterize the resource and actor subsystems of the counties separately. We treated each county-year combination (e.g. Ada County in 1990) as a single observation, for a total of 104 observations.
 
