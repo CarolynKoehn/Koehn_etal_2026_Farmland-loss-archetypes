@@ -229,31 +229,11 @@ Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's s
 :::
 -->
 
-## Gaussian Mixed Model Clustering
+##  Cluster Analysis
 
-<!-- 
-K-means: 
+Cluster analysis is a common method for archetype identification [@sietz2019], particularly the heuristic method of k-means clustering initialized by hierarchical clustering [@kok2016; @sietz2017; @vidal2019]. K-means uses Euclidean distance to cluster points around a central point [@patel2020]. However, this calculation method is limited in its ability to find complex data structures, as it assumes that data clusters will be spherical with equal volume [@patel2020; @scrucca2023]. Complex systems may be better described by generative model-based clustering, which describes each cluster as a probability distribution, allowing for a variety of cluster shapes, including spheres and ellipses, and cluster volumes in dimensional space [@scrucca2023]. Specifically, Gaussian mixture model-based clustering, which describes each cluster as a mixture of Gaussian probability distributions, is a flexible and popular method for clustering continuous variables [@scrucca2023]. 
 
-Aho, K., Parsons, S., Castro, A. J., & Lohse, K. A. (2022). Mapping socio‐ecological systems in Idaho: Spatial patterns and analytical considerations. Ecosphere, 13(10), e4242.
-
-Hierarchical:
-Lim-Camacho, L., Ariyawardana, A., Lewis, G.K. et al. Climate adaptation of food value chains: the implications of varying consumer acceptance. Reg Environ Change 17, 93–103 (2017). https://doi.org/10.1007/s10113-016-0976-5
-
-Aho, K., Parsons, S., Castro, A. J., & Lohse, K. A. (2022). Mapping socio‐ecological systems in Idaho: Spatial patterns and analytical considerations. Ecosphere, 13(10), e4242.
-
-Locatelli, B., Lavorel, S., Sloan, S., Tappeiner, U., & Geneletti, D. (2017). Characteristic trajectories of ecosystem services in mountains. Frontiers in Ecology and the Environment, 15(3), 150-159.
-
-Sequence hierarchecal (to initialize) -> k-means:
-
-Sietz, D., Ordoñez, J. C., Kok, M. T. J., Janssen, P., Hilderink, H. B., Tittonell, P., & Van Dijk, H. (2017). Nested archetypes of vulnerability in African drylands: where lies potential for sustainable agricultural intensification?. Environmental Research Letters, 12(9), 095006.
-
-Kok, M., Lüdeke, M., Lucas, P. et al. A new method for analysing socio-ecological patterns of vulnerability. Reg Environ Change 16, 229–243 (2016). https://doi.org/10.1007/s10113-014-0746-1
-
-Vidal Merino, M., Sietz, D., Jost, F., & Berger, U. (2019). Archetypes of climate vulnerability: a mixed-method approach applied in the Peruvian Andes. Climate and Development, 11(5), 418-434.
-
--->
-
-We fit two separate cluster models, one with the resource variables and one with the actor variables, in order to characterize the resource and actor subsystems of the counties separately. We treated each county-year combination (e.g. Ada County in 1990) as a single observation, for a total of 104 observations.
+We fit two separate Gaussian mixture models, one with the resource variables and one with the actor variables, in order to characterize the resource and actor subsystems of the counties separately. We treated each county-year combination (e.g. Ada County in 1990) as a single observation, for a total of 104 observations.
 
 ### Model Selection
 
@@ -261,7 +241,7 @@ There are three components to model selection in Gaussian-based cluster modeling
 
 We identified redundant indicators by systematically checking single variables for exclusion using a backward stepwise greedy search, which allowed us to take variable dependencies into account [@bouveyron2019]. We began with the full set of variables, then tested the exclusion of each indicator individually, dropping the single most redundant variable, as identified by BIC. Then, this step was repeated with the remaining indicators until all indicators were identified as useful for clustering. At all steps after the first, we tested the inclusion of all dropped variables and added any that showed new evidence for clustering importance after other variables were dropped. We used the R package `clustvarsel` for this variable selection process (v2.3.5, see @clustvarsel for a full description of the backward stepwise greedy search).
 
-The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented with R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes (see @scrucca2023 for a description of all possible shapes), though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >4 groups.
+The next two steps of model selection are selecting the shape of the clusters in dimensional space (e.g. spherical vs elliptical) and the number of clusters, both of which we implemented with R package `mclust` [v6.1.1, @scrucca2023]. We tested for a range of 1-5 clusters in each model, as it is recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ [4 < 104$^{0.3}$ < 5, @biernacki2006]. We tested all 14 possible model shapes (see @scrucca2023 for a description of all possible shapes), though some model shapes, which require many parameters, could not be tested. For the resource model, we could not test shapes VEE, EVE, VVE, EVV, or VVV with >2 groups. For the actors model, we could not test shapes EVE or VVE with >4 groups.
 
 Because clustering models are sensitive to their initialization, we ran each model 200 times with random initialization. We selected the best model structure of the 200 runs using BIC, and the log likelihoods for the 200 runs of both models indicated no evidence of alternative local solutions [@bauer2021].
 
