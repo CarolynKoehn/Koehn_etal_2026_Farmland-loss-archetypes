@@ -3058,7 +3058,7 @@ a_data <- left_join(a_data, hired_clean, by = c("county", "year"))
 
 ### Geographical Isolation
 
-RUCA codes are a proxy for geographical isolation, but RUCA codes are not comparable across years. RUCA is made of two items at the tract level: presence in a metropolitan, micropolitan, small town, or rural area and commuting flows to these types of areas. Unfortunately, 1990 data is only available statewide at the county level, so I have modified this measure for the county level.
+RUCA codes are a proxy for geographical isolation, but RUCA codes are not comparable across years. RUCA is made of two items at the tract level: presence in a metropolitan, micropolitan, small town, or rural area and commuting flows to these types of areas. Unfortunately, 1990 commuting data is only available statewide at the county level, so I have modified this measure for the county level.
 
 Data for [1990](https://www.census.gov/data/datasets/1990/demo/commuting/worker-flow.html), [2000](https://www.census.gov/data/tables/2000/dec/county-to-county-worker-flow-files.html), [2010](https://www.census.gov/data/tables/2010/demo/metro-micro/commuting-employment-2010.html), and [2020](https://www.census.gov/data/tables/2020/demo/metro-micro/commuting-flows-2020.html)
 
@@ -3093,7 +3093,11 @@ counties_urb <- mapply(function(blocks, year) {
     summarise(UA_pop = sum(tot_pop)) %>%
     na.omit() %>%
     right_join(UAs) %>%
-    st_as_sf()
+    st_as_sf() %>%
+    mutate(urb_label = ifelse(UA_pop >= 50000 & !is.na(UA_pop), "Metropolitan", NA)) %>%
+    mutate(urb_label = ifelse(UA_pop >= 10000 & UA_pop < 50000 & !is.na(UA_pop), "Micropolitan", urb_label)) %>%
+    # smallest UAs classified as "small town"
+    mutate(urb_label = ifelse(is.na(urb_label), "Small town", urb_label))
   
   # determine which urban areas are in each county
   county_UAs <- st_intersects(us_counties, st_transform(UA_pops, st_crs(us_counties)))
@@ -3116,14 +3120,58 @@ counties_urb <- mapply(function(blocks, year) {
     mutate(urb_label = ifelse(!(GEOID %in% near_counties$GEOID), ">150 mi commute", NA)) %>%
     mutate(urb_label = ifelse(max_urb_pop >= 50000 & !is.na(max_urb_pop), "Metropolitan", urb_label)) %>%
     mutate(urb_label = ifelse(max_urb_pop >= 10000 & max_urb_pop < 50000 & !is.na(max_urb_pop), "Micropolitan", urb_label)) %>%
-    mutate(urb_label = ifelse(max_urb_pop >= 5000 & max_urb_pop < 10000 & !is.na(max_urb_pop), "Small town", urb_label)) %>%
+    # all small urban areas = "small town"
+    mutate(urb_label = ifelse(!is.na(max_urb_pop) & is.na(urb_label), "Small town", urb_label)) %>%
     mutate(urb_label = ifelse(is.na(urb_label), "Rural", urb_label))
   
   return(county_UAs_labels)
 }, blocks = block_data_list, year = years, SIMPLIFY = FALSE)
-# returns a list of counties labeled by urbanicity for each year
 
-
+# calculate block level populations in urban categories for each county
+id_counties_urb_pops <- mapply(function(blocks, year) {
+  # read in urban areas data saved from the urban land code chunk - RS3
+  UAs <- st_read(paste0("../data/urb_areas_thresholded/urb_areas_thresholded_", year, ".shp"))
+  
+  # retain blocks in urban areas
+  UA_blocks <- st_join(blocks, UAs, join = st_covered_by)
+  
+  # get population of each urban area to categorize as metropolitan, micropolitan, small town
+  UA_pops <- UA_blocks %>%
+    st_drop_geometry() %>%
+    group_by(FID) %>%
+    summarise(UA_pop = sum(tot_pop)) %>%
+    na.omit() %>%
+    right_join(UAs) %>%
+    st_as_sf() %>%
+    mutate(urb_label = ifelse(UA_pop >= 50000 & !is.na(UA_pop), "Metropolitan", NA)) %>%
+    mutate(urb_label = ifelse(UA_pop >= 10000 & UA_pop < 50000 & !is.na(UA_pop), "Micropolitan", urb_label)) %>%
+    # smallest UAs classified as "small town"
+    mutate(urb_label = ifelse(is.na(urb_label), "Small town", urb_label))
+  
+  # add urban labels to blocks
+  blocks_urblabs <- blocks %>%
+    left_join(st_drop_geometry(UA_blocks[,c("GISJOIN", "FID")]), by="GISJOIN") %>%
+    left_join(st_drop_geometry(UA_pops[,c("FID", "urb_label")]), by="FID") %>%
+    mutate(urb_label = ifelse(is.na(urb_label), "Rural", urb_label))
+  
+  # total populations by urban label and county
+  urb_pops_cty <- blocks_urblabs %>%
+    st_drop_geometry(.) %>%
+    group_by(FIPS, urb_label) %>%
+    summarise(urb_pop = sum(tot_pop, na.rm=TRUE)) %>%
+    pivot_wider(names_from = urb_label,
+                values_from = urb_pop) %>%
+    ungroup() %>%
+    replace(is.na(.), 0) %>%
+    rowwise(FIPS) %>%
+    mutate(tot_pop = sum(c_across(everything()))) %>%
+    mutate(across(everything(), ~.x/tot_pop * 100)) %>%
+    select(-tot_pop) %>%
+    filter(str_starts(FIPS, "16")) %>%
+    mutate(year = year)
+  
+  return(urb_pops_cty)
+}, blocks = block_data_list, year = years, SIMPLIFY = FALSE)
 
 # get commuting flows
 commutes_1990 <- read.table("https://www2.census.gov/programs-surveys/commuting/datasets/1990/worker-flow/idresco.txt", sep = "\t", strip.white = TRUE) %>%
@@ -3145,15 +3193,15 @@ commutes_1990 <- read.table("https://www2.census.gov/programs-surveys/commuting/
   # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
-                          paste(ResUrbStatus, "Stay", sep="_"),
+                          "Stay",
                           ifelse(ResUrbStatus == "Metropolitan" & WorkUrbStatus == "Metropolitan",
                                  ifelse(WorkUrbPop > ResUrbPop, 
-                                        "Metropolitan_BiggerMetropolitan",
-                                        "Metropolitan_SmallerMetropolitan"),
-                                 paste(ResUrbStatus, WorkUrbStatus, sep="_"))
-                          ),
+                                        "BiggerMetropolitan",
+                                        "SmallerMetropolitan"),
+                                 WorkUrbStatus)
+         ),
          year = 1990) %>%
-  group_by(county, year, commute) %>%
+  group_by(county, year, commute, ResFIPS) %>%
   summarise(workers = sum(Workers))
 
 commutes_2000 <- readxl::read_xls("../data/raw_data/2kresco_id.xls",
@@ -3175,22 +3223,22 @@ commutes_2000 <- readxl::read_xls("../data/raw_data/2kresco_id.xls",
   # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
-                          paste(ResUrbStatus, "Stay", sep="_"),
+                          "Stay",
                           ifelse(ResUrbStatus == "Metropolitan" & WorkUrbStatus == "Metropolitan",
                                  ifelse(WorkUrbPop > ResUrbPop, 
-                                        "Metropolitan_BiggerMetropolitan",
-                                        "Metropolitan_SmallerMetropolitan"),
-                                 paste(ResUrbStatus, WorkUrbStatus, sep="_"))
-                          ),
+                                        "BiggerMetropolitan",
+                                        "SmallerMetropolitan"),
+                                 WorkUrbStatus)
+         ),
          year = 2000) %>%
-  group_by(county, year, commute) %>%
+  group_by(county, year, commute, ResFIPS) %>%
   summarise(workers = sum(Count))
 
 commutes_2010 <- readxl::read_xlsx("../data/raw_data/table1 (2010).xlsx",
                                    # leave out empty rows, undesired column names
-                                  range = "A6:J26342",
-                                  # manually name columns
-                                  col_names = c("Res_State_FIPS", "Res_County_FIPS", "Work_State_FIPS", "Work_County_FIPS", "Workers", "MOE", "Res_State", "Res_County", "Work_State", "Work_County")) %>%
+                                   range = "A6:J26342",
+                                   # manually name columns
+                                   col_names = c("Res_State_FIPS", "Res_County_FIPS", "Work_State_FIPS", "Work_County_FIPS", "Workers", "MOE", "Res_State", "Res_County", "Work_State", "Work_County")) %>%
   # filter to Idaho
   filter(Res_State == "Idaho") %>%
   rowwise() %>%
@@ -3208,22 +3256,22 @@ commutes_2010 <- readxl::read_xlsx("../data/raw_data/table1 (2010).xlsx",
   # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
-                          paste(ResUrbStatus, "Stay", sep="_"),
+                          "Stay",
                           ifelse(ResUrbStatus == "Metropolitan" & WorkUrbStatus == "Metropolitan",
                                  ifelse(WorkUrbPop > ResUrbPop, 
-                                        "Metropolitan_BiggerMetropolitan",
-                                        "Metropolitan_SmallerMetropolitan"),
-                                 paste(ResUrbStatus, WorkUrbStatus, sep="_"))
-                          ),
+                                        "BiggerMetropolitan",
+                                        "SmallerMetropolitan"),
+                                 WorkUrbStatus)
+         ),
          year = 2010) %>%
-  group_by(county, year, commute) %>%
+  group_by(county, year, commute, ResFIPS) %>%
   summarise(workers = sum(Workers))
 
 commutes_2020 <- readxl::read_xlsx("../data/raw_data/table1 (2020).xlsx",
                                    # leave out empty rows, undesired column names
-                                  range = "A9:J23788",
-                                  # manually rename columns
-                                  col_names = c("Res_State_FIPS", "Res_County_FIPS", "Res_State", "Res_County", "Work_State_FIPS", "Work_County_FIPS", "Work_State", "Work_County", "Workers", "MOE" )) %>%
+                                   range = "A9:J23788",
+                                   # manually rename columns
+                                   col_names = c("Res_State_FIPS", "Res_County_FIPS", "Res_State", "Res_County", "Work_State_FIPS", "Work_County_FIPS", "Work_State", "Work_County", "Workers", "MOE" )) %>%
   # filter to Idaho
   filter(Res_State == "Idaho") %>%
   rowwise() %>%
@@ -3241,15 +3289,15 @@ commutes_2020 <- readxl::read_xlsx("../data/raw_data/table1 (2020).xlsx",
   # label commutes based on resident and work county
   mutate(WorkUrbStatus = ifelse(is.na(WorkUrbStatus), ">150 mi commute", WorkUrbStatus),
          commute = ifelse(ResFIPS == WorkFIPS, 
-                          paste(ResUrbStatus, "Stay", sep="_"),
+                          "Stay",
                           ifelse(ResUrbStatus == "Metropolitan" & WorkUrbStatus == "Metropolitan",
                                  ifelse(WorkUrbPop > ResUrbPop, 
-                                        "Metropolitan_BiggerMetropolitan",
-                                        "Metropolitan_SmallerMetropolitan"),
-                                 paste(ResUrbStatus, WorkUrbStatus, sep="_"))
-                          ),
+                                        "BiggerMetropolitan",
+                                        "SmallerMetropolitan"),
+                                 WorkUrbStatus)
+         ),
          year = 2020) %>%
-  group_by(county, year, commute) %>%
+  group_by(county, year, commute, ResFIPS) %>%
   summarise(workers = sum(Workers))
 
 # combine data from all years
@@ -3261,18 +3309,27 @@ commutes_all <- do.call(rbind, list(commutes_1990, commutes_2000, commutes_2010,
   # percent workers with each type of commute in each county-year
   mutate(perc_workers = workers / tot_workers * 100) %>%
   # pivot so that each commute type is a column, fill NAs with 0
-  pivot_wider(id_cols = c("county", "year"),
+  pivot_wider(id_cols = c("county", "year", "ResFIPS"),
               names_from = "commute",
+              names_prefix = "commute_",
               values_from = "perc_workers",
               values_fill = 0)
 
-ruca_proxy_pca <- prcomp(commutes_all[,-c(1:2)])
+urbs_plus_commutes <- do.call("rbind", id_counties_urb_pops) %>%
+  right_join(commutes_all, by = c("FIPS" = "ResFIPS", "year")) %>%
+  relocate(county, year, .before=FIPS) %>%
+  ungroup() %>%
+  replace(is.na(.), 0) %>%
+  select(-FIPS)
+
+ruca_proxy_pca <- prcomp(urbs_plus_commutes[,-c(1:2)])
 summary(ruca_proxy_pca)
 
-# PCs 1-2 explain >70% of variance
-a_data <- cbind(commutes_all[,c(1:2)], ruca_proxy_pca$x[,c(1:2)]) %>%
+# PCs 1-3 explain >70% of variance
+a_data <- cbind(urbs_plus_commutes[,c(1:2)], ruca_proxy_pca$x[,c(1:3)]) %>%
   rename("ruca_proxy_pc1" = "PC1",
-         "ruca_proxy_pc2" = "PC2") %>%
+         "ruca_proxy_pc2" = "PC2",
+         "ruca_proxy_pc3" = "PC3") %>%
   right_join(a_data, by = c("county", "year"))
 ```
 
