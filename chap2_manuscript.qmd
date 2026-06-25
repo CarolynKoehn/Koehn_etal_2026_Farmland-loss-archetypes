@@ -293,7 +293,7 @@ var_labs_R <- data.frame(indicator = colnames(clust_dat$Resource)[order(colnames
                          pretty_label = c("RU4 - Jobs in Hospitality", "RU4 - Jobs Supporting Ag", "RS9 - Average Slope", "Cluster", "County", "RU2 - Cropland Loss/Gain", "RU2 - Developed Land Gain", "RS4 - Distance to a National Park", "RS4 - Distance to a Ski Area", "RU6 - Farm Size (PC1)", "RU6 - Farm Size (PC2)", "RS4, RU5 - Farm Density", "RU2 - Forest Loss/Gain", "GEOID", "geometry", "RS4 - Jobs in Healthcare", "RS4, RU5 - Housing Density", "RS3 - Lake Area", "RS3 - Land in Farms", "RU4 - Med Home Value", "RU2 - Land in Farms Loss/Gain", "RU2 - Farm Loss/Gain", "RU4 - Farms with Net Loss", "RS3 - Federal Land", "RS4 - Non-Federal Land near Highway", "RS4 - Recreation Land", "RS3 - Cropland", "RS3 - Developed Land", "RS3 - Forest", "RS3 - Shrubland", "RS3 - Length of Rivers", "RU2 - Shrubland Loss/Gain", "RS3 - Distance from Urban (PC1)", "RS3 - Distance from Urban (PC2)", "Year"))
 
 var_labs_A <- data.frame(indicator = colnames(clust_dat$Actors)[order(colnames(clust_dat$Actors))],
-                         pretty_label = c("A2 - Average Age", "A2 - Residents with Bachelor's", "Cluster", "County", "A2 - Employment Sectors (PC1)", "A2 - Employment Sectors (PC2)", "A2 - Employment Sectors (PC3)", "A2 - Employment Sectors (PC4)", "GEOID", "geometry", "A2 - Residents with High School Education", "A2 - Median Income", "A2 - Hired Ag Workers", "A2 - Farms with Net Loss", "A2 - Hispanic Residents", "A1 - Population Change", "A2 - Retirees", "A1 - Population Density", "A2 - Racial Composition (PC1)", "A4 - Geographical Isolation (PC1)", "A4 - Geographical Isolation (PC2)", "A2 - Full Owned Farms", "A2 - Unemployment Rate", "Year"))
+                         pretty_label = c("A2 - Average Age", "A2 - Residents with Bachelor's", "Cluster", "County", "A2 - Employment Sectors (PC1)", "A2 - Employment Sectors (PC2)", "A2 - Employment Sectors (PC3)", "A2 - Employment Sectors (PC4)", "GEOID", "geometry", "A2 - Residents with High School Education", "A2 - Median Income", "A2 - Hired Ag Workers", "A2 - Farms with Net Loss", "A2 - Hispanic Residents", "A1 - Population Change", "A2 - Retirees", "A1 - Population Density", "A2 - Racial Composition (PC1)", "A4 - Geographical Isolation (PC1)", "A4 - Geographical Isolation (PC2)", "A4 - Geographical Isolation (PC3)", "A2 - Full Owned Farms", "A2 - Unemployment Rate", "Year"))
 
 rel_inf <- list()
 
@@ -380,7 +380,7 @@ The most influential variables in the resource model were: (1) geographic isolat
 
 ci_clust$Actors %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A4", "A5", "A2", "A3"),
+                          levels = c("A1", "A2", "A5", "A3", "A4"),
                           labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
   mutate(input_data_name = factor(input_data_name,
                                   levels = rel_inf$Actors$indicator,
@@ -423,7 +423,7 @@ Like A4, A5 contains rural counties with low population density, moderate popula
 #| label: fig-cluster-maps
 #| fig-width: 13
 #| fig-height: 7
-#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R3 in 1990 and R2 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R4-A3, or small town counties with agriculture further from urban and recreational amenities, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
+#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R2 in 1990 and R4 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R4-A3, or small town counties with agriculture further from urban and recreational amenities, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
   mutate(cluster = factor(cluster,
@@ -437,7 +437,7 @@ resource_map <- clust_dat[["Resource"]] %>%
   geom_sf() +
   geom_sf_pattern(data = subset(clust_dat[["Resource"]], county=="Gem"),
                   pattern = 'stripe', pattern_density = 0.75,
-                  fill = rev(viridis::turbo(5, begin=0.075, end=0.8))[3],
+                  fill = rev(viridis::turbo(5, begin=0.075, end=0.8))[4],
                   pattern_fill=rev(viridis::turbo(5, begin=0.075, end=0.8))[2],
                   pattern_size=0.1,
                   show.legend = FALSE) +
@@ -454,7 +454,7 @@ resource_map <- clust_dat[["Resource"]] %>%
 
 actor_map_data <- clust_dat[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A3", "A4", "A5", "A2"),
+                          levels = c("A1", "A2", "A5", "A3", "A4"),
                           labels = c("A1: Urban counties with high population growth",
                                      "A2: Small cities",
                                      "A3: Small town counties grow as quickly as small cities",
@@ -491,7 +491,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                             levels = c("R1", "R4", "R2", "R5", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
-                            levels = c("A1", "A3", "A4", "A5", "A2"),
+                            levels = c("A1", "A2", "A5", "A3", "A4"),
                             labels = c("A1", "A2", "A3", "A4", "A5")))
 
 assoc_tbl <- ggplot(as.data.frame(table(county_clusts$cluster.A, county_clusts$cluster.R)),
