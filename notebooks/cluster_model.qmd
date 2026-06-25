@@ -68,7 +68,9 @@ Before clustering begins, it is useful to select the most important variables fo
 
 I chose the most conservative method. The algorithm starts with all the variables, and tests dropping different variables from the equation to see if the difference is minimal.
 
-I tested for a range of 1-5 possible clusters. It's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ (Biernacki et al., 2006).
+I tested for a range of 1-5 possible clusters. It's recommended to vary the number of possible clusters between 1 and the next integer after $n^{0.3}$ (Biernacki et al., 2006). 
+
+To deal with high dimensional data, I restricted the model to test only spherical and diagonal shapes, reducing the number of parameters needed to estimate cluster shapes and volumes (see `mclust` guide chapter 7, https://mclust-org.github.io/mclust-book/chapters/07_miscellanea.html#high-dimensional-data).
 
 ```{r}
 #| label: "variable selection bootstrap"
@@ -87,6 +89,7 @@ ses_var_sel <- mapply(function(df, ses_system) {
               G = 1:5,
               search = "greedy",
               direction = "backward",
+              emModels2 = c("EII", "VII", "EEI", "VEI", "EVI", "VVI"),
               fit = FALSE)
     # record if each variable name was included in the varsel result
     newrow <- (colnames(df)[-c(1:2)] %in% names(varsel$subset))
@@ -148,6 +151,8 @@ To select a model, which includes selecting the number of groups and the shape, 
 
 Since this clustering finds local maxima, it is sensitive to its initialization. I ran the cluster models 200 times for each SES subsystem, preserving the best model as the final result.
 
+To deal with high dimensional data, I restricted the model to test only spherical and diagonal shapes, reducing the number of parameters needed to estimate cluster shapes and volumes (see `mclust` guide chapter 7, https://mclust-org.github.io/mclust-book/chapters/07_miscellanea.html#high-dimensional-data). I also used a general prior to avoid failures of maximum likelihood estimation and to smooth the noisy behavior of BIC (see `mclust` guide chapter 7, https://mclust-org.github.io/mclust-book/chapters/07_miscellanea.html#sec-prior). The prior mean is set to 0, since because of data scaling, every variable should have a mean of 0.
+
 ```{r}
 #| label: "model selection"
 
@@ -156,7 +161,9 @@ ses_mclustBIC <- lapply(ses_data_sel, function(df) {
   LL <- NULL
   for(j in 1:200) {
     rBIC <- mclustBIC(df[,-c(1:2)], G=1:5, verbose=FALSE,
-                    initalization = list(hcPairs=hcRandomPairs(df[,-c(1:2)])))
+                    initalization = list(hcPairs=hcRandomPairs(df[,-c(1:2)])),
+                      modelNames = c("EII", "VII", "EEI", "VEI", "EVI", "VVI", "XII", "XXI"),
+                      prior = priorControl(mean = rep(0, ncol(df[,-c(1:2)]))))
     rModel <- mclustModel(df[,-c(1:2)], BICvalues = rBIC)
     LL <- c(LL, rModel$loglik)
     BIC <- mclustBICupdate(BIC, rBIC)
