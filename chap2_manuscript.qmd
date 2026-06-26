@@ -945,19 +945,19 @@ r1_means <- r1 %>%
 # get farm size raw data
 # farm sizes range
 # list parameters
-# params <- list(state_alpha = "ID",
-#                agg_level_desc = "county",
-#                year = c(2002, 2012, 2022),
-#                commodity_desc = "Farm operations",
-#                short_desc = "Farm operations - number of operations",
-#                domain_desc = "area operated")
-# # retrieve
-# farm_sizes <- nassqs(params)
+params <- list(state_alpha = "ID",
+               agg_level_desc = "county",
+               year = c(2002, 2012, 2022),
+               commodity_desc = "Farm operations",
+               short_desc = "Farm operations - number of operations",
+               domain_desc = "area operated")
+# retrieve
+farm_sizes <- nassqs(params)
 # save a backup copy
 # write.csv(farm_sizes,
 #           "../data/API_data_download_backup/farm_sizes.csv",
 #           row.names = FALSE)
-farm_sizes <- read.csv("data/API_data_download_backup/farm_sizes.csv")
+# farm_sizes <- read.csv("data/API_data_download_backup/farm_sizes.csv")
 
 # clean
 farm_sizes2 <- farm_sizes %>%
@@ -1090,8 +1090,8 @@ a1_means <- a1 %>%
             min = min(input_data_value, na.rm=TRUE),
             max = max(input_data_value, na.rm=TRUE)) %>%
   mutate(var_name_clean = factor(input_data_name,
-                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2"),
-                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)"))) %>%
+                                 levels = c("pop_per_acre", "perc_pop_change", "emply_pc1", "emply_pc2", "emply_pc3", "emply_pc4", "perc_retired", "avg_age", "med_income_in_2020_USD", "unemployment_rate", "high_school", "bachelors", "races_PC1", "perc_hispanic", "tenure_pc1", "perc_farms_w_net_loss", "num_hired", "ruca_proxy_pc1", "ruca_proxy_pc2", "ruca_proxy_pc3"),
+                                 labels = c("Population Density", "Population Change", "Employment Sectors (PC1)", "Employment Sectors (PC2)", "Employment Sectors (PC3)", "Employment Sectors (PC4)", "Retirees", "Average Age", "Median Income", "Unemployment Rate", "Residents with High School Education", "Residents with Bachelor's", "Racial Composition (PC1)", "Hispanic Residents", "Full Owned Farms", "Farms with Net Loss", "Hired Ag Workers", "Geographical Isolation (PC1)", "Geographical Isolation (PC2)", "Geographical Isolation (PC3)"))) %>%
   arrange(var_name_clean) %>%
   relocate(var_name_clean, .before = input_data_name) %>%
   select(-input_data_name)
@@ -1121,9 +1121,9 @@ tenure_a1 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
 
 ###############
 # urbanicity
-urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+urb_a1 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
   pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
+               names_to = "urb_or_commute",
                values_to = "perc")
 ```
 
@@ -1153,8 +1153,8 @@ urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
 |  Average age |  `r round(subset(a1_means, var_name_clean == "Average Age")$mean, 0)` | `r round(subset(a1_means, var_name_clean == "Average Age")$median, 0)`  |  `r round(subset(a1_means, var_name_clean == "Average Age")$min, 0)` | `r round(subset(a1_means, var_name_clean == "Average Age")$max, 0)`  |
 |  Median income |  \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(a1_means, var_name_clean == "Median Income")$max, 0), big.mark=",", trim=TRUE)`  |
 |  Unemployment rate |  `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$max, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$max, 0)`%  |
 |  White residents |  `r round(mean(subset(races_a1, race == "Persons_white")$perc), 0)`% | `r round(median(subset(races_a1, race == "Persons_white")$perc), 0)`%  |  `r round(min(subset(races_a1, race == "Persons_white")$perc), 0)`% | `r round(max(subset(races_a1, race == "Persons_white")$perc), 0)`%  |
 |  American Indian or Alaska Native residents |  `r round(mean(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_AmericanIndian_Eskimo_Aleut")$perc), 1)`%  |
 |  Black residents |  `r round(mean(subset(races_a1, race == "Persons_Black")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_Black")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_Black")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_Black")$perc), 1)`%  |
@@ -1167,23 +1167,18 @@ urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
 |  Tenant-rented farms (% of all farms) |  `r round(mean(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`% | `r round(median(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`%  |  `r round(min(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`% | `r round(max(subset(tenure_a1, tenure == "Num_tenant")$perc), 0)`%  |
 |  Farms with Net Loss (% of all farms) |  `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
 |  Number of hired agricultural workers |  `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$mean, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$median, 0), big.mark=",", trim=TRUE)`  |  `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$min, 0), big.mark=",", trim=TRUE)` | `r format(round(subset(a1_means, var_name_clean == "Hired Ag Workers")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Live and work in same metropolitan county (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |
-|  Live and work in same micropolitan county (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%  |
-|  Live and work in same "small town" county (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Small.town_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Small.town_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Small.town_Stay")$perc), 0)`%  |
-|  Live and work in same "rural" county (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Rural_Stay")$perc), 0)`%  |
-|  Live rural, commute to micropolitan (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
-|  Live rural, commute to another rural (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Rural_Rural")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Rural_Rural")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Rural_Rural")$perc), 0)`%  |
-|  Live rural, commute to small town (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Rural_Small.town")$perc), 0)`%  |
-|  Live rural, commute to metropolitan (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
-|  Live micropolitan, commute to another micropolitan (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |
-|  Live small town, commute to another small town (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Small.town_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Small.town_Small.town")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Small.town_Small.town")$perc), 0)`%  |
-|  Live small town, commute to metropolitan (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Small.town_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |
-|  Live small town, commute to micropolitan (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Small.town_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |
-|  Live micropolitan, commute to metropolitan (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |
-|  Live small town, commute to rural (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Small.town_Rural")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Small.town_Rural")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Small.town_Rural")$perc), 0)`%  |
-|  Live metropolitan, commute to a bigger metropolitan area (% of workers) |  -- | `r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |
+| Residents in metropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% |
+| Residents in micropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% |
+| Residents in "small town" census blocks (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% |
+| Residents in census blocks outside urban areas (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% |
+| Residents commuting within county of residence (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% |
+| Residents commuting to a county with larger metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% |
+| Residents commuting to a county with smaller metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% |
+| Residents commuting to a micropolitan county (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% |
+| Residents commuting to a "small town" county (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% |
+| Residents commuting to a county with no urban area (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% |
  
-Summary statistics for all study area counties. A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce) as there were very many (25) commute type possibilities in the study area, and means are not reported as they were not representative of the overall data spread.
+Summary statistics for all study area counties.
  
 :::
 
@@ -1813,7 +1808,7 @@ label_order <- left_join(var_labs_A, rel_inf$Actors) %>%
 
 clust_dat_sc[["Actors"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("A1", "A3", "A4", "A5", "A2"),
+                          levels = c("A1", "A2", "A5", "A3", "A4"),
                           labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
   st_drop_geometry() %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
@@ -1903,23 +1898,19 @@ tenure_a1 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
 
 ###############
 # urbanicity
-urb_a1 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+urb_a1 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
   right_join(st_drop_geometry(a1[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
+               names_to = "urb_or_commute",
                values_to = "perc")
 ```
 
-The counties in A1 are Ada, Madison, and Canyon (2010-2020).
+The counties in A1 are Ada and Canyon.
 
 ::: {#supptblb-data-a1}
 
 | Indicator  | Mean | Median  | Minimum  |  Maximum |
 |----------|---|---|---|---|
-|  Live and work in same metropolitan county (% of workers) |  **`r round(mean(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_Stay")$perc), 0)`%  |
-|  Live and work in same micropolitan county (% of workers) |  **`r round(mean(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Stay")$perc), 0)`%  |
-|  Live metropolitan, commute to a bigger metropolitan area (% of workers) |  **`r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Metropolitan_BiggerMetropolitan")$perc), 0)`%  |
-|  Live micropolitan, commute to another micropolitan area (% of workers) |  **`r round(median(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |
 |  Population density (persons per $km^2$) |  **`r round(subset(a1_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)`** | `r round(subset(a1_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a1_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a1_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a1, industry == "Retail.Trade")$perc_workers), 0)`%  |
@@ -1952,11 +1943,21 @@ The counties in A1 are Ada, Madison, and Canyon (2010-2020).
 |  Asian residents |  `r round(mean(subset(races_a1, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_Asian")$perc), 1)`%  |
 |  Pacific Islander residents |  `r round(mean(subset(races_a1, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_PacificIslander")$perc), 1)`%  |
 |  Residents of some other race |  `r round(mean(subset(races_a1, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a1, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a1, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a1, race == "Persons_other")$perc), 1)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with Bachelor's")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Residents with High School Education")$max, 0)`%  |
 |  Unemployment rate |  `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a1_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+| Residents in metropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Metropolitan")$perc), 0)`% |
+| Residents in micropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Micropolitan")$perc), 0)`% |
+| Residents in "small town" census blocks (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Small.town")$perc), 0)`% |
+| Residents in census blocks outside urban areas (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "Rural")$perc), 0)`% |
+| Residents commuting within county of residence (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Stay")$perc), 0)`% |
+| Residents commuting to a county with larger metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% |
+| Residents commuting to a county with smaller metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% |
+| Residents commuting to a micropolitan county (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Micropolitan")$perc), 0)`% |
+| Residents commuting to a "small town" county (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Small.town")$perc), 0)`% |
+| Residents commuting to a county with no urban area (component of geographical isolation) | `r round(mean(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(median(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(min(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(max(subset(urb_a1, urb_or_commute == "commute_Rural")$perc), 0)`% |
 
-Summary statistics for counties in archetype A1. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A1 are metropolitan (contain an urban area with population >50,000).
+Summary statistics for counties in archetype A1. Bolded cluster means are significantly different from the study area mean (p < 0.05).
 
 :::
 
@@ -1966,10 +1967,8 @@ Summary statistics for counties in archetype A1. Bolded cluster means are signif
 #| include: false
 #| label: "A2 data"
 
-# labeled A3 by model, A2 in manuscript
-
 a2 <- clust_dat[["Actors"]] %>%
-  filter(cluster == "A3")
+  filter(cluster == "A2")
 
 a2_means <- a2 %>%
   st_drop_geometry() %>%
@@ -2017,10 +2016,10 @@ tenure_a2 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
 
 ###############
 # urbanicity
-urb_a2 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+urb_a2 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
   right_join(st_drop_geometry(a2[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
+               names_to = "urb_or_commute",
                values_to = "perc")
 ```
 
@@ -2030,9 +2029,6 @@ The counties in A2 are Bannock, Bonneville, Twin Falls, Bingham (2010-2020), Elm
 
 | Indicator  | Mean | Median  | Minimum  |  Maximum |
 |----------|---|---|---|---|
-|  Live and work in same micropolitan county (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Micropolitan_Stay")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Micropolitan_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Micropolitan_Stay")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Micropolitan_Stay")$perc), 0)`%  |
-|  Live micropolitan, commute to another micropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Micropolitan_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Micropolitan_Micropolitan")$perc), 0)`%  |
-|  Live micropolitan, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a2, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a2, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a2, commut_type == "Micropolitan_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, commut_type == "Micropolitan_Metropolitan")$perc), 0)`%  |
 |  Population density (persons per $km^2$) |  **`r round(subset(a2_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)`** | `r round(subset(a2_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a2_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a2_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a2, industry == "Retail.Trade")$perc_workers), 0)`%  |
@@ -2065,11 +2061,21 @@ The counties in A2 are Bannock, Bonneville, Twin Falls, Bingham (2010-2020), Elm
 |  Asian residents |  `r round(mean(subset(races_a2, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_Asian")$perc), 1)`%  |
 |  Pacific Islander residents |  `r round(mean(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_PacificIslander")$perc), 1)`%  |
 |  Residents of some other race |  `r round(mean(subset(races_a2, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a2, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a2, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a2, race == "Persons_other")$perc), 1)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with Bachelor's")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Residents with High School Education")$max, 0)`%  |
 |  Unemployment rate |  `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a2_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+| Residents in metropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "Metropolitan")$perc), 0)`% |
+| Residents in micropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "Micropolitan")$perc), 0)`% |
+| Residents in "small town" census blocks (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "Small.town")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "Small.town")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "Small.town")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "Small.town")$perc), 0)`% |
+| Residents in census blocks outside urban areas (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "Rural")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "Rural")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "Rural")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "Rural")$perc), 0)`% |
+| Residents commuting within county of residence (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "commute_Stay")$perc), 0)`% |
+| Residents commuting to a county with larger metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% |
+| Residents commuting to a county with smaller metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% |
+| Residents commuting to a micropolitan county (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "commute_Micropolitan")$perc), 0)`% |
+| Residents commuting to a "small town" county (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "commute_Small.town")$perc), 0)`% |
+| Residents commuting to a county with no urban area (component of geographical isolation) | `r round(mean(subset(urb_a2, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(median(subset(urb_a2, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(min(subset(urb_a2, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(max(subset(urb_a2, urb_or_commute == "commute_Rural")$perc), 0)`% |
 
-Summary statistics for counties in archetype A2. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A2 are micropolitan counties (contain an urban area with a population 10,000-49,999).
+Summary statistics for counties in archetype A2. Bolded cluster means are significantly different from the study area mean (p < 0.05).
 
 :::
 
@@ -2082,7 +2088,7 @@ Summary statistics for counties in archetype A2. Bolded cluster means are signif
 # labeled A5 by model, A3 in manuscript
 
 a3 <- clust_dat[["Actors"]] %>%
-  filter(cluster == "A4")
+  filter(cluster == "A5")
 
 a3_means <- a3 %>%
   st_drop_geometry() %>%
@@ -2130,10 +2136,10 @@ tenure_a3 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
 
 ###############
 # urbanicity
-urb_a3 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+urb_a3 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
   right_join(st_drop_geometry(a3[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
+               names_to = "urb_or_commute",
                values_to = "perc")
 ```
 
@@ -2143,11 +2149,6 @@ The counties in A3 are Cassia, Payette, Blaine (2000-2020), Gem (2000-2020), Was
 
 | Indicator  | Mean | Median  | Minimum  |  Maximum |
 |----------|---|---|---|---|
-|  Live and work in same "small town" county (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Small.town_Stay")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Small.town_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Small.town_Stay")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Small.town_Stay")$perc), 0)`%  |
-|  Live small town, commute to another small town (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Small.town_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Small.town_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Small.town_Small.town")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Small.town_Small.town")$perc), 0)`%  |
-|  Live small town, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Small.town_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Small.town_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Small.town_Metropolitan")$perc), 0)`%  |
-|  Live small town, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Small.town_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Small.town_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Small.town_Micropolitan")$perc), 0)`%  |
-|  Live small town, commute to rural (% of workers) |  **`r round(mean(subset(urb_a3, commut_type == "Small.town_Rural")$perc), 0)`%** | `r round(median(subset(urb_a3, commut_type == "Small.town_Rural")$perc), 0)`%  |  `r round(min(subset(urb_a3, commut_type == "Small.town_Rural")$perc), 0)`% | `r round(max(subset(urb_a3, commut_type == "Small.town_Rural")$perc), 0)`%  |
 |  Population density (persons per $km^2$) |  `r round(subset(a3_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)` | `r round(subset(a3_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a3_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a3_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a3, industry == "Retail.Trade")$perc_workers), 0)`%  |
@@ -2180,11 +2181,21 @@ The counties in A3 are Cassia, Payette, Blaine (2000-2020), Gem (2000-2020), Was
 |  Asian residents |  `r round(mean(subset(races_a3, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_Asian")$perc), 1)`%  |
 |  Pacific Islander residents |  `r round(mean(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_PacificIslander")$perc), 1)`%  |
 |  Residents of some other race |  `r round(mean(subset(races_a3, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a3, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a3, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a3, race == "Persons_other")$perc), 1)`%  |
-|  Percent residents with Bachelor's degree as highest education attained | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with Bachelor's")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Residents with High School Education")$max, 0)`%  |
 |  Unemployment rate |  `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a3_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+| Residents in metropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "Metropolitan")$perc), 0)`% |
+| Residents in micropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "Micropolitan")$perc), 0)`% |
+| Residents in "small town" census blocks (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "Small.town")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "Small.town")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "Small.town")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "Small.town")$perc), 0)`% |
+| Residents in census blocks outside urban areas (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "Rural")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "Rural")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "Rural")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "Rural")$perc), 0)`% |
+| Residents commuting within county of residence (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "commute_Stay")$perc), 0)`% |
+| Residents commuting to a county with larger metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% |
+| Residents commuting to a county with smaller metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% |
+| Residents commuting to a micropolitan county (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "commute_Micropolitan")$perc), 0)`% |
+| Residents commuting to a "small town" county (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "commute_Small.town")$perc), 0)`% |
+| Residents commuting to a county with no urban area (component of geographical isolation) | `r round(mean(subset(urb_a3, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(median(subset(urb_a3, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(min(subset(urb_a3, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(max(subset(urb_a3, urb_or_commute == "commute_Rural")$perc), 0)`% |
 
-Summary statistics for counties in archetype A3. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A3 are "small town" counties (contain an urban area with a population 5,000-9,999). 
+Summary statistics for counties in archetype A3. Bolded cluster means are significantly different from the study area mean (p < 0.05). 
 
 :::
 
@@ -2194,10 +2205,10 @@ Summary statistics for counties in archetype A3. Bolded cluster means are signif
 #| include: false
 #| label: "A4 data"
 
-# labeled A5 by model, A4 in manuscript
+# labeled A3 by model, A4 in manuscript
 
 a4 <- clust_dat[["Actors"]] %>%
-  filter(cluster == "A5")
+  filter(cluster == "A3")
 
 a4_means <- a4 %>%
   st_drop_geometry() %>%
@@ -2245,10 +2256,10 @@ tenure_a4 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
 
 ###############
 # urbanicity
-urb_a4 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+urb_a4 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
   right_join(st_drop_geometry(a4[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
+               names_to = "urb_or_commute",
                values_to = "perc")
 ```
 
@@ -2258,10 +2269,6 @@ The counties in A4 are Butte, Fremont, Gooding, Jefferson, Minidoka, Teton, Powe
 
 | Indicator  | Mean | Median  | Minimum  |  Maximum |
 |----------|---|---|---|---|
-|  Live and work in same rural county (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Rural_Stay")$perc), 0)`%  |
-|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
-|  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Rural_Small.town")$perc), 0)`%  |
-|  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a4, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a4, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a4, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
 |  Population density (persons per $km^2$) |  **`r round(subset(a4_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)`** | `r round(subset(a4_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a4_means, var_name_clean == "Population Density")$min*247.1053814672, 0)` | `r round(subset(a4_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a4, industry == "Retail.Trade")$perc_workers), 0)`%  |
@@ -2294,11 +2301,21 @@ The counties in A4 are Butte, Fremont, Gooding, Jefferson, Minidoka, Teton, Powe
 |  Asian residents |  `r round(mean(subset(races_a4, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a4, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a4, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a4, race == "Persons_Asian")$perc), 1)`%  |
 |  Pacific Islander residents |  `r round(mean(subset(races_a4, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a4, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a4, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a4, race == "Persons_PacificIslander")$perc), 1)`%  |
 |  Residents of some other race |  `r round(mean(subset(races_a4, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a4, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a4, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a4, race == "Persons_other")$perc), 1)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$mean, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$median, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$min, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with Bachelor's")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$mean, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$median, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$min, 0)`% | `r round(subset(a4_means, var_name_clean == "Residents with High School Education")$max, 0)`%  |
 |  Unemployment rate |  `r round(subset(a4_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a4_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a4_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a4_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+| Residents in metropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "Metropolitan")$perc), 0)`% |
+| Residents in micropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "Micropolitan")$perc), 0)`% |
+| Residents in "small town" census blocks (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "Small.town")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "Small.town")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "Small.town")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "Small.town")$perc), 0)`% |
+| Residents in census blocks outside urban areas (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "Rural")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "Rural")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "Rural")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "Rural")$perc), 0)`% |
+| Residents commuting within county of residence (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "commute_Stay")$perc), 0)`% |
+| Residents commuting to a county with larger metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% |
+| Residents commuting to a county with smaller metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% |
+| Residents commuting to a micropolitan county (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "commute_Micropolitan")$perc), 0)`% |
+| Residents commuting to a "small town" county (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "commute_Small.town")$perc), 0)`% |
+| Residents commuting to a county with no urban area (component of geographical isolation) | `r round(mean(subset(urb_a4, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(median(subset(urb_a4, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(min(subset(urb_a4, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(max(subset(urb_a4, urb_or_commute == "commute_Rural")$perc), 0)`% |
 
-Summary statistics for counties in archetype A4. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A4 are "rural" counties (do not contain an urban area).
+Summary statistics for counties in archetype A4. Bolded cluster means are significantly different from the study area mean (p < 0.05).
 
 :::
 
@@ -2308,10 +2325,10 @@ Summary statistics for counties in archetype A4. Bolded cluster means are signif
 #| include: false
 #| label: "A5 data"
 
-# labeled A2 in model, A5 in manuscript
+# labeled A4 in model, A5 in manuscript
 
 a5 <- clust_dat[["Actors"]] %>%
-  filter(cluster == "A2")
+  filter(cluster == "A4")
 
 a5_means <- a5 %>%
   st_drop_geometry() %>%
@@ -2359,10 +2376,10 @@ tenure_a5 <- read.csv("data/clean_data_for_PCA/farm_own_perc.csv") %>%
 
 ###############
 # urbanicity
-urb_a5 <- read.csv("data/clean_data_for_PCA/commutes_all.csv") %>%
+urb_a5 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
   right_join(st_drop_geometry(a5[,c(1:2)])) %>%
   pivot_longer(!c("county", "year"),
-               names_to = "commut_type",
+               names_to = "urb_or_commute",
                values_to = "perc")
 ```
 
@@ -2372,10 +2389,6 @@ The counties in A5 are Adams, Camas, Clark, Lincoln, Owyhee (2000-2020), Power (
 
 | Indicator  | Mean | Median  | Minimum  |  Maximum |
 |----------|---|---|---|---|
-|  Live and work in same rural county (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Stay")$perc), 0)`%  |
-|  Live rural, commute to small town (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Small.town")$perc), 0)`%  |
-|  Live rural, commute to micropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Micropolitan")$perc), 0)`%  |
-|  Live rural, commute to metropolitan (% of workers) |  **`r round(mean(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%** | `r round(median(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%  |  `r round(min(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, commut_type == "Rural_Metropolitan")$perc), 0)`%  |
 |  Population density (persons per $km^2$) |  `r round(subset(a5_means, var_name_clean == "Population Density")$mean*247.1053814672, 0)` | `r round(subset(a5_means, var_name_clean == "Population Density")$median*247.1053814672, 0)`  |  `r round(subset(a5_means, var_name_clean == "Population Density")$min*247.1053814672, 1)` | `r round(subset(a5_means, var_name_clean == "Population Density")$max*247.1053814672, 0)`  |
 |  Jobs in agriculture, forestry, fishing, or hunting |  **`r round(mean(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%** | `r round(median(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Agriculture..Forestry..Fishing.and.Hunting")$perc_workers), 0)`%  |
 |  Jobs in retail trade |  `r round(mean(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(median(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`%  |  `r round(min(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`% | `r round(max(subset(emply_a5, industry == "Retail.Trade")$perc_workers), 0)`%  |
@@ -2408,10 +2421,20 @@ The counties in A5 are Adams, Camas, Clark, Lincoln, Owyhee (2000-2020), Power (
 |  Asian residents |  `r round(mean(subset(races_a5, race == "Persons_Asian")$perc), 1)`% | `r round(median(subset(races_a5, race == "Persons_Asian")$perc), 1)`%  |  `r round(min(subset(races_a5, race == "Persons_Asian")$perc), 1)`% | `r round(max(subset(races_a5, race == "Persons_Asian")$perc), 1)`%  |
 |  Pacific Islander residents |  `r round(mean(subset(races_a5, race == "Persons_PacificIslander")$perc), 1)`% | `r round(median(subset(races_a5, race == "Persons_PacificIslander")$perc), 1)`%  |  `r round(min(subset(races_a5, race == "Persons_PacificIslander")$perc), 1)`% | `r round(max(subset(races_a5, race == "Persons_PacificIslander")$perc), 1)`%  |
 |  Residents of some other race |  `r round(mean(subset(races_a5, race == "Persons_other")$perc), 1)`% | `r round(median(subset(races_a5, race == "Persons_other")$perc), 1)`%  |  `r round(min(subset(races_a5, race == "Persons_other")$perc), 1)`% | `r round(max(subset(races_a5, race == "Persons_other")$perc), 1)`%  |
-|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$mean*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$median*100, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$min*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$max*100, 0)`%  |
-|  Percent residents with high school education as highest education attained |  `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$mean*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$median*100, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$min*100, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$max*100, 0)`%  |
+|  Percent residents with Bachelor's degree as highest education attained |  `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$mean, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$median, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$min, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with Bachelor's")$max, 0)`%  |
+|  Percent residents with high school education as highest education attained |  `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$mean, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$median, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$min, 0)`% | `r round(subset(a5_means, var_name_clean == "Residents with High School Education")$max, 0)`%  |
 |  Unemployment rate |  `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$mean, 0)`% | `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$median, 0)`%  |  `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$min, 0)`% | `r round(subset(a5_means, var_name_clean == "Unemployment Rate")$max, 0)`%  |
+| Residents in metropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "Metropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "Metropolitan")$perc), 0)`% |
+| Residents in micropolitan census blocks (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "Micropolitan")$perc), 0)`% |
+| Residents in "small town" census blocks (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "Small.town")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "Small.town")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "Small.town")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "Small.town")$perc), 0)`% |
+| Residents in census blocks outside urban areas (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "Rural")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "Rural")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "Rural")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "Rural")$perc), 0)`% |
+| Residents commuting within county of residence (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "commute_Stay")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "commute_Stay")$perc), 0)`% |
+| Residents commuting to a county with larger metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "commute_BiggerMetropolitan")$perc), 0)`% |
+| Residents commuting to a county with smaller metropolitan area (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "commute_SmallerMetropolitan")$perc), 0)`% |
+| Residents commuting to a micropolitan county (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "commute_Micropolitan")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "commute_Micropolitan")$perc), 0)`% |
+| Residents commuting to a "small town" county (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "commute_Small.town")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "commute_Small.town")$perc), 0)`% |
+| Residents commuting to a county with no urban area (component of geographical isolation) | `r round(mean(subset(urb_a5, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(median(subset(urb_a5, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(min(subset(urb_a5, urb_or_commute == "commute_Rural")$perc), 0)`% | `r round(max(subset(urb_a5, urb_or_commute == "commute_Rural")$perc), 0)`% |
 
-Summary statistics for counties in archetype A5. Bolded cluster means are significantly different from the study area mean (p < 0.05). A selection of geographical isolation statistics are reported (all commute types used by >10% of a county's workforce). All counties in A5 are "rural" counties (contain no urban areas). 
+Summary statistics for counties in archetype A5. Bolded cluster means are significantly different from the study area mean (p < 0.05).
 
 :::
