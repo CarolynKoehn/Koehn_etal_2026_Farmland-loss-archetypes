@@ -560,6 +560,8 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 #             sd.crop_change = sd(cropland_change),
 #             min.crop_change = min(cropland_change),
 #             max.crop_change = max(cropland_change))
+
+# ggplot(subset(clust_ag_loss, cluster.A!="A1"), aes(shape=cluster.R, color=cluster.A)) + geom_point(aes(y=mean.lif_change, x=mean.dev), size=3) + geom_segment(aes(yend=-2*sd.lif_change+mean.lif_change, y=mean.lif_change, x=mean.dev, xend=mean.dev)) + geom_segment(aes(yend=2*sd.lif_change+mean.lif_change, y=mean.lif_change, x=mean.dev, xend=mean.dev)) + geom_point(data=subset(clust_ag_loss1, cluster.A!="A1"), aes(shape=cluster.R, color=cluster.A, y=Perc_change_land_in_farms, x=percent_developed), size=1, inherit.aes = FALSE) + theme_bw()
 # 
 # p1 <- ggplot(clust_ag_loss, aes(color=cluster.R, shape=cluster.A)) +
 #   geom_point(aes(x=mean.lif, y=mean.dev_change), size=3) +
