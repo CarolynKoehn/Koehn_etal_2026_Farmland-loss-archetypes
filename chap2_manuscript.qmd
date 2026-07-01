@@ -1,5 +1,5 @@
 ---
-title: "Interdisciplinary archetype analysis reveals multiple policy pathways may be necessary to protect farmland from development"
+title: "Farmland loss emerges from distinct social-ecological archetypes"
 author:
   - name: Carolyn Koehn
     email: carolynkoehn@u.boisestate.edu
