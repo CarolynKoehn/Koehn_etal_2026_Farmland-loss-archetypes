@@ -171,7 +171,7 @@ county_barcodes %>%
   mutate(ag_to_UHD = sum(c_across(c(crop_to_UHD, past_to_UHD, range_to_UHD)), na.rm=T),
          pvr_to_UHD = mean(c_across(c(crop_to_UHD_avg_pvr, past_to_UHD_avg_pvr, range_to_UHD_avg_pvr)), na.rm=T)) %>%
   ggplot(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab)) +
-  geom_point() +
+  geom_point()
   # geom_label(data=subset(county_barcodes %>%
   #                          rowwise() %>%
   #                          mutate(ag_to_UHD = sum(c_across(c(crop_to_UHD, past_to_UHD, range_to_UHD)), na.rm=T),
