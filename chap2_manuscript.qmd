@@ -325,7 +325,7 @@ The most influential variables in the resource model were housing density and de
 
 ci_clust$Resource %>%
   mutate(cluster = factor(cluster,
-                          levels = c("R1", "R4", "R2", "R5", "R3"),
+                          levels = c("R1", "R4", "R5", "R2", "R3"),
                           labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
   mutate(input_data_name = factor(input_data_name,
                                   levels = rel_inf$Resource$indicator,
@@ -352,13 +352,13 @@ Characteristic resources of R1 are crop- and developed land, high access to high
 
 R2 is closer to national parks and ski areas, and is closer to urban areas while not containing as much urban or developed land as R1. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain are low. These counties tend to have lower home values than R1 and R3 (@supptblb-data-r3). This cluster contains five counties (@fig-cluster-maps). An illustrative example of this cluster is Twin Falls County, which contains the growing city of Twin Falls and a growing dairy industry, fueled by the recent establishment of a large yogurt processing plant (see @sec-twinfalls for qualitative analysis).
 
-#### Cluster R3: Risk of amenity migration -- Access to mountain recreation and urban amenities
-
-Characteristic resources of R3 are a greater presence of forestland and more steep lands (@fig-R-CIs). These counties are closer to ski areas and have a higher presence of recreation land, have an average presence of lakes and rivers, and support more jobs in hospitality (@suppfigb-R-ranges, @supptblb-data-r2). There is little developed or urban land, and both housing and farm density are low. However, most of the land in these counties lie within 50 miles of an urban area and its amenities, and access to major roadways is average for the study area (@supptblb-data-r2). These counties have higher home values compared to other clusters (@supptblb-data-r2), indicating the appeal of the natural amenities and non-urban nature of these counties. Rates of cropland loss and developed land gain are fairly low compared to other clusters. This cluster contains ten counties (@fig-cluster-maps). An illustrative example is Teton County, which attracts outdoor recreationists to live in its small towns and rural areas (see @sec-teton for qualitative analysis).
-
-#### Cluster R4: Risk of amenity migration and industrialized agriculture -- Agriculture further from urban and recreational amenities
+#### Cluster R3: Risk of amenity migration and industrialized agriculture -- Agriculture further from urban and recreational amenities
 
 Cluster R4 has less presence of natural land covers like forest and shrublands, and average cover of cropland and developed land (@fig-R-CIs). Though there are many rivers, access to other natural amenities such as ski areas, national parks, lakes, forests, and recreation lands are low (@suppfigb-R-ranges). Like R2 and R3, there is not much urban land in these counties, but almost all of their lands are within 50 miles of an urban area (@supptblb-data-r5). Similar to R2, on average, half the lands of these counties are part of farms (@supptblb-data-r5). Rates of cropland loss are low, while developed land gain and farm loss are average for the study area (@fig-R-CIs). This cluster contains six counties (@fig-cluster-maps). Because counties in this archetype have a considerable amount of agricultural lands and are moderately close to cities but do not contain cities themselves, they may be candidates for both agricultural industrialization, or amenity migration for migrants who are specifically seeking a rural agricultural setting.
+
+#### Cluster R4: Risk of amenity migration -- Access to mountain recreation and urban amenities
+
+Characteristic resources of R3 are a greater presence of forestland and more steep lands (@fig-R-CIs). These counties are closer to ski areas and have a higher presence of recreation land, have an average presence of lakes and rivers, and support more jobs in hospitality (@suppfigb-R-ranges, @supptblb-data-r2). There is little developed or urban land, and both housing and farm density are low. However, most of the land in these counties lie within 50 miles of an urban area and its amenities, and access to major roadways is average for the study area (@supptblb-data-r2). These counties have higher home values compared to other clusters (@supptblb-data-r2), indicating the appeal of the natural amenities and non-urban nature of these counties. Rates of cropland loss and developed land gain are fairly low compared to other clusters. This cluster contains ten counties (@fig-cluster-maps). An illustrative example is Teton County, which attracts outdoor recreationists to live in its small towns and rural areas (see @sec-teton for qualitative analysis).
 
 #### Cluster R5: Low risk of farmland loss -- Very isolated counties with few natural amenities
 
@@ -423,22 +423,22 @@ Like A4, A5 contains rural counties with low population density, moderate popula
 #| label: fig-cluster-maps
 #| fig-width: 13
 #| fig-height: 7
-#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R2 in 1990 and R4 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R4-A3, or small town counties with agriculture further from urban and recreational amenities, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
+#| fig-cap: "Each county in the study area is assigned separate resource and actor archetypes from the two cluster models for each year of the study period. Plot (a) depicts the actors clusters in each year. Counties that underwent an actor archetype shift between years are outlined in salmon. Plot (b) depicts the resource clusters. The single county with a resource archetype shift, depicted with striped shading, was R2 in 1990 and R3 for 2000-2020. Plot (c) is a matrix showing the resource-actor archetype combinations, roughly ordered from most urban (R1, A1) to least urban (R5, A5), and the number of county-years that fell into each combination. For example, R4-A3, or small town counties with agriculture further from urban and recreational amenities, is the most common archetype. For names of counties in each cluster, see the corresponding sections in Appendix B."
 
 resource_map <- clust_dat[["Resource"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("R1", "R4", "R2", "R5", "R3"),
-                          labels = c("R1: Flattest land with urban infrastructure",
-                                     "R2: Flat lands moderately near to natural amenities and urban infrastructure",
-                                     "R3: Mountain recreation moderately near urban infrastructure",
-                                     "R4: Agriculture further from urban and recreational amenities",
-                                     "R5: Very isolated counties with few natural amenities"))) %>%
+                          levels = c("R1", "R4", "R5", "R2", "R3"),
+                          labels = c("R1: Flattest land with urban services",
+                                     "R2: Flat lands moderately near to natural amenities and urban services",
+                                     "R3: Flat lands near urban services with more agriculture",
+                                     "R4: Mountain recreation moderately near urban services",
+                                     "R5: Range- and public lands far from urban services"))) %>%
   ggplot(aes(fill = cluster)) +
   geom_sf() +
   geom_sf_pattern(data = subset(clust_dat[["Resource"]], county=="Gem"),
                   pattern = 'stripe', pattern_density = 0.75,
-                  fill = rev(viridis::turbo(5, begin=0.075, end=0.8))[4],
-                  pattern_fill=rev(viridis::turbo(5, begin=0.075, end=0.8))[2],
+                  fill = rev(viridis::turbo(5, begin=0.075, end=0.8))[2],
+                  pattern_fill=rev(viridis::turbo(5, begin=0.075, end=0.8))[3],
                   pattern_size=0.1,
                   show.legend = FALSE) +
   scale_fill_manual(name = NULL, values = rev(viridis::turbo(5, begin=0.075, end=0.8)),
@@ -447,7 +447,7 @@ resource_map <- clust_dat[["Resource"]] %>%
   theme_void() +
   theme(legend.position="right",
         legend.key.spacing.y = unit(10, 'pt'),
-        text = element_text(size=14, face = "bold"),
+        text = element_text(size=14),#, face = "bold"),
         plot.background = element_rect(fill=NA, color="black"),
         plot.margin = margin(t=1, r=4, b=0, l=8))
 
@@ -476,8 +476,8 @@ actor_map <- ggplot(actor_map_data, aes(fill = cluster)) +
         legend.key.spacing.x = unit(20, "pt"),
         legend.key.justification = "center",
         legend.key.width = unit(50, "pt"),
-        text = element_text(size=14, face = "bold"),
-        strip.text.x = element_text(size=14, face="bold"),
+        text = element_text(size=14),#, face = "bold"),
+        strip.text.x = element_text(size=14),#, face="bold"),
         plot.background = element_rect(fill=NA, color="black"),
         plot.margin = margin(t=4, r=0, b=8, l=8))+
   guides(fill = guide_legend(label.position = "bottom"))
@@ -488,7 +488,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                            by = c("county", "year"),
                            suffix = c(".R", ".A")) %>%
   mutate(cluster.R = factor(cluster.R,
-                            levels = c("R1", "R4", "R2", "R5", "R3"),
+                            levels = c("R1", "R4", "R5", "R2", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
                             levels = c("A1", "A2", "A5", "A3", "A4"),
@@ -1331,7 +1331,7 @@ label_order <- left_join(var_labs_R, rel_inf$Resource) %>%
 
 clust_dat_sc[["Resource"]] %>%
   mutate(cluster = factor(cluster,
-                          levels = c("R1", "R4", "R2", "R5", "R3"),
+                          levels = c("R1", "R4", "R5", "R2", "R3"),
                           labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
   st_drop_geometry() %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
@@ -1567,10 +1567,10 @@ Summary statistics for counties in archetype R2. Bolded cluster means are signif
 #| include: false
 #| label: "R3 data"
 
-# labeled R2 by model, we label it R3 in the text
+# labeled R5 by model, we label it R3 in the text
 
 r3 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R2")
+  filter(cluster == "R5")
 
 r3_means <- r3 %>%
   st_drop_geometry() %>%
@@ -1666,10 +1666,10 @@ Summary statistics for counties in archetype R3. Bolded cluster means are signif
 #| include: false
 #| label: "R4 data"
 
-# labeled R5 by model, R4 in manuscript
+# labeled R2 by model, R4 in manuscript
 
 r4 <- clust_dat[["Resource"]] %>%
-  filter(cluster == "R5")
+  filter(cluster == "R2")
 
 r4_means <- r4 %>%
   st_drop_geometry() %>%

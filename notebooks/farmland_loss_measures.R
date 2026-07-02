@@ -12,6 +12,8 @@ aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
   select(c("GEOID", "NAME")) %>%
   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>% st_transform(st_crs(lulc_01))
 
+mean_pvr_aoi <- mean(values(crop(pvr, st_transform(aoi, st_crs(pvr)), mask=TRUE)), na.rm=TRUE)
+
 ada <- counties("ID") %>% filter(NAME == "Ada") %>% st_transform(st_crs(lulc_01))
 ada01 <- crop(lulc_01, ada, mask=TRUE)
 ada16 <- crop(lulc_16, ada, mask=TRUE)
@@ -33,7 +35,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                            by = c("county", "year"),
                            suffix = c(".R", ".A")) %>%
   mutate(cluster.R = factor(cluster.R,
-                            levels = c("R1", "R4", "R2", "R5", "R3"),
+                            levels = c("R1", "R4", "R5", "R2", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
                             levels = c("A1", "A2", "A5", "A3", "A4"),
@@ -166,38 +168,93 @@ county_barcodes %>%
   geom_point()
 
 # these are the ones I think (maybe without R1-A1?)
-county_barcodes %>%
+plot_UHD_data <- county_barcodes %>%
   rowwise() %>%
   mutate(ag_to_UHD = sum(c_across(c(crop_to_UHD, past_to_UHD, range_to_UHD)), na.rm=T),
-         pvr_to_UHD = mean(c_across(c(crop_to_UHD_avg_pvr, past_to_UHD_avg_pvr, range_to_UHD_avg_pvr)), na.rm=T)) %>%
-  ggplot(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab)) +
-  geom_point()
-  # geom_label(data=subset(county_barcodes %>%
-  #                          rowwise() %>%
-  #                          mutate(ag_to_UHD = sum(c_across(c(crop_to_UHD, past_to_UHD, range_to_UHD)), na.rm=T),
-  #                                 pvr_to_UHD = mean(c_across(c(crop_to_UHD_avg_pvr, past_to_UHD_avg_pvr, range_to_UHD_avg_pvr)), na.rm=T)), county %in% c("Teton", "Canyon", "Twin Falls")), inherit.aes = F,
-  #            aes(x=ag_to_UHD, y=pvr_to_UHD, label=county))
+         pvr_to_UHD = mean(c_across(c(crop_to_UHD_avg_pvr, past_to_UHD_avg_pvr, range_to_UHD_avg_pvr)), na.rm=T))
+  
+ggplot(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab),
+       data= plot_UHD_data) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=7100, y=0.263, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(plot_UHD_data, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=ag_to_UHD+200, xend=ag_to_UHD,
+                y=pvr_to_UHD-0.01, yend=pvr_to_UHD)) +
+  geom_text(data=subset(plot_UHD_data, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=ag_to_UHD+200, y=pvr_to_UHD-0.01, label=county), hjust="left") +
+  geom_point(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab),
+             data= plot_UHD_data, size=2) +
+  labs(x="Ag Land Converted to Urban High Development (acres)",
+       y="Avg PVR of Converted Land") +
+  scale_color_viridis_d(name="Actor Type", option="turbo") +
+  scale_shape_discrete(name = "Resource Type") +
+  theme_bw()
+# without R1-A1
+ggplot(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab),
+       data= subset(plot_UHD_data, barcode_A_lab!="A1")) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=2500, y=0.263, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(plot_UHD_data, county %in% c("Teton", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=ag_to_UHD+200, xend=ag_to_UHD,
+                   y=pvr_to_UHD-0.01, yend=pvr_to_UHD)) +
+  geom_text(data=subset(plot_UHD_data, county %in% c("Teton", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=ag_to_UHD+200, y=pvr_to_UHD-0.01, label=county), hjust="left") +
+  geom_point(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab),
+             data= subset(plot_UHD_data, barcode_A_lab!="A1")) +
+  labs(x="Ag Land Converted to Urban High Development (acres)",
+       y="Avg PVR of Converted Land") +
+  scale_color_viridis_d(name="Actor Type", option="turbo",
+                        begin=0.2) +
+  scale_shape_manual(name = "Resource Type",
+                       values = c(17,15,3,7,8)) +
+  theme_bw()
 
-county_barcodes %>%
+plot_LDR_data <- county_barcodes %>%
   rowwise() %>%
   mutate(ag_to_LDR = sum(c_across(c(crop_to_LDR, past_to_LDR, range_to_LDR)), na.rm=T),
-         pvr_to_LDR = mean(c_across(c(crop_to_LDR_avg_pvr, past_to_LDR_avg_pvr, range_to_LDR_avg_pvr)), na.rm=T)) %>%
-  ggplot(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab)) +
-  geom_point()
+         pvr_to_LDR = mean(c_across(c(crop_to_LDR_avg_pvr, past_to_LDR_avg_pvr, range_to_LDR_avg_pvr)), na.rm=T))
 
-# without Ada/Canyon
-county_barcodes %>%
-  filter(barcode_A_lab != "A1") %>%
-  rowwise() %>%
-  mutate(ag_to_UHD = sum(c_across(c(crop_to_UHD, past_to_UHD, range_to_UHD)), na.rm=T),
-         pvr_to_UHD = mean(c_across(c(crop_to_UHD_avg_pvr, past_to_UHD_avg_pvr, range_to_UHD_avg_pvr)), na.rm=T)) %>%
-  ggplot(aes(x=ag_to_UHD, y=pvr_to_UHD, shape=barcode_R_lab, color = barcode_A_lab)) +
-  geom_point()
+ggplot(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab),
+       data= plot_LDR_data) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=12500, y=0.263, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(plot_LDR_data, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=c(6300,850,2200), xend=ag_to_LDR,
+                   y=c(0.345,0.2779,0.285), yend=pvr_to_LDR)) +
+  geom_text(data=subset(plot_LDR_data, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=c(6300,700,2200), y=c(0.345,0.273,0.285), label=county), hjust="left") +
+  geom_point(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab),
+             data= plot_LDR_data, size=2) +
+  labs(x="Ag Land Converted to Low Density Residential (acres)",
+       y="Avg PVR of Converted Land") +
+  scale_color_viridis_d(name="Actor Type", option="turbo") +
+  scale_shape_discrete(name = "Resource Type") +
+  theme_bw()
+# without R1-A1
+ggplot(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab),
+       data= subset(plot_LDR_data, barcode_A_lab!="A1")) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=5500, y=0.283, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(plot_LDR_data, county %in% c("Teton", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=c(850,2200), xend=ag_to_LDR,
+                   y=c(0.2779,0.285), yend=pvr_to_LDR)) +
+  geom_text(data=subset(plot_LDR_data, county %in% c("Teton", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=c(700,2200), y=c(0.273,0.285), label=county), hjust="left") +
+  geom_point(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab),
+             data= subset(plot_LDR_data, barcode_A_lab!="A1"), size=2) +
+  labs(x="Ag Land Converted to Low Density Residential (acres)",
+       y="Avg PVR of Converted Land") +
+  scale_color_viridis_d(name="Actor Type", option="turbo",
+                        begin=0.2) +
+  scale_shape_manual(name = "Resource Type",
+                     values = c(17,15,3,7,8)) +
+  theme_bw()
 
-county_barcodes %>%
-  filter(barcode_A_lab != "A1") %>%
-  rowwise() %>%
-  mutate(ag_to_LDR = sum(c_across(c(crop_to_LDR, past_to_LDR, range_to_LDR)), na.rm=T),
-         pvr_to_LDR = mean(c_across(c(crop_to_LDR_avg_pvr, past_to_LDR_avg_pvr, range_to_LDR_avg_pvr)), na.rm=T)) %>%
-  ggplot(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab)) +
-  geom_point()
