@@ -258,3 +258,44 @@ ggplot(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab
                      values = c(17,15,3,7,8)) +
   theme_bw()
 
+##########################
+# new AFT methods
+
+# install.packages("CropScapeR")
+
+nlcd01 <- FedData::get_nlcd(template = aoi, label="SRP",
+                            year = 2001)
+nlcd21 <- FedData::get_nlcd(template = aoi, label="SRP",
+                            year = 2021)
+imperv21 <- rast("/vsizip/R:/CarolynKoehn/Data_raw/Annual_NLCD_ImpDsc_2021_CU_C1V2.zip/Annual_NLCD_ImpDsc_2021_CU_C1V2.tif")
+imperv21 <- crop(imperv21, st_transform(aoi, st_crs(imperv21)), mask=TRUE)
+imperv21_prj <- project(imperv21, nlcd21, method="mode")
+
+crops01 <- ifel(nlcd01==82, 1, NA)
+
+grass01 <- ifel(nlcd01 %in% c(81, 71), 1, NA)
+
+aft01 <- project(lulc_01, grass01, method = "mode")
+grass01_aft <- ifel(grass01 == 1 & aft01 %in% c(2,3, 1102, 1103), 1, NA)
+
+forest01 <- ifel(nlcd01 %in% c(41,42,43,90), 1, NA)
+
+forest01_aft <- ifel(forest01 == 1 & aft01 %in% c(5,1105), 1, NA)
+
+dev21 <- ifel(nlcd21 %in% c(21:24), 1, NA)
+
+dev21_noroads <- ifel(imperv21_prj == 1, NA, dev21)
+
+aglands <- ifel(crops01==1, 1, ifel(grass01_aft==1, 1, forest01_aft))
+aglands_trim <- trim(aglands)
+dev21_noroads_ext <- extend(trim(dev21_noroads), aglands_trim)
+dev21_noroads_ext <- crop(dev21_noroads_ext, aglands_trim)
+dev21_noroads_ext <- project(dev21_noroads_ext, aglands_trim, method="near")
+
+converted <- ifel(aglands_trim==1 & dev21_noroads_ext == 1, 1, NA)
+
+by_county <- extract(converted, st_transform(aoi, st_crs(converted)), fun=sum, na.rm=TRUE)
+
+pvr_by_county <- project(pvr, converted, method="bilinear")
+pvr_converted <- mask(pvr_by_county, converted)
+pvr_bc2 <- extract(pvr_converted, st_transform(aoi, st_crs(pvr_by_county)), fun=mean, na.rm=TRUE)
