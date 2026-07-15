@@ -261,8 +261,6 @@ ggplot(aes(x=ag_to_LDR, y=pvr_to_LDR, shape=barcode_R_lab, color = barcode_A_lab
 ##########################
 # new AFT methods
 
-# install.packages("CropScapeR")
-
 nlcd01 <- FedData::get_nlcd(template = aoi, label="SRP",
                             year = 2001)
 nlcd21 <- FedData::get_nlcd(template = aoi, label="SRP",
@@ -276,11 +274,11 @@ crops01 <- ifel(nlcd01==82, 1, NA)
 grass01 <- ifel(nlcd01 %in% c(81, 71), 1, NA)
 
 aft01 <- project(lulc_01, grass01, method = "mode")
-grass01_aft <- ifel(grass01 == 1 & aft01 %in% c(2,3, 1102, 1103), 1, NA)
+grass01_aft <- ifel(grass01 == 1 & aft01 %in% c(2,3), 1, NA)
 
 forest01 <- ifel(nlcd01 %in% c(41,42,43,90), 1, NA)
 
-forest01_aft <- ifel(forest01 == 1 & aft01 %in% c(5,1105), 1, NA)
+forest01_aft <- ifel(forest01 == 1 & aft01 == 5, 1, NA)
 
 dev21 <- ifel(nlcd21 %in% c(21:24), 1, NA)
 
@@ -296,6 +294,55 @@ converted <- ifel(aglands_trim==1 & dev21_noroads_ext == 1, 1, NA)
 
 by_county <- extract(converted, st_transform(aoi, st_crs(converted)), fun=sum, na.rm=TRUE)
 
+aglands_by_county <- extract(aglands, st_transform(aoi, st_crs(aglands)), fun=sum, na.rm=TRUE)
+
 pvr_by_county <- project(pvr, converted, method="bilinear")
 pvr_converted <- mask(pvr_by_county, converted)
 pvr_bc2 <- extract(pvr_converted, st_transform(aoi, st_crs(pvr_by_county)), fun=mean, na.rm=TRUE)
+
+aoi$convert_acres <- by_county$Class * 0.2223948433
+aoi$ag_acres <- aglands_by_county$Class * 0.2223948433
+aoi$convert_perc <- aoi$convert_acres / aoi$ag_acres * 100
+aoi$convert_pvr <- pvr_bc2$productivity_versatility_resiliency_2016_conus_120m
+
+county_barcodes <- left_join(county_barcodes, st_drop_geometry(aoi), by=c("county" = "NAME"))
+
+# by acres
+ggplot(aes(x=convert_acres, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+       data= county_barcodes) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=15000, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=convert_acres-50, xend=convert_acres,
+                   y=convert_pvr-0.01, yend=convert_pvr)) +
+  geom_text(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=convert_acres-50, y=convert_pvr-0.01, label=county), hjust="right") +
+  geom_point(aes(x=convert_acres, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+             data= county_barcodes, size=4) +
+  labs(x="Ag Land Converted to Development (acres)",
+       y="Avg PVR of Converted Land") +
+  scale_color_viridis_d(name="Actor Type", option="turbo", direction=-1) +
+  scale_shape_manual(name = "Resource Type", values = c(7,17,18,16,15,9)) +
+  theme_bw()
+
+# by percent converted
+ggplot(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+       data= county_barcodes) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=15, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=convert_perc+0.5, xend=convert_perc,
+                   y=convert_pvr-0.01, yend=convert_pvr)) +
+  geom_text(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=convert_perc+0.5, y=convert_pvr-0.01, label=county), hjust="left") +
+  geom_point(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+             data= county_barcodes, size=4) +
+  labs(x="Ag Land Converted to Development (%)",
+       y="Avg PVR of Converted Land") +
+  scale_color_viridis_d(name="Actor Type", option="turbo") +
+  scale_shape_discrete(name = "Resource Type") +
+  theme_bw()
