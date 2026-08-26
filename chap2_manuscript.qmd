@@ -345,13 +345,13 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
 
 <!-- urban amenities -> urban services and infrastructure? -->
 
-#### Cluster R1: Risk of urban sprawl -- Flat land with accessible urban amenities
+#### Cluster R1: Flattest land, with urban services
 
-Characteristic resources of R1 are crop- and developed land, high access to highways and urban areas, higher housing density, more healthcare workers, and flatter land (@fig-R-CIs, @supptblb-data-r1). This cluster has more small farms than any other. These counties have experienced higher cropland loss and developed land gain compared to other resource clusters (@suppfigb-R-ranges, @supptblb-data-r1). This cluster is home to Boise, the largest city in Idaho, and neighboring Canyon County, known for its high quality farmland but experiencing urban sprawl from the Boise metropolitan area (@fig-cluster-maps; see @sec-canyon for qualitative analysis).
+Characteristic resources of R1 are a high extent of developed land, higher housing density, high access to highways and urban areas, more healthcare workers, and flatter land (@fig-R-CIs, @suppfigb-R-ranges). This cluster has the highest percentage of small farms of all the resource clusters (@supptblb-data-r1). These counties have experienced higher cropland loss and developed land gain compared to other resource clusters (@suppfigb-R-ranges). This cluster is home to Boise, the largest city in Idaho, and neighboring Canyon County, known for its high quality farmland but experiencing urban sprawl from the Boise metropolitan area (@fig-cluster-maps; see @sec-canyon for qualitative analysis).
 
-#### Cluster R2: Risk of urban sprawl, amenity migration, and/or industrial agriculture -- Flat land near natural and urban amenities
+#### Cluster R2: Flat lands moderately near to natural amenities and urban services
 
-R2 is closer to national parks and ski areas, and is closer to urban areas while not containing as much urban or developed land as R1. Its unique characteristics are less forest presence and higher shrubland cover, flatter land, and the higher presence of large farms and cropland. While farms in this cluster are still being lost, these counties are losing farms at a slower rate than other clusters and less farms operate at a loss (@fig-R-CIs). Farmland and cropland loss are average for the study area, and the rates of developed land gain are low. These counties tend to have lower home values than R1 and R3 (@supptblb-data-r3). This cluster contains five counties (@fig-cluster-maps). An illustrative example of this cluster is Twin Falls County, which contains the growing city of Twin Falls and a growing dairy industry, fueled by the recent establishment of a large yogurt processing plant (see @sec-twinfalls for qualitative analysis).
+R2 is the cluster closest to the study area average for most indicators (@fig-R-CIs). Few lands are in urban areas, but ca. 66% are within 30 miles of an urban area while ca. 33% are further than 30 miles from urban services (@supptblb-data-r2). Farm density is slightly lower than average, with 43% small farms, 34% medium farms, and 22% large farms, on average (@fig-R-CIs, @supptblb-data-r2). Median home values are also slightly lower than average. This is one of three clusters with slightly less developed land gain and cropland loss, yet cropland loss rates are quite variable within counties and years in this cluster (@suppfigb-R-ranges). This cluster contains twelve counties (@fig-cluster-maps). An illustrative example of this cluster is Twin Falls County, which contains the growing city of Twin Falls and a growing dairy industry, fueled by the recent establishment of a large yogurt processing plant (see @sec-twinfalls for qualitative analysis).
 
 #### Cluster R3: Risk of amenity migration and industrialized agriculture -- Agriculture further from urban and recreational amenities
 
@@ -1339,7 +1339,10 @@ clust_dat_sc[["Resource"]] %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "value") %>%
-  left_join(ci_clust[["Resource"]][,c("cluster", "input_data_name", "sig")]) %>%
+  left_join(mutate(ci_clust$Resource, 
+                   cluster = factor(cluster,
+                                    levels = c("R1", "R4", "R5", "R2", "R3"),
+                                    labels = c("R1", "R2", "R3", "R4", "R5")))[,c("cluster", "input_data_name", "sig")]) %>%
   mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
   ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
@@ -1905,7 +1908,10 @@ clust_dat_sc[["Actors"]] %>%
   pivot_longer(cols = !c(county, year, cluster, GEOID),
                names_to = "input_data_name",
                values_to = "value") %>%
-  left_join(ci_clust[["Actors"]][,c("cluster", "input_data_name", "sig")]) %>%
+  left_join(mutate(ci_clust$Actors, 
+                   cluster = factor(cluster,
+                                    levels = c("R1", "R4", "R5", "R2", "R3"),
+                                    labels = c("R1", "R2", "R3", "R4", "R5")))[,c("cluster", "input_data_name", "sig")]) %>%
   mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
   ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
