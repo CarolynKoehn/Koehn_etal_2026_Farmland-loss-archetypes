@@ -316,7 +316,7 @@ The most influential variables in the resource model were housing density and de
 ```{r}
 #| label: fig-R-CIs
 #| message: false
-#| fig-cap: "Characteristics of each Resource cluster. The resource cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled, if the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Characteristics of each Resource cluster. The resource cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled between -1 and 1, if the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
 #| fig-height: 8.5
 #| fig-width: 8
   
@@ -336,6 +336,7 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
+  scale_x_continuous(breaks = c(-0.5, 0, 0.5), limits = c(-0.55, 0.8)) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "") +
   theme_bw() +
   theme(text = element_text(size = 14),
@@ -371,7 +372,7 @@ The most influential variables in the resource model were: (1) geographic isolat
 ```{r}
 #| label: fig-A-CIs
 #| message: false
-#| fig-cap: "Characteristics of each Actors cluster. The actors cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Characteristics of each Actors cluster. The actors cluster model determined the mean for each variable in each cluster, and we used bootstrapping to obtain 95% confidence intervals [@scrucca2023]. Since variables were scaled between -1 and 1, if the CI contains 0, the variable mean is not significantly different (p>0.05) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
 #| fig-height: 6
 #| fig-width: 7.5
 
@@ -391,6 +392,7 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
   facet_wrap(vars(cluster)) +
   scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
+  scale_x_continuous(breaks = c(-0.5, 0, 0.5), limits = c(-0.55, 0.8)) +
   labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
   theme_bw() +
   theme(text = element_text(size = 14),
