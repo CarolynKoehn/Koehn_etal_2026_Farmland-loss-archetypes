@@ -346,3 +346,24 @@ ggplot(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A
   scale_color_viridis_d(name="Actor Type", option="turbo") +
   scale_shape_discrete(name = "Resource Type") +
   theme_bw()
+
+##########################
+# use LCMAP as a different data source to verify?
+
+lcmap90 <- rast("/vsizip/R:/CarolynKoehn/Data_raw/LCMAP/lcmap_df1bf009-933b-46cf-89e8-59b4f304ee21.zip/LCMAP_CU_1990_V13_LCPRI.tiff")
+lcmap20 <- rast("/vsizip/R:/CarolynKoehn/Data_raw/LCMAP/lcmap_c632322b-8ba2-4342-bc85-46116c6b4dcb.zip/LCMAP_CU_2020_V13_LCPRI.tiff")
+
+pvr <- rast("R:/SarahHalperin/Data/AFT_Data/productivity_versatility_resiliency_2016_conus_120m.tif")
+
+aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+  select(c("GEOID", "NAME")) %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon")) %>% st_transform(st_crs(lcmap20))
+
+lulc90_srp <- crop(lcmap90, aoi, mask=TRUE)
+lulc20_srp <- crop(lcmap20, aoi, mask=TRUE)
+pvr_srp <- crop(project(pvr, lulc20_srp, method = "bilinear"), aoi, mask=TRUE)
+
+crops90 <- ifel(lulc90_srp==2, 1, NA)
+grass90 <- ifel(lulc90_srp==3, 1, NA)
+
+# stopped here, can't check against AFT pastures/rangelands with these years
