@@ -369,7 +369,7 @@ The unique characteristics of R5 are more shrubland cover, less cropland cover, 
 
 ### Actors Clusters
 
-The most influential variables in the resource model were: (1) geographic isolation and (2) population density (@suppfigb-A-influential).
+The most influential variables in the resource model were: (1) population density and (2) geographic isolation (@suppfigb-A-influential).
 
 ```{r}
 #| label: fig-A-CIs
@@ -403,15 +403,17 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
 
 #### Cluster A1: Urban counties with high population growth
 
-The defining characteristics of A1 are its high population density, low employment in agriculture, and urban population, with most people living and working in metropolitan or micropolitan counties (@fig-A-CIs, @supptblb-data-a1). A1 also has high population growth, higher incomes, and a higher percentage of residents with a Bachelor's degree (@suppfigb-A-ranges). Despite a lower proportion of residents in agricultural production, the number of hired agricultural workers is fairly high for the study area, indicating the high production needs of the farms that remain in these counties (@fig-A-CIs). The share of farms that are fully owned by the producer is slightly higher than any other actors archetype, and these counties also have higher percentages of farms operating at a loss. These farm labor, tenure, and profit rates indicate that farming in these counties is financially challenging, and expanding farming operations by renting land is especially difficult.
+The defining characteristics of A1 are its high population density and urban population, with most people living and working in metropolitan or micropolitan counties (@fig-A-CIs, @supptblb-data-a1). A1 also has high population growth, higher incomes, and a higher percentage of residents with a Bachelor's degree (@suppfigb-A-ranges). Despite a lower proportion of residents in agricultural production, the number of hired agricultural workers is high for the study area, indicating the high production needs of the farms that remain in these counties (@supptblb-data-a1, @fig-A-CIs). The share of farms that are fully owned by the producer is slightly higher than any other actors archetype, and these counties also have higher percentages of farms operating at a loss. These farm labor, tenure, and profit rates indicate that farming in these counties is financially challenging.
 
 #### Cluster A2: Small cities 
 
-Cluster A2's unique characteristic is that all its counties are micropolitan (contain an urban area with 10,000-49,999 residents, @supptblb-data-a3), and most workers live and work in the same county. A2 has high population growth with wealthier, highly educated residents similar to A1, but most of these indicators tend more toward the study area mean in A2 compared to A1. Population density and growth are high, but not as high as A1, and residents have higher incomes and more are college educated, but not at the levels of A1 (@suppfigb-A-ranges). Like A1, a lower percentage of residents are employed in agriculture, but there are a higher percentage in retail trade and lower percentage in construction compared to A1 (@supptblb-data-a3).
+In cluster A2, population density and growth are average for the study area and most residents live in a micropolitan or a non-urban census block (@fig-A-CIs, @supptblb-data-a2).
 
-#### Cluster A3: Small town counties grow as quickly as small cities
+<!-- Cluster A2's unique characteristic is that all its counties are micropolitan (contain an urban area with 10,000-49,999 residents, @supptblb-data-a3), and most workers live and work in the same county. A2 has high population growth with wealthier, highly educated residents similar to A1, but most of these indicators tend more toward the study area mean in A2 compared to A1. Population density and growth are high, but not as high as A1, and residents have higher incomes and more are college educated, but not at the levels of A1 (@suppfigb-A-ranges). Like A1, a lower percentage of residents are employed in agriculture, but there are a higher percentage in retail trade and lower percentage in construction compared to A1 (@supptblb-data-a3). -->
 
-Counties in A3 are "small town" counties (contain an urban area with population 5,000-9,999), have low population density, and are fairly geographically isolated with most workers living and working in the same county or another small town county (@fig-A-CIs, @supptblb-data-a4). In many ways, A3 is similar to A4, with similar employment in agriculture, lower incomes, and fewer people with a Bachelor's degree (@fig-A-CIs). Population growth rates are similar in A2, A3, and A4.
+#### Cluster A3: Small city with university
+
+Cluster A3, comprised of a single county (@fig-cluster-maps), is similar to cluster A2 in that it is comprised of mostly micropolitan and non-urban census blocks, but is distinguished by its higher population density and growth and its education and employment demographics. In A3, most residents have attained a higher educational level than high school or a Bachelor's degree, and a high percentage (37%) are employed in education. Madison County contains the small city of Rexburg and Brigham Young University - Idaho, which influences the demographics and population dynanmics of this county enough to create its own cluster in our study area.
 
 #### Cluster A4: Rural counties with more urban influence
 
@@ -461,7 +463,7 @@ actor_map_data <- clust_dat[["Actors"]] %>%
                           levels = c("A1", "A2", "A5", "A3", "A4"),
                           labels = c("A1: Urban counties with high population growth",
                                      "A2: Small cities",
-                                     "A3: College town",
+                                     "A3: Small city with university",
                                      "A4: Small town counties",
                                      "A5: Geographically isolated rural counties"))) %>%
   arrange(county, year) %>%
@@ -1912,8 +1914,8 @@ clust_dat_sc[["Actors"]] %>%
                values_to = "value") %>%
   left_join(mutate(ci_clust$Actors, 
                    cluster = factor(cluster,
-                                    levels = c("R1", "R4", "R5", "R2", "R3"),
-                                    labels = c("R1", "R2", "R3", "R4", "R5")))[,c("cluster", "input_data_name", "sig")]) %>%
+                                    levels = c("A1", "A2", "A5", "A3", "A4"),
+                                    labels = c("A1", "A2", "A3", "A4", "A5")))[,c("cluster", "input_data_name", "sig")]) %>%
   mutate(sig = ifelse(is.na(sig), "Not in model", sig)) %>%
   ggplot(aes(x = value, y = input_data_name, fill = sig, alpha = sig, color=sig)) +
   geom_vline(xintercept=0, color = "black", linetype="dashed") +
