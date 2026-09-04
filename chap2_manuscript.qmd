@@ -89,6 +89,7 @@ library(terra)
 library(patchwork)
 library(rnassqs)
 library(ggpattern)
+library(ggbreak)
 
 # set API keys
 readRenviron(".Renviron")
@@ -254,6 +255,12 @@ In the actors model, the following indicators were redundant: (1) the second pri
 To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
 <!-- For identifying most influential, consider methods from Pacheco-Romero, M., Vallejos, M., Paruelo, J. M., Alcaraz-Segura, D., Torres-García, M. T., Salinas-Bonillo, M. J., & Cabello, J. (2022). A data-driven methodological routine to identify key indicators for social-ecological system archetype mapping. Environmental Research Letters, 17(4), 045019. -->
+
+## Measuring farmland loss
+
+To measure farmland loss, we used Farms Under Threat land use data for 2001 [@theobald2018], which contain agriculture-specific land classes (e.g. cropland, rangeland), and NLCD land use/land cover and impervious descriptor data for 2001 and 2025 [@nlcd12]. We isolated crops, grassland/herbaceous, pasture/hay, forest, and woody wetland areas from the 2001 NLCD data. We filtered the grassland/herbaceous and pasture/hay layers to areas identified as pastureland or rangeland in the 2001 Farms Under Threat land use data in order to separate agricultural grazing land from non-agricultural grasslands. We also filtered the forest and woody wetland layers to areas that were identified as farm-associated woodlands in the 2001 Farms Under Threat data to exclude non-agricultural woodlands and forests. We combined these layers to represent agricultural lands in 2001. Then, we isolated developed areas from the 2025 NLCD data, removing roads using the 2025 NLCD imperviousness descriptor to eliminate the effects of road positioning changes between the two NLCD years. Finally, we extracted the area of 2001 agricultural lands that were classified as developed in 2025.
+
+We measured the average agricultural quality of converted lands using the Productivity, Versatility, Resiliency (PVR) metric, a measure of land quality based on its ability to support high yields and a variety of crops now and continuing into the future [@theobald2018].
 
 ## Qualitative Analysis
 
@@ -528,101 +535,58 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 ## Combined archetypes have different farmland loss outcomes
 
 ```{r}
-#| fig-cap: "Development outcomes are mediated by both resource and actor archetypes. We would expect development gains to decrease along the actor archetype gradient of most (A1) to least (A5) urban, yet this is not the case in R2 and R3. Developed land gain is the percent increase of county land in the developed land class over a 5-year period."
+#| fig-cap: "Farmland loss outcomes from 2001-2025 in each county. Percent of agricultural land converted to more highly developed land (x-axis) and the average agricultural quality (productivity-versatility-resilience PVR index, y-axis) are shown for each county in the study area. The shapes of the points correspond to their resource cluster and the colors correspond to their actor cluster, including transitions between clusters during the study period. A dashed line marks the average agricultural quality (PVR) for the study area. The three counties with qualitative data are labeled (see @sec-qualresults)."
 #| label: "fig-resource-actor-combo"
 #| warning: false
 #| message: false
-#| eval: false
+#| fig-width: 10.5
+#| fig-height: 6
 
-# clust_ag_loss1 <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c("county","year","cropland_change","developed_change","Perc_change_land_in_farms", "percent_cropland", "percent_developed", "land_in_farms")]))
-# 
-# clust_ag_loss1.anova <- aov(paste0(clust_ag_loss1$cluster.R, clust_ag_loss1$cluster.A) ~ clust_ag_loss1$Perc_change_land_in_farms + clust_ag_loss1$developed_change + clust_ag_loss1$percent_developed + clust_ag_loss1$land_in_farms)
-# 
-# clust_ag_loss <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c("county","year","cropland_change","developed_change","Perc_change_land_in_farms", "percent_cropland", "percent_developed", "land_in_farms")])) %>%
-#   group_by(cluster.R, cluster.A) %>%
-#   summarise(mean.lif_change = mean(Perc_change_land_in_farms),
-#             mean.dev_change = mean(developed_change),
-#             mean.lif = mean(land_in_farms),
-#             mean.dev = mean(percent_developed),
-#             sd.lif_change = sd(Perc_change_land_in_farms),
-#             sd.dev_change = sd(developed_change),
-#             sd.lif = sd(land_in_farms),
-#             sd.dev = sd(percent_developed),
-#             min.lif_change = min(Perc_change_land_in_farms),
-#             min.dev_change = min(developed_change),
-#             min.lif = min(land_in_farms),
-#             min.dev = min(percent_developed),
-#             max.lif_change = max(Perc_change_land_in_farms),
-#             max.dev_change = max(developed_change),
-#             max.lif = max(land_in_farms),
-#             max.dev = max(percent_developed),
-#             mean.crop = mean(percent_cropland),
-#             sd.crop = sd(percent_cropland),
-#             min.crop = min(percent_cropland),
-#             max.crop = max(percent_cropland),
-#             mean.crop_change = mean(cropland_change),
-#             sd.crop_change = sd(cropland_change),
-#             min.crop_change = min(cropland_change),
-#             max.crop_change = max(cropland_change))
+# methods to generate these data in notebooks/measuring_farmland_loss.qmd
+county_barcodes <- read.csv("data/agland_conversion_and_labels.csv")
 
-# ggplot(subset(clust_ag_loss, cluster.A!="A1"), aes(shape=cluster.R, color=cluster.A)) + geom_point(aes(y=mean.lif_change, x=mean.dev), size=3) + geom_segment(aes(yend=-2*sd.lif_change+mean.lif_change, y=mean.lif_change, x=mean.dev, xend=mean.dev)) + geom_segment(aes(yend=2*sd.lif_change+mean.lif_change, y=mean.lif_change, x=mean.dev, xend=mean.dev)) + geom_point(data=subset(clust_ag_loss1, cluster.A!="A1"), aes(shape=cluster.R, color=cluster.A, y=Perc_change_land_in_farms, x=percent_developed), size=1, inherit.aes = FALSE) + theme_bw()
-# 
-# p1 <- ggplot(clust_ag_loss, aes(color=cluster.R, shape=cluster.A)) +
-#   geom_point(aes(x=mean.lif, y=mean.dev_change), size=3) +
-#   # lower vert bars
-#   geom_segment(aes(yend=min.dev_change, y=mean.dev_change,
-#                    x=mean.lif, xend=mean.lif)) +
-#   # upper vert bars
-#   geom_segment(aes(yend=max.dev_change, y=mean.dev_change,
-#                    x=mean.lif, xend=mean.lif)) +
-#   # lower horizontal bars
-#   geom_segment(aes(yend=mean.dev_change, y=mean.dev_change,
-#                    x=mean.lif, xend=min.lif)) +
-#   # upper horizontal bars
-#   geom_segment(aes(yend=mean.dev_change, y=mean.dev_change,
-#                    x=mean.lif, xend=max.lif))
-# 
-# p2 <- ggplot(clust_ag_loss, aes(color=cluster.R, shape=cluster.A)) +
-#   geom_point(aes(x=mean.lif, y=mean.dev), size=3)
-  
+pvr <- rast("data/raw_data/productivity_versatility_resiliency_2016_conus_120m.tif")
+mean_pvr_aoi <- mean(values(crop(pvr, st_transform(aoi, st_crs(pvr)), mask=TRUE)), na.rm=TRUE)
 
-# # actors affecting outcomes in R3
-# 
-# clust_ag_loss <- left_join(county_clusts, st_drop_geometry(clust_dat$Resource[,c("county","year","cropland_change","developed_change","Perc_change_land_in_farms", "percent_cropland", "percent_developed")]))
-# 
-# ggplot(clust_ag_loss, aes(x=cluster.A, y=developed_change)) + 
-#   geom_boxplot() + 
-#   labs(x = "Actor Archetype", y = "Developed Land Gain (%)") +
-#   scale_y_continuous(limits = c(0,2)) +
-#   facet_wrap(vars(cluster.R)) +
-#   theme_bw() +
-#   theme(panel.grid.major.x = element_blank())
-
-# dev_r3 <- ggplot(filter(clust_ag_loss, cluster.R=="R3"), aes(x=cluster.A, y=developed_change)) + 
-#   geom_boxplot() + 
-#   labs(title="R3: Access to mountain recreation\nand urban amenities", x = "Actor Archetype", y = NULL) +
-#   scale_y_continuous(limits = c(0,0.7)) +
-#   theme_bw() +
-#   theme(panel.grid.major.x = element_blank())
-# dev_r2 <- ggplot(filter(clust_ag_loss, cluster.R=="R2"), aes(x=cluster.A, y=developed_change)) + 
-#   geom_boxplot() + 
-#   labs(title="R2: Flat land near natural\nand urban amenities", x = "Actor Archetype", y = "Developed Land Gain (%)") +
-#   scale_y_continuous(limits = c(0,0.7)) +
-#   theme_bw() +
-#   theme(panel.grid.major.x = element_blank())
-# 
-# dev_r2 + dev_r3
+ggplot(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+       data= county_barcodes) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=9.8, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=convert_perc+0.5, xend=convert_perc,
+                   y=convert_pvr-0.01, yend=convert_pvr)) +
+  geom_text(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=convert_perc+0.5, y=convert_pvr-0.01, label=county), hjust="left") +
+  geom_point(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+             data= county_barcodes, size=4) +
+  labs(x="Farmland Converted to Development (%)",
+       y="Avg PVR of Converted Land") +
+  scale_color_manual(name="Actor Type", 
+                     values = c("black", viridis::turbo(n=6, direction=-1, begin=0.075, end=0.95)),
+                     limits = c("A1", "A2", "A3", "A4➞A2", "A4", "A5➞A4" ,"A5" )) +
+  scale_shape_manual(name = "Resource Type", values = c(7,17,18,16,15,9)) +
+  scale_y_continuous(limits = c(0,0.5), expand = FALSE, breaks = c(0, seq(0.2,0.5,0.1))) +
+  scale_x_continuous(limits = c(-0.2,24), expand = FALSE, breaks = c(seq(0,10,2), 23,24)) +
+  scale_x_break(breaks = c(10,23), scales = c(0.1,10), expand = FALSE, symbol="slash", space = 0.5) +
+  scale_y_break(breaks = c(0.05,0.19), scales = c(10, 0.1), expand = FALSE, symbol="slash") +
+  #coord_cartesian(xlim = c(0,25), ylim = c(0,0.5), expand = FALSE) +
+  theme_bw() +
+  theme(text = element_text(size = 13))
 ```
 
-Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo). The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with more urban influence) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development gains decrease more linearly along the actor archetype gradient of most to least urban. A1 is the actor archetype associated with high population growth and density, yet those actors' impacts on developed land gains are mediated by the resource system. A1 counties are associated with more developed land gain in R1 counties than in the R3-A1 county.
+Between 2001 and 2025, agricultural land conversion generally occurred on lands with higher than average agricultural land quality according to the Farms Under Threat productivity-versatility-resilience (PVR) index (@fig-resouce-actor-combo). The resource-actor combined cluster with the most farmland loss is R1-A1. Farmland loss outcomes in non-R1-A1 are mediated by both resource and actor archetypes. For example, the highest quality converted farmlands tend to be in R2, but the combined R2-A2 archetype converted a higher percentage of its farmland compared to other R2 counties. In other cases, the archetypes do not fully explain farmland loss outcomes. For example, R2-A5 counties have a fairly large spread of farmland loss and converted farmland quality. Notably, the county that experienced both a resource and actor archetype transition also had a fairly high amount of farmland loss, which may be associated with archetype shifts toward more urban archetypes.
 
-## Insights from Changing Communities
+<!-- Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo). The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with more urban influence) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development gains decrease more linearly along the actor archetype gradient of most to least urban. A1 is the actor archetype associated with high population growth and density, yet those actors' impacts on developed land gains are mediated by the resource system. A1 counties are associated with more developed land gain in R1 counties than in the R3-A1 county. -->
+
+## Insights from Changing Communities {#sec-qualresults}
 
 For the following results, we combine insights from longitudinal public data used to generate the quantitative archetypes (described in @tbl-datasel, A[-@supptbla-means) and qualitative data from interviews and participant observations in three key counties in different archetypes.
 
 ### Urban Sprawl in Canyon County {#sec-canyon}
 
-Canyon County is in the resource archetype "R1: risk of urban sprawl – flat land with accessible urban amenities." It transitioned from the actor archetype "A2 - small cities" to “A1 - urban counties with high population growth" between 2000 and 2010. Canyon County experienced rapid growth from 1990 to 2020, with housing density doubling and population density tripling [@CofPopHous_1990; @cencounts; @decennial_2020]. There has been a corresponding decline in agriculture: cropland decreased by 10% and land in farms decreased by 25% in those 30 years [@nlcd; @CofAg_1992_landinfarms; @CofAg_quickstats]. The nature of farm ownership has also changed: in 1990, 52% of farms were 1-50 acres and 53% were fully owned, and in 2020, 80% of farms were 1-50 acres and 78% were fully owned [@CofAg_1992_landinfarms; @CofAg_quickstats]. Homes are also more expensive – median home values doubled from 1990 (\$108,255) to 2020 [\$211,600, @CofHous_1990; @acs2020]. Overall, these data suggest that Canyon County is a case of urban sprawl overtaking agriculture land for residential and commercial development. 
+Canyon County is in the resource archetype "R1: risk of urban sprawl – flat land with accessible urban amenities." It transitioned from the actor archetype "A2 - small cities" to “A1 - urban counties with high population growth" between 2000 and 2010. Canyon County experienced rapid growth from 1990 to 2020, with housing density doubling and population density tripling [@CofPopHous_1990; @cencounts; @decennial_2020]. There has been a corresponding decline in agriculture: cropland decreased by 10% and land in farms decreased by 25% in those 30 years [@nlcd11; @CofAg_1992_landinfarms; @CofAg_quickstats]. The nature of farm ownership has also changed: in 1990, 52% of farms were 1-50 acres and 53% were fully owned, and in 2020, 80% of farms were 1-50 acres and 78% were fully owned [@CofAg_1992_landinfarms; @CofAg_quickstats]. Homes are also more expensive – median home values doubled from 1990 (\$108,255) to 2020 [\$211,600, @CofHous_1990; @acs2020]. Overall, these data suggest that Canyon County is a case of urban sprawl overtaking agriculture land for residential and commercial development. 
 
 Aligning with our archetype analysis, our qualitative data for Canyon County suggests that the top perceived driver of community change is urban sprawl. Many interview participants perceived this urban development as inevitable, with agricultural land being developed without discernment. As one rancher noted, "I do see this in almost every community around us in the Treasure Valley an almost insatiable appetite for more housing without stopping." 
 
@@ -630,7 +594,7 @@ While zoning and planning policies could limit development, there has been littl
 
 ### Agricultural Industrialization in Twin Falls County {#sec-twinfalls}
 
-Twin Falls County is in resource archetype "R2 - flat land near natural and urban amenities" and actor archetype "A2 - small cities." Though it did not undergo an archetype shift, Twin Falls County is experiencing agricultural industrialization, specialization, and concentration. Farms in Twin Falls County have changed, with a declining "agriculture of the middle." In 1992 there were 762 farms between 50-500 acres, while in 2022 there were 351. There was an increase in both small and large farms over the same period, with 1-50 acre farms increasing from 495 to 673 and farms over 2,000 acres increasing from 34 to 46 [@CofAg_1992_landinfarms; @CofAg_quickstats]. Developed land has increased from 3% to 5% of the county [@nlcd], but agricultural land has declined very little. In 2020, there was 3% less cropland and 5% less land in farms compared to 1990 [@nlcd; @CofAg_1992_landinfarms; @CofAg_quickstats]. The population has increased from 53,580 in 1990 to 90,046 in 2020, yet employment in agriculture has remained around 5% [@cencounts; @decennial_2020; @cbp1997; @cbp2022; @CofAg_quickstats]. Some urban growth is evidenced by expanding service industries, with increasing employment in healthcare and hospitality [@cbp1997; @cbp2022]. Overall, these data suggest that Twin Falls County is a case of agricultural industrialization fueling modest urban growth. However, should growth persist as our overall actor archetype trajectories suggest, farmland loss in Twin Falls may become uncontrolled and jeopardize the stability and viability of the agribusiness economy driving the county’s economic and demographic change. 
+Twin Falls County is in resource archetype "R2 - flat land near natural and urban amenities" and actor archetype "A2 - small cities." Though it did not undergo an archetype shift, Twin Falls County is experiencing agricultural industrialization, specialization, and concentration. Farms in Twin Falls County have changed, with a declining "agriculture of the middle." In 1992 there were 762 farms between 50-500 acres, while in 2022 there were 351. There was an increase in both small and large farms over the same period, with 1-50 acre farms increasing from 495 to 673 and farms over 2,000 acres increasing from 34 to 46 [@CofAg_1992_landinfarms; @CofAg_quickstats]. Developed land has increased from 3% to 5% of the county [@nlcd11], but agricultural land has declined very little. In 2020, there was 3% less cropland and 5% less land in farms compared to 1990 [@nlcd11; @CofAg_1992_landinfarms; @CofAg_quickstats]. The population has increased from 53,580 in 1990 to 90,046 in 2020, yet employment in agriculture has remained around 5% [@cencounts; @decennial_2020; @cbp1997; @cbp2022; @CofAg_quickstats]. Some urban growth is evidenced by expanding service industries, with increasing employment in healthcare and hospitality [@cbp1997; @cbp2022]. Overall, these data suggest that Twin Falls County is a case of agricultural industrialization fueling modest urban growth. However, should growth persist as our overall actor archetype trajectories suggest, farmland loss in Twin Falls may become uncontrolled and jeopardize the stability and viability of the agribusiness economy driving the county’s economic and demographic change. 
 
 Interview data in Twin Falls County suggests that agricultural industrialization is perceived to be the main driver of community and land use change, aligning with the archetype analysis. Interview participants observed that agribusinesses are expanding to the point of changing both the physical and socio-cultural landscape of Twin Falls. Physical shifts include an expansion of industrial agricultural facilities. As one resident noted, "Everybody now is within a stone's throw of some dairy facility of some kind." Respondents also discussed the increase in urbanization. This is reflected in the statement from a lifelong resident of the valley and self-identified "farm kid", who noted that "the demographic of Twin Falls has changed from a little tiny cowtown to a pretty urban area."
 
@@ -638,7 +602,7 @@ Agricultural industrialization was viewed as not only shifting the physical land
 
 ### Amenity Migration in Teton County {#sec-teton}
 
-Teton County is in resource archetype "R3 - access to mountain recreation and urban amenities." It transitioned from actor archetype "A5 - geographically isolated rural counties with less economic opportunity" to "A4 - rural counties with more urban influence." Teton County is located near mountains and recreation areas, including nearby ski areas and national parks. It does not contain a densely populated urban area; the closest urban center is 20-40 miles away [@ipums]. Though it maintains its rural nature in this regard, Teton County is also undergoing rapid change. The population remains scattered, but both population and housing density have more than tripled from 1990 to 2020 [@CofPopHous_1990; @cencounts; @decennial_2020]. Median home values have also almost tripled in that time, from \$122,494 to \$358,100 [@CofHous_1990; @acs2020]. In those 30 years, developed land has increased from 3% to 5% of the county [@nlcd], and employment trends reflect a shift towards both housing development and a recreation economy. Jobs in agriculture have declined from 22% to 12% from 1997 to 2022, while there are increases in construction (8% to 20%), hospitality (8% to 14%), and recreation (2% to 3%) jobs [@cbp1997; @cbp2022; @CofAg_quickstats]. Overall, these data suggest that Teton County is experiencing amenity migration.
+Teton County is in resource archetype "R3 - access to mountain recreation and urban amenities." It transitioned from actor archetype "A5 - geographically isolated rural counties with less economic opportunity" to "A4 - rural counties with more urban influence." Teton County is located near mountains and recreation areas, including nearby ski areas and national parks. It does not contain a densely populated urban area; the closest urban center is 20-40 miles away [@ipums]. Though it maintains its rural nature in this regard, Teton County is also undergoing rapid change. The population remains scattered, but both population and housing density have more than tripled from 1990 to 2020 [@CofPopHous_1990; @cencounts; @decennial_2020]. Median home values have also almost tripled in that time, from \$122,494 to \$358,100 [@CofHous_1990; @acs2020]. In those 30 years, developed land has increased from 3% to 5% of the county [@nlcd11], and employment trends reflect a shift towards both housing development and a recreation economy. Jobs in agriculture have declined from 22% to 12% from 1997 to 2022, while there are increases in construction (8% to 20%), hospitality (8% to 14%), and recreation (2% to 3%) jobs [@cbp1997; @cbp2022; @CofAg_quickstats]. Overall, these data suggest that Teton County is experiencing amenity migration.
 
 Our qualitative data also suggests that the top perceived driver of community change is amenity migration. "Most of the people I knew moved here for fishing, for skiing, or hunting, for outdoor recreation." This quote by an 'old-newcomer' who moved to the valley in the early 1990s, echoes a common sentiment among respondents that most of the population growth has been fueled by outdoor enthusiasts and growth in the outdoor economy. 
 
@@ -775,15 +739,15 @@ Land in farms and total county land data for 2002-2022 are available in the Cens
 
 #### Percent cropland {#sec-perc-cropland-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories.
 
 #### Percent forestland {#sec-perc-forest-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent forestland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent forestland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories.
 
 #### Percent shrubland {#sec-perc-shrubland-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent shrubland, we used the "Shrub/Scrub" category.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent shrubland, we used the "Shrub/Scrub" category.
 
 #### Percent federally managed land {#sec-fedlands}
 
@@ -799,7 +763,7 @@ We accessed river data from the WWF HydroSHEDS Free Flowing Rivers Network [v1.0
 
 #### Percent developed land {#sec-dev-land-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent developed land, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent developed land, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories.
 
 #### Land in, nearby, and far from urban areas {#sec-urbareas}
 
@@ -857,19 +821,19 @@ Land in farms data for 1997-2022 are available in the Census of Agriculture and 
 
 #### Percent change of cropland {#sec-cropland-change-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories. We used the five-year change in the percent of all county land that was in cropland.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Pasture/Hay" and "Cultivated Crops" categories. We used the five-year change in the percent of all county land that was in cropland.
 
 #### Percent change of forest {#sec-forest-change-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories. We used the five-year change in the percent of all county land that was in forestland.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Deciduous Forest" and "Evergreen Forest" categories. We used the five-year change in the percent of all county land that was in forestland.
 
 #### Percent change of shrubland {#sec-shrubland-change-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the "Shrub/Scrub category. We used the five-year change in the percent of all county land that was in shrubland.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the "Shrub/Scrub category. We used the five-year change in the percent of all county land that was in shrubland.
 
 #### Percent change of developed land {#sec-dev-land-change-methods}
 
-Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories. We used the five-year change in the percent of all county land that was in developed land.
+Annual land cover data from the National Land Cover Database (NLCD) was downloaded from https://www.mrlc.gov/viewer/ [@nlcd11]. We used the `exactextractr` package to summarize the percent cover of each land cover category in each county [v0.10.0, @exactextractr]. To calculate percent cropland, we used the sum of the "Developed, Open Space", "Developed, Low Intensity", "Developed, Medium Intensity", and "Developed High Intensity" categories. We used the five-year change in the percent of all county land that was in developed land.
 
 #### Percent farms with net loss {#sec-farm-net-loss-methods}
 

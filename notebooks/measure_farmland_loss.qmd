@@ -1,0 +1,172 @@
+---
+title: "Measuring Farmland Loss"
+author: "Carolyn Koehn"
+format: html
+---
+
+```{r}
+#| label: setup
+
+# load libraries
+library(tidyverse)
+library(terra)
+library(sf)
+library(tigris)
+
+# county data
+aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
+  select(c("GEOID", "NAME")) %>%
+  filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
+```
+
+Methods follow American Farmland Trust's Farms Under Threat update methods.
+
+Read in NLCD data and mask to study area. These data were downloaded from https://doi.org/10.5066/P94UXNTS.
+
+```{r}
+nlcd01 <- rast("/vsizip/../data/raw_data/Annual_NLCD_LndCov_2001_CU_C1V2.zip/Annual_NLCD_LndCov_2001_CU_C1V2.tif")
+nlcd01 <- crop(nlcd01, st_transform(aoi, st_crs(nlcd01)), mask=TRUE)
+
+nlcd25 <- rast("/vsizip/../data/raw_data/Annual_NLCD_LndCov_2025_CU_C1V2.zip/Annual_NLCD_LndCov_2025_CU_C1V2.tif")
+nlcd25 <- crop(nlcd25, st_transform(aoi, st_crs(nlcd25)), mask=TRUE)
+
+imperv25 <- rast("/vsizip/../data/raw_data/Annual_NLCD_ImpDsc_2025_CU_C1V2.zip/Annual_NLCD_ImpDsc_2025_CU_C1V2.tif")
+imperv25 <- crop(imperv25, st_transform(aoi, st_crs(imperv25)), mask=TRUE)
+```
+
+Read in the 2001 Farms Under Threat data. Project to overlay with NLCD data -- pixels will generally be larger, so the mode is taken for the new pixel value. These data were requested from the American Farmland Trust; data can be requested at https://farmlandinfo.org/publications/farms-under-threat-2040/ with the data request form (https://survey123.arcgis.com/share/3f8d2e46cec64288b53d235fa7cf7d40).
+
+```{r}
+lulc_01 <- rast("../data/raw_data/land_cover_and_use_2001_ID_30m (1).tif")
+aft01 <- project(lulc_01, nlcd01, method = "mode")
+```
+
+
+Isolate crops from the 2001 NLCD.
+
+```{r}
+crops01 <- ifel(nlcd01==82, 1, NA)
+```
+
+Isolate grasslands and pastures from the 2001 NLCD.
+
+```{r}
+grass01 <- ifel(nlcd01 %in% c(81, 71), 1, NA)
+```
+
+Isolate grasslands and pastures also identified as pastureland or rangeland in the 2001 Farms Under Threat data.
+
+```{r}
+grass01_aft <- ifel(grass01 == 1 & aft01 %in% c(2,3,1102,1103), 1, NA)
+```
+
+Isolate forests and woody wetlands from the 2001 NLCD.
+
+```{r}
+forest01 <- ifel(nlcd01 %in% c(41,42,43,90), 1, NA)
+```
+
+Isolate forests and woodlands that were identified as farm-associated woodlands in the 2001 Farms Under Threat data.
+
+```{r}
+forest01_aft <- ifel(forest01 == 1 & aft01 %in% c(5,1105), 1, NA)
+```
+
+Isolate developed pixels from the 2025 NLCD data.
+
+```{r}
+dev25 <- ifel(nlcd25 %in% c(21:24), 1, NA)
+```
+
+Remove roads from the developed layer using 2025 NLCD imperviousness layer to eliminate effects of road positioning changes between the NLCD years.
+
+```{r}
+dev25_noroads <- ifel(imperv25 == 1, NA, dev25)
+```
+
+Combine agricultural land layers from 2001.
+
+```{r}
+aglands <- ifel(crops01==1, 1, ifel(grass01_aft==1, 1, forest01_aft))
+```
+
+Extract 2001 agricultural lands that were developed in 2025.
+
+```{r}
+converted <- ifel(aglands==1 & dev25_noroads == 1, 1, NA)
+```
+
+Sum converted lands (2025) and total agricultural lands (2001) by county.
+
+```{r}
+by_county <- extract(converted, st_transform(aoi, st_crs(converted)), fun=sum, na.rm=TRUE)
+
+aglands_by_county <- extract(aglands, st_transform(aoi, st_crs(aglands)), fun=sum, na.rm=TRUE)
+```
+
+Import and project agricultural quality (PVR) data. Mask PVR data to only converted pixels and calculate the average quality of converted lands for each county. These data were requested from the American Farmland Trust; data can be requested at https://farmlandinfo.org/publications/farms-under-threat-2040/ with the data request form (https://survey123.arcgis.com/share/3f8d2e46cec64288b53d235fa7cf7d40).
+
+```{r}
+pvr <- rast("../data/raw_data/productivity_versatility_resiliency_2016_conus_120m.tif")
+
+pvr_prj <- project(pvr, converted, method="bilinear")
+pvr_converted <- mask(pvr_prj, converted)
+pvr_conv_by_county <- extract(pvr_converted, st_transform(aoi, st_crs(pvr_prj)), fun=mean, na.rm=TRUE)
+```
+
+Add acres converted and quality converted to the county data.
+
+```{r}
+aoi$convert_acres <- by_county$`NLCD Land Cover Class` * 0.2223948433
+aoi$ag_acres <- aglands_by_county$`NLCD Land Cover Class` * 0.2223948433
+aoi$convert_perc <- aoi$convert_acres / aoi$ag_acres * 100
+aoi$convert_pvr <- pvr_conv_by_county$productivity_versatility_resiliency_2016_conus_120m
+```
+
+Create county labels based on their clusters.
+
+```{r}
+clust_dat <- list()
+clust_dat[["Resource"]] <- read.csv("../data/model results/clust_dat_resource.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
+clust_dat[["Actors"]] <- read.csv("../data/model results/clust_dat_actors.csv") %>%
+  left_join(aoi, by = c("county" = "NAME")) %>%
+  st_as_sf()
+county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county", "year", "cluster")]),
+                           st_drop_geometry(clust_dat[["Actors"]][,c("county", "year", "cluster")]),
+                           by = c("county", "year"),
+                           suffix = c(".R", ".A")) %>%
+  mutate(cluster.R = factor(cluster.R,
+                            levels = c("R1", "R4", "R5", "R2", "R3"),
+                            labels = c("R1", "R2", "R3", "R4", "R5")),
+         cluster.A = factor(cluster.A,
+                            levels = c("A1", "A2", "A5", "A3", "A4"),
+                            labels = c("A1", "A2", "A3", "A4", "A5")))
+county_barcodes <- county_clusts %>%
+  rowwise() %>%
+  mutate(comb_clust = paste0(cluster.R,cluster.A)) %>%
+  pivot_wider(id_cols="county",
+              names_from = year,
+              values_from = comb_clust)
+county_barcodes$barcode <- do.call(paste, c(county_barcodes[,-1], sep="-"))
+county_barcodes$barcode_A <- str_remove_all(county_barcodes$barcode, "R[:digit:]")
+county_barcodes$barcode_R <- str_remove_all(county_barcodes$barcode, "A[:digit:]")
+
+county_barcodes$barcode_A_lab <- ifelse(test = str_extract(county_barcodes$barcode_A, "^A[:digit:]") == str_extract(county_barcodes$barcode_A, "A[:digit:]$"),
+                                        yes = str_extract(county_barcodes$barcode_A, "^A[:digit:]"),
+                                        no = paste(str_extract(county_barcodes$barcode_A, "^A[:digit:]"), str_extract(county_barcodes$barcode_A, "A[:digit:]$"), sep="\u279E"))
+
+county_barcodes$barcode_R_lab <- ifelse(test = str_extract(county_barcodes$barcode_R, "^R[:digit:]") == str_extract(county_barcodes$barcode_R, "R[:digit:]$"),
+                                        yes = str_extract(county_barcodes$barcode_R, "^R[:digit:]"),
+                                        no = paste(str_extract(county_barcodes$barcode_R, "^R[:digit:]"), str_extract(county_barcodes$barcode_R, "R[:digit:]$"), sep="\u279E"))
+```
+
+Join county labels and conversion calculations, saving to data folder.
+
+```{r}
+county_barcodes <- left_join(county_barcodes, st_drop_geometry(aoi), by=c("county" = "NAME"))
+
+write.csv(county_barcodes, "../data/agland_conversion_and_labels.csv", row.names=FALSE)
+```
+
