@@ -138,7 +138,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                            by = c("county", "year"),
                            suffix = c(".R", ".A")) %>%
   mutate(cluster.R = factor(cluster.R,
-                            levels = c("R1", "R4", "R5", "R2", "R3"),
+                            levels = c("R1", "R5", "R4", "R2", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
                             levels = c("A1", "A2", "A5", "A3", "A4"),
