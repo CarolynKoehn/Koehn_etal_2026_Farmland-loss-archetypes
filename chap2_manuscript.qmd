@@ -146,6 +146,8 @@ For example, @magliocca2019 combined a quantitative survival analysis that linke
 
 ## Study Area
 
+<!-- COMMENT: study area map needed? if so, what info? -->
+
 The Snake River Plain ecoregion of the United States [@ecoregions] intersects with 26 counties in the state of Idaho (109,700 km$^2$). It contains  productive croplands [@freedgood2020], localized yet rapidly growing highly developed urban areas [@census_metro], and public rangelands grazed by livestock (@freedgood2020). This region features two primary ecological zones, the river plain and the shrub steppe, and a diverse range of social systems, from urban and exurban systems to dryland agriculture and rural public lands, that together form a diverse array of social-ecological systems [@aho2022]. 
 
 Farmland protection in southern Idaho is based on the 1981 Right to Farm section of Idaho Code, which protects farmlands from nuisance lawsuits [@IDRightToFarm], and the 1975 Local Land Use Planning Act, which mandates that cities and counties must plan and zone [@IDLLUPA; @meyer2025]. Therefore, farmland protection actions and funding from 1990-2020 in southern Idaho occur at the county level or lower. Farmland protection is mainly accomplished through zoning that prevents development on farmland or, rarely, costly perpetual easements established in partnership with land trusts or local government [@pald]. Before 2020, Idaho's Snake River Plain contained 64 agricultural easements totaling 271 $km^2$, or 0.2% of the total study area [@pald].
@@ -312,11 +314,11 @@ rel_inf[["Actors"]] <- read.csv("data/model results/drmod_actors.csv") %>%
   left_join(var_labs_A)
 ```
 
-## Cluster Descriptions
+## Are there recurrent combinations of social-ecological archetypes in Idaho's Snake River Plain, and how have they changed over time?
 
 ### Resource Clusters
 
-The most influential variables in the resource model were housing density and developed land (@suppfigb-R-influential).
+The archetype analysis identified 5 resource clusters. The most influential variables in the resource model were housing density and developed land (@suppfigb-R-influential).
 
 <!-- comment to ask: re-level in order of influence rather than methods tables? TTC says yes -->
 
@@ -374,9 +376,9 @@ Characteristic resources of R4 are a greater presence of forestland and more ste
 
 The unique characteristics of R5 are more shrubland cover, less cropland cover, a greater amount of federal land, greater distance from urban areas, and less access to highways (@fig-R-CIs, @suppfigb-R-ranges, @supptblb-data-r5). Natural amenities are also few, with less river miles, lower lake area, average presence of recreation and forest land, and long distances to a ski areas (@fig-R-CIs). Similar to R2, R5 has more large farms and less farms operating at a loss (@supptblb-data-r5). R5 has low rates of cropland loss and developed land gain, and it is also losing fewer farms than other counties (@suppfigb-R-ranges). This cluster contains three counties (@fig-cluster-maps).
 
-### Actors Clusters
+### Actor Clusters
 
-The most influential variables in the resource model were: (1) population density and (2) geographic isolation (@suppfigb-A-influential).
+The archetype analysis identified 5 actor clusters. The most influential variables in the actors model were: (1) population density and (2) geographic isolation (@suppfigb-A-influential).
 
 ```{r}
 #| label: fig-A-CIs
@@ -532,11 +534,11 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 
 :::
 
-## Cluster Transitions {#sec-transitions}
+### Change over time {#sec-transitions}
 
 There was one resource transition in the study period: Gem County transitioned from R3 (flat lands moderately near to natural amenities and urban services) to R2 (flat lands near urban services with more agriculture) in 2000 (@fig-cluster-maps). This can be attributed to Emmett, the largest town in the county, officially meeting the US Census standards for an urban area (see @sec-urbareas) in 2000 so that many more county lands were in or closer to an urban area compared to 1990. There were two types of actor transitions present that each occurred in multiple counties: a transition from A5 (rural counties) to A4 (small town counties) and a transition from A4 (small town counties) to A2 (small cities; @fig-cluster-maps). All these transitions, both in resource and actor archetypes, are the effects of growing populations and the creation or expansion of dense centers of population, or urban areas.
 
-## Combined archetypes have different farmland loss outcomes
+## What is the relationship between these archetypes and farmland loss?
 
 ```{r}
 #| label: fig-resource-actor-combo
@@ -585,7 +587,7 @@ Between 2001 and 2025, agricultural land conversion generally occurred on lands 
 
 <!-- Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo). The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with more urban influence) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development gains decrease more linearly along the actor archetype gradient of most to least urban. A1 is the actor archetype associated with high population growth and density, yet those actors' impacts on developed land gains are mediated by the resource system. A1 counties are associated with more developed land gain in R1 counties than in the R3-A1 county. -->
 
-## Insights from Changing Communities {#sec-qualresults}
+## In what ways do actors in select counties describe drivers of community change, and do these insights validate archetypes indicating urban sprawl, industrialization, or amenity migration? {#sec-qualresults}
 
 For the following results, we combine insights from longitudinal public data used to generate the quantitative archetypes (described in Tables [-@tbl-datasel] and A[-@supptbla-means]) and qualitative data from interviews and participant observations in three key counties in different archetypes.
 
