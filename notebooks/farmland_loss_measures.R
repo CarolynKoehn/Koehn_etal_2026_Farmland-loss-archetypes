@@ -35,7 +35,7 @@ county_clusts <- left_join(st_drop_geometry(clust_dat[["Resource"]][,c("county",
                            by = c("county", "year"),
                            suffix = c(".R", ".A")) %>%
   mutate(cluster.R = factor(cluster.R,
-                            levels = c("R1", "R4", "R5", "R2", "R3"),
+                            levels = c("R1", "R5", "R4", "R2", "R3"),
                             labels = c("R1", "R2", "R3", "R4", "R5")),
          cluster.A = factor(cluster.A,
                             levels = c("A1", "A2", "A5", "A3", "A4"),
@@ -391,3 +391,169 @@ crops90 <- ifel(lulc90_srp==2, 1, NA)
 grass90 <- ifel(lulc90_srp==3, 1, NA)
 
 # stopped here, can't check against AFT pastures/rangelands with these years
+
+##############################
+
+# farmland loss / developed gain by cluster
+
+county_clusts_lossgain <- st_drop_geometry(clust_dat$Resource) %>%
+  select(county, year, cluster, developed_change, Perc_change_land_in_farms, perc_farms_change) %>%
+  left_join(st_drop_geometry(select(clust_dat$Actors, county, year, cluster)), 
+            join_by(county, year), suffix = c(".R",".A")) %>%
+  mutate(cluster.R = factor(cluster.R,
+                            levels = c("R1", "R5", "R4", "R2", "R3"),
+                            labels = c("R1", "R2", "R3", "R4", "R5")),
+         cluster.A = factor(cluster.A,
+                            levels = c("A1", "A2", "A5", "A3", "A4"),
+                            labels = c("A1", "A2", "A3", "A4", "A5")))
+
+ggplot(county_clusts_lossgain, aes(x=developed_change, y=perc_farms_change,
+                                   color = cluster.A, shape = cluster.R)) +
+  geom_point(size=3)
+ggplot(county_clusts_lossgain, aes(x=developed_change, y=Perc_change_land_in_farms,
+                                   color = cluster.A, shape = cluster.R)) +
+  geom_point(size=3)
+# not easy to interpret
+
+##############################
+
+# AFT methods with NLCD - but get a slope instead of two points in time
+
+nlcd01 <- rast("/vsizip/data/raw_data/Annual_NLCD_LndCov_2001_CU_C1V2.zip/Annual_NLCD_LndCov_2001_CU_C1V2.tif")
+nlcd01 <- crop(nlcd01, st_transform(aoi, st_crs(nlcd01)), mask=TRUE)
+
+nlcd_05_25 <- list(rast(paste0("/vsizip/data/raw_data/NLCD_LndCov_1985-2020.zip/",
+                            unzip("data/raw_data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name[str_detect(unzip("data/raw_data/NLCD_LndCov_1985-2020.zip", list=TRUE)$Name, ".tiff$")][c(6:8,1)])), 
+                     rast("/vsizip/data/raw_data/Annual_NLCD_LndCov_2025_CU_C1V2.zip/Annual_NLCD_LndCov_2025_CU_C1V2.tif"))
+nlcd_05_25_crop <- rast(lapply(nlcd_05_25, function(r) 
+  crop(r, st_transform(aoi, st_crs(nlcd_05_25[[1]])), mask=TRUE)))
+rm(nlcd_05_25)
+
+imperv_05_25 <- rast(paste0("/vsizip/data/raw_data/Annual_NLCD_ImpDsc_", seq(2005,2025,5), "_CU_C1V2.zip/Annual_NLCD_ImpDsc_", seq(2005,2025,5), "_CU_C1V2.tif"))
+imperv_05_25_crop <- crop(imperv_05_25, st_transform(aoi, st_crs(imperv_05_25)), mask=TRUE)
+rm(imperv_05_25)
+
+crops01 <- ifel(nlcd01==82, 1, NA)
+
+grass01 <- ifel(nlcd01 %in% c(81, 71), 1, NA)
+
+aft01 <- project(lulc_01, grass01, method = "mode")
+grass01_aft <- ifel(grass01 == 1 & aft01 %in% c(2,3,1102,1103), 1, NA)
+
+forest01 <- ifel(nlcd01 %in% c(41,42,43,90), 1, NA)
+
+forest01_aft <- ifel(forest01 == 1 & aft01 %in% c(5,1105), 1, NA)
+
+dev_05_25 <- ifel(nlcd_05_25_crop %in% c(21:24), 1, NA)
+
+dev_05_25_noroads <- dev_05_25
+for(i in 1:nlyr(dev_05_25_noroads)) {
+  dev_05_25_noroads[[i]] <- ifel(imperv_05_25_crop[[i]] == 1, NA, dev_05_25_noroads[[i]])
+}
+
+aglands <- ifel(crops01==1, 1, ifel(grass01_aft==1, 1, forest01_aft))
+
+converted <- dev_05_25_noroads
+for(i in 1:nlyr(converted)) {
+  converted[[i]] <- ifel(aglands==1 & dev_05_25_noroads[[i]] == 1, 1, NA)
+}
+names(converted) <- paste0("converted_", seq(2005,2025,5))
+
+by_county <- extract(converted, st_transform(aoi, st_crs(converted)), fun=sum, na.rm=TRUE)
+
+aglands_by_county <- extract(aglands, st_transform(aoi, st_crs(aglands)), fun=sum, na.rm=TRUE)
+
+pvr_prj <- project(pvr, aglands, method="bilinear")
+pvr_converted_25 <- mask(pvr_prj, converted$converted_2025)
+pvr_conv_by_county <- extract(pvr_converted_25, st_transform(aoi, st_crs(pvr_prj)), fun=mean, na.rm=TRUE)
+
+by_county_rates <- cbind(by_county, aoi) %>%
+  cbind(., pvr_conv_by_county$productivity_versatility_resiliency_2016_conus_120m) %>%
+  rename(converted_pvr = `pvr_conv_by_county$productivity_versatility_resiliency_2016_conus_120m`) %>%
+  cbind(., aglands_by_county$`NLCD Land Cover Class`) %>%
+  rename("aglands01" = "aglands_by_county$`NLCD Land Cover Class`") %>%
+  st_drop_geometry() %>%
+  select(-c(ID, GEOID, geometry)) %>%
+  mutate(converted_2001=0) %>%
+  pivot_longer(!c(NAME, converted_pvr, aglands01), 
+               names_to = "year",
+               values_to = "converted_px") %>%
+  mutate(year = as.integer(str_extract(year, "[0-9]+")),
+         converted_px = ifelse(is.nan(converted_px), 0, converted_px),
+         converted_acres = converted_px * 0.2223948433,
+         aglands01_acres = aglands01 * 0.2223948433)
+
+county_barcodes[,c("rate", "CIlow", "CIhigh")] <- NA
+for(i in 1:nrow(county_barcodes)) {
+  county_barcodes$rate[i] <- 
+    summary(lm(converted_acres~year, 
+               data = subset(by_county_rates, 
+                             NAME==county_barcodes$county[i])))$coefficients[2,1]
+  
+  county_barcodes$CIlow[i] <- 
+    confint(lm(converted_acres~year, 
+               data = subset(by_county_rates, 
+                             NAME==county_barcodes$county[i])))[2,1]
+  
+  county_barcodes$CIhigh[i] <- 
+    confint(lm(converted_acres~year, 
+               data = subset(by_county_rates, 
+                             NAME==county_barcodes$county[i])))[2,2]
+}
+
+county_barcodes <- county_barcodes %>%
+  left_join(unique(by_county_rates[,c("NAME", "converted_pvr", "aglands01_acres")]), 
+            join_by(county == NAME))
+
+county_barcodes_percCIs <- county_barcodes %>%
+  mutate(perc_rate = rate / aglands01_acres * 100,
+         perc_rate_CIlow = CIlow / aglands01_acres * 100,
+         perc_rate_CIhigh = CIhigh / aglands01_acres * 100)
+
+
+# acres per year
+ggplot(aes(x=rate, y=converted_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+       data= county_barcodes) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=15, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=rate+0.5, xend=rate,
+                   y=converted_pvr-0.01, yend=converted_pvr)) +
+  geom_point(aes(x=rate, y=converted_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+             data= county_barcodes, size=4) +
+  geom_text(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=rate+0.5, y=converted_pvr-0.01, label=county), hjust="left") +
+  labs(x="Ag Land Converted to Development (acres/yr)",
+       y="Avg PVR of Converted Land") +
+  scale_color_manual(name="Actor Type", 
+                     values = c("black", viridis::turbo(n=6, direction=-1, begin=0.075, end=0.95)),
+                     limits = c("A1", "A2", "A3", "A4➞A2", "A4", "A5➞A4" ,"A5" )) +
+  scale_shape_manual(name = "Resource Type", values = c(7,17,18,16,15,9),
+                     limits = c("R1", "R2", "R3➞R2", "R3", "R4" ,"R5" )) +
+  theme_bw()
+
+# percent change per year
+# conclusion: the results are not different enough to justify the extra compelixty -- there don't seem to be anomalous 2025 measurements skewing where the average rate wouldn't go
+ggplot(aes(x=perc_rate, y=converted_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+       data= county_barcodes_percCIs) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=1, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(county_barcodes_percCIs, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=perc_rate+0.5, xend=perc_rate,
+                   y=converted_pvr-0.01, yend=converted_pvr)) +
+  geom_point(aes(x=perc_rate, y=converted_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+             data= county_barcodes_percCIs, size=4) +
+  geom_text(data=subset(county_barcodes_percCIs, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=perc_rate+0.5, y=converted_pvr-0.01, label=county), hjust="left") +
+  labs(x="Annual Percent Conversion of Ag Land to Development",
+       y="Avg PVR of Converted Land") +
+  scale_color_manual(name="Actor Type", 
+                     values = c("black", viridis::turbo(n=6, direction=-1, begin=0.075, end=0.95)),
+                     limits = c("A1", "A2", "A3", "A4➞A2", "A4", "A5➞A4" ,"A5" )) +
+  scale_shape_manual(name = "Resource Type", values = c(7,17,18,16,15,9),
+                     limits = c("R1", "R2", "R3➞R2", "R3", "R4" ,"R5" )) +
+  theme_bw()
