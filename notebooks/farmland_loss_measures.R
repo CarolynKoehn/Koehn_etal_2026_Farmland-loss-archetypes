@@ -542,13 +542,16 @@ ggplot(aes(x=perc_rate, y=converted_pvr, shape=barcode_R_lab, color = barcode_A_
   geom_text(aes(x=1, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
   geom_segment(data=subset(county_barcodes_percCIs, county %in% c("Teton", "Canyon", "Twin Falls")), 
                inherit.aes = F,
-               aes(x=perc_rate+0.5, xend=perc_rate,
+               aes(x=perc_rate+0.05, xend=perc_rate,
                    y=converted_pvr-0.01, yend=converted_pvr)) +
+  geom_segment(aes(x=perc_rate_CIlow, xend=perc_rate_CIhigh,
+                   y=converted_pvr, yend=converted_pvr),
+             data= county_barcodes_percCIs) +
   geom_point(aes(x=perc_rate, y=converted_pvr, shape=barcode_R_lab, color = barcode_A_lab),
              data= county_barcodes_percCIs, size=4) +
   geom_text(data=subset(county_barcodes_percCIs, county %in% c("Teton", "Canyon", "Twin Falls")), 
             inherit.aes = F,
-            aes(x=perc_rate+0.5, y=converted_pvr-0.01, label=county), hjust="left") +
+            aes(x=perc_rate+0.05, y=converted_pvr-0.01, label=county), hjust="left") +
   labs(x="Annual Percent Conversion of Ag Land to Development",
        y="Avg PVR of Converted Land") +
   scale_color_manual(name="Actor Type", 
