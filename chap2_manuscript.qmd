@@ -324,7 +324,7 @@ The archetype analysis identified 5 resource clusters. The most influential vari
 ```{r}
 #| label: fig-R-CIs
 #| message: false
-#| fig-cap: "Means and 95% confidence intervals for indicators in each Resource cluster. If the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Means and 95% confidence intervals for indicators in each Resource cluster. If the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black. For unscaled means and CIs, see Table B[-@supptblb-modelCIs-R]."
 #| fig-height: 8.5
 #| fig-width: 8
   
@@ -380,7 +380,7 @@ The archetype analysis identified 5 actor clusters. The most influential variabl
 ```{r}
 #| label: fig-A-CIs
 #| message: false
-#| fig-cap: "Means and 95% confidence intervals for indicators in each Actor cluster. If the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black."
+#| fig-cap: "Means and 95% confidence intervals for indicators in each Actor cluster. If the confidence interval contains 0, the variable mean is not significantly different ($p>0.05$) than the overall mean across the study area (the Snake River Plain) and time period (1990-2020). These variables are shown in gray. Variables with significantly different means, suggesting that they are distinctive characteristics of that cluster, are shown in black. For unscaled means and CIs, see Table B[-@supptblb-modelCIs-A]."
 #| fig-height: 6
 #| fig-width: 7.5
 
@@ -1288,6 +1288,72 @@ We used dimension reduction to maximally separate clusters, which is similar to 
 
 :::
 
+\newpage
+
+```{r}
+#| label: "calculate unscaled model means and CIs - resource"
+
+unscale_key <- clust_dat$Resource %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Resource$indicator,
+                                  labels = rel_inf$Resource$pretty_label)) %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE))
+
+CIs_unscaled <- ci_clust$Resource %>%
+  mutate(cluster = factor(cluster,
+                          levels = c("R1", "R5", "R4", "R2", "R3"),
+                          labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Resource$indicator,
+                                  labels = rel_inf$Resource$pretty_label)) %>%
+  left_join(unscale_key, join_by(input_data_name), suffix=c(".sc", ".key")) %>%
+  mutate(mean.unsc = mean.sc*(max-min) + mean.key,
+         CIlow.unsc = `X2.5.`*(max-min) + mean.key,
+         CIhigh.unsc = `X97.5.`*(max-min) + mean.key) %>%
+  select(cluster, input_data_name, mean.unsc, CIlow.unsc, CIhigh.unsc)
+
+CIs_table <- CIs_unscaled %>%
+  mutate(mean.unsc = ifelse(mean.unsc>9999, 
+                            trunc(mean.unsc), 
+                            signif(mean.unsc, 3)),
+         CIlow.unsc = ifelse(CIlow.unsc>9999, 
+                            trunc(CIlow.unsc), 
+                            signif(CIlow.unsc, 3)),
+         CIhigh.unsc = ifelse(CIhigh.unsc>9999, 
+                            trunc(CIhigh.unsc), 
+                            signif(CIhigh.unsc, 3))) %>%
+  mutate(cell_val = paste0(mean.unsc, " (", CIlow.unsc, ", ", CIhigh.unsc, ")")) %>%
+  select(cluster, input_data_name, cell_val) %>%
+  arrange(cluster,desc(input_data_name)) %>%
+  pivot_wider(id_cols = input_data_name,
+              names_from = cluster,
+              values_from = cell_val) %>%
+  column_to_rownames(var = "input_data_name")
+
+rownames_w_units <- paste(rownames(CIs_table),
+                          c("(%)", "(houses/km$^2$)", "", "(%)", "", "(%)", "(%)", "(farms/km$^2$)", "(km)", "(\\$USD)", "(%)", "(km/km$^2$)", "(km$^2$)", "", "(%)", "(per 1000 residents)", "(%)", "($^{\\circ}$)", "(%)", "(%)", "(per 1000 residents)"))
+
+rownames(CIs_table) <- rownames_w_units
+```
+
+
+::: {#supptblb-modelCIs-R}
+
+```{r}
+knitr::kable(CIs_table)
+```
+
+Means and 95% confidence intervals for each variable and cluster in the resource model.
+
+:::
+
 ::: {#suppfigb-R-ranges}
 
 ```{r}
@@ -1866,6 +1932,72 @@ read.csv("data/model results/drmod_actors.csv") %>%
 ```
 
 we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Then, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
+
+:::
+
+\newpage
+
+```{r}
+#| label: "calculate unscaled model means and CIs - actors"
+
+unscale_key <- clust_dat$Actors %>%
+  st_drop_geometry() %>%
+  pivot_longer(!c(county, year, cluster, GEOID),
+               names_to = "input_data_name",
+               values_to = "input_data_value") %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Actors$indicator,
+                                  labels = rel_inf$Actors$pretty_label)) %>%
+  group_by(input_data_name) %>%
+  summarise(mean = mean(input_data_value, na.rm=TRUE),
+            min = min(input_data_value, na.rm=TRUE),
+            max = max(input_data_value, na.rm=TRUE))
+
+CIs_unscaled <- ci_clust$Actors %>%
+  mutate(cluster = factor(cluster,
+                          levels = c("A1", "A2", "A5", "A3", "A4"),
+                          labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Actors$indicator,
+                                  labels = rel_inf$Actors$pretty_label)) %>%
+  left_join(unscale_key, join_by(input_data_name), suffix=c(".sc", ".key")) %>%
+  mutate(mean.unsc = mean.sc*(max-min) + mean.key,
+         CIlow.unsc = `X2.5.`*(max-min) + mean.key,
+         CIhigh.unsc = `X97.5.`*(max-min) + mean.key) %>%
+  select(cluster, input_data_name, mean.unsc, CIlow.unsc, CIhigh.unsc)
+
+CIs_table <- CIs_unscaled %>%
+  mutate(mean.unsc = ifelse(mean.unsc>9999, 
+                            trunc(mean.unsc), 
+                            signif(mean.unsc, 3)),
+         CIlow.unsc = ifelse(CIlow.unsc>9999, 
+                            trunc(CIlow.unsc), 
+                            signif(CIlow.unsc, 3)),
+         CIhigh.unsc = ifelse(CIhigh.unsc>9999, 
+                            trunc(CIhigh.unsc), 
+                            signif(CIhigh.unsc, 3))) %>%
+  mutate(cell_val = paste0(mean.unsc, " (", CIlow.unsc, ", ", CIhigh.unsc, ")")) %>%
+  select(cluster, input_data_name, cell_val) %>%
+  arrange(cluster,desc(input_data_name)) %>%
+  pivot_wider(id_cols = input_data_name,
+              names_from = cluster,
+              values_from = cell_val) %>%
+  column_to_rownames(var = "input_data_name")
+
+rownames_w_units <- paste(rownames(CIs_table),
+                          c("(persons/km$^2$)", "", "", "(total)", "", "", "", "", "(%)", "(%)", "(%)"))
+
+rownames(CIs_table) <- rownames_w_units
+```
+
+
+::: {#supptblb-modelCIs-A}
+
+```{r}
+knitr::kable(CIs_table)
+```
+
+Means and 95% confidence intervals for each variable and cluster in the actor model.
 
 :::
 
