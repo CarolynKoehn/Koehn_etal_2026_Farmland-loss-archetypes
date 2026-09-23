@@ -882,7 +882,7 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Population change {#sec-pop-change-methods}
 
-Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $ (population_{1990} - population_{1980}) / population_{1980} $.
+Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $(population_{1990} - population_{1980}) / population_{1980}$.
 
 #### Percent employed in different industries {#sec-employ-indust-methods}
 
@@ -899,7 +899,7 @@ The County Business Patterns data does not include public sector employees or ag
 
 We used data from the Quarterly Census of Employment and Wages [@qcew] to quantify employees of the state or federal government residing in each county. 
 
-Finally, we added producer counts from the Census of Agriculture using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022 since the County Business Patterns data did not include agricultural production. In 2022, the Census of Agriculture began reporting on the total number of producers rather than the number of principal operators. This resulted in slightly inflated counts of farmers in 2022. We deem this to be more acceptable than fully excluding agricultural producers from employment counts in this context, but caution should be used when interpreting these data in other contexts.
+Finally, we added producer counts from the Census of Agriculture using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs] for 1997-2022 since the County Business Patterns series did not include agricultural production. In 2022, the Census of Agriculture began reporting on the total number of producers rather than the number of principal operators. This resulted in slightly inflated counts of farmers in 2022. We deem this to be more acceptable than fully excluding agricultural producers from employment counts in this context, but caution should be used when interpreting these data in other contexts.
 
 We calculated the percent of workers in each category, then used these data in a principal component analysis. We retained the first three components, which explained 73.1% of the variance.
 
@@ -1259,11 +1259,11 @@ Summary statistics for all study area counties.
 :::
 
 \newpage
-# Appendix B: Cluster Details
-
-Medians and ranges from county data for each archetype, including data indicators that were removed during variable selection, are reported here. For medians and ranges for each data indicator across the study area, see Appendix A.
+# Appendix B: Detailed Clustering Results
 
 ## Resource Archetypes
+
+### Relative influence of variables
 
 ::: {#suppfigb-R-influential}
 
@@ -1289,6 +1289,8 @@ We used dimension reduction to maximally separate clusters, which is similar to 
 :::
 
 \newpage
+
+### Model means and confidence intervals
 
 ```{r}
 #| label: "calculate unscaled model means and CIs - resource"
@@ -1354,6 +1356,14 @@ Means and 95% confidence intervals for each variable and cluster in the resource
 
 :::
 
+\newpage
+
+### Summarized data for all variables in each cluster
+
+\newpage
+
+Medians and ranges from county data for each archetype, including data indicators that were removed during variable selection, are reported here. For medians and ranges for each data indicator across the study area, see Appendix A.
+
 ::: {#suppfigb-R-ranges}
 
 ```{r}
@@ -1417,7 +1427,9 @@ Data spread of all indicators in each resource cluster, including indicators rem
 
 :::
 
-### R1
+\newpage
+
+#### R1
 
 ```{r}
 #| include: false
@@ -1514,7 +1526,7 @@ Summary statistics for counties in archetype R1. Bolded cluster means are signif
 
 \newpage
 
-### R2
+#### R2
 
 ```{r}
 #| include: false
@@ -1613,7 +1625,7 @@ Summary statistics for counties in archetype R2. Bolded cluster means are signif
 
 \newpage
 
-### R3
+#### R3
 
 ```{r}
 #| include: false
@@ -1712,7 +1724,7 @@ Summary statistics for counties in archetype R3. Bolded cluster means are signif
 
 \newpage
 
-### R4
+#### R4
 
 ```{r}
 #| include: false
@@ -1811,7 +1823,7 @@ Summary statistics for counties in archetype R4. Bolded cluster means are signif
 
 \newpage
 
-### R5
+#### R5
 
 ```{r}
 #| include: false
@@ -1908,7 +1920,11 @@ Summary statistics for counties in archetype R5. Bolded cluster means are signif
 
 :::
 
+\newpage
+
 ## Actor Archetypes
+
+### Relative influence of variables
 
 ::: {#suppfigb-A-influential}
 
@@ -1936,6 +1952,8 @@ we used dimension reduction to maximally separate clusters, which is similar to 
 :::
 
 \newpage
+
+### Model means and confidence intervals
 
 ```{r}
 #| label: "calculate unscaled model means and CIs - actors"
@@ -2001,6 +2019,10 @@ Means and 95% confidence intervals for each variable and cluster in the actor mo
 
 :::
 
+\newpage
+
+### Summarized data for all variables in each cluster
+
 ::: {#suppfigb-A-ranges}
 
 ```{r}
@@ -2053,7 +2075,9 @@ Data spread of all indicators in each actors cluster, including indicators remov
 
 :::
 
-### A1
+\newpage
+
+#### A1
 
 ```{r}
 #| include: false
@@ -2171,7 +2195,9 @@ Summary statistics for counties in archetype A1. Bolded cluster means are signif
 
 :::
 
-### A2
+\newpage
+
+#### A2
 
 ```{r}
 #| include: false
@@ -2288,7 +2314,9 @@ Summary statistics for counties in archetype A2. Bolded cluster means are signif
 
 :::
 
-### A3
+\newpage
+
+#### A3
 
 ```{r}
 #| include: false
@@ -2407,7 +2435,9 @@ Summary statistics for counties in archetype A3. Bolded cluster means are signif
 
 :::
 
-### A4
+\newpage
+
+#### A4
 
 ```{r}
 #| include: false
@@ -2526,7 +2556,9 @@ Summary statistics for counties in archetype A4. Bolded cluster means are signif
 
 :::
 
-### A5
+\newpage
+
+#### A5
 
 ```{r}
 #| include: false
