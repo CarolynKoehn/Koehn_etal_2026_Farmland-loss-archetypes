@@ -102,8 +102,6 @@ nassqs_auth(key = Sys.getenv('NASSQS_TOKEN'))
 aoi <- tigris::counties("ID", progress_bar = FALSE) %>%
   select(c("GEOID", "NAME")) %>%
   filter(NAME %in% c("Jefferson", "Gem", "Madison", "Clark", "Jerome", "Bonneville", "Teton", "Power", "Blaine", "Elmore", "Butte", "Adams", "Minidoka", "Bingham", "Ada", "Cassia", "Payette", "Fremont", "Bannock", "Twin Falls", "Owyhee", "Washington", "Gooding", "Lincoln", "Camas", "Canyon"))
-
-# aoi <- st_read("R:/CarolynKoehn/Data_clipped/00_SnakeRiverPlainCounties_StudyArea/SRP_counties_26.shp", quiet=TRUE) %>% select(NAME)
 ```
 
 
@@ -124,26 +122,6 @@ The overarching goal of this research is to identify and describe archetypes, or
 1. Which recurrent combinations of social-ecological indicators, i.e. archetypes, are present in Idaho's Snake River Plain, and how have they changed over time?
 2. What is the relationship between these archetypes and farmland loss?
 3. In what ways do actors in select counties describe drivers of community change, and do these insights validate archetypes indicating urban sprawl, industrialization, or amenity migration?
-
-<!-- 
-
-Cuts:
-
-Even when other pathways to agricultural land loss impact a smaller land area compared to urban sprawl, they can have significant negative impacts on local ecology and crop production [@zhu2022] and social and community well-being [@smith2001].
-
-Across Asia, conversion of agricultural land to industry use precedes urban sprawl or occurs alongside urban sprawl [@azadi2011; @tuyen2013; @zhou2020]. In Europe, a large portion of manufacturing was shifted to rural areas in the late 1970s [@keeble1983], and food manufacturing is an important component of many rural economies [@rizov2011].
-
-I’ve proposed to find these archetypes by using a cluster analysis. Cluster analyses are highly influenced by their data inputs, so it is necessary to justify the decisions to include every data indicator. I will use Ostrom’s social-ecological systems framework [@ostrom2009] to identify a broad and relevant set of data indicators to include in the cluster analysis. I’ll be analyzing the resources units (broadly, the land), resource systems, and actors at the county level.
-
-The localized and overall effects of industrial expansion have not been included in spatial predictions of agricultural lands loss, which are based on population growth models [@xie2023; @chen2020; @haney2015; @meiyappan2014]. It is critical to identify and characterize the distinct pathway of agricultural lands loss via industrial expansion to improve predictions about threatened agricultural lands and identify where different approaches to protected agricultural lands may be effective.
-
-We calculated descriptive metrics for 26 Idaho counties in 1990, 2000, 2010, and 2020 (104 units total) from the US Census, land use/land cover spatial data, and the US Census of Agriculture. 
-
-The three farmland loss pathways described above, urban/suburban sprawl, agricultural industrialization, and amenity migration, are distinct phenomena that require context-specific policies to manage farmland conversion. In the United States, long-term public datasets enable longitudinal studies of land use and demographic change that can construct dynamic archetypes, patterns of social-ecological variables that re-occur across both space and time. The intentional use of public data ensures that this analysis can be implemented across the country.
-
-For example, @magliocca2019 combined a quantitative survival analysis that linked economic, ecological, and agricultural variables with land use change and a qualitative comparative analysis of case studies that linked economic land concessions and socioeconomic consequences to construct 12 multi-component archetypal pathways from economic land concession to either indirect land use change, or the prevention of indirect land use change.
-
--->
 
 # Methods
 
@@ -200,7 +178,6 @@ land_plot <- ggplot(data=lu_df, aes(x=x, y=y, fill=landuse)) +
                          which_north="true",
                          style = north_arrow_orienteering(text_size = 8)) +
   theme_void() +
-  #coord_sf(default_crs=st_crs(landuse_srp), crs=st_crs(landuse_srp)) +
   guides(fill = guide_legend(nrow=5)) +
   theme(legend.position = "bottom",
         legend.title.position = "top")
@@ -238,8 +215,6 @@ layout <- c(
 map_w_counties + guide_area() + inset + inset_us + plot_layout(design=layout, guides="collect")
 ```
 
-
-<!-- COMMENT: study area map needed? if so, what info? -->
 
 The Snake River Plain ecoregion of the US [@ecoregions] intersects with 26 counties in the state of Idaho (109,700 km$^2$, @fig-study-area). It contains  productive croplands [@freedgood2020], localized yet rapidly growing highly developed urban areas [@census_metro], and public rangelands grazed by livestock [@freedgood2020]. This region features two primary ecological zones, the river plain and the shrub steppe, and a diverse range of social systems, from urban and exurban systems to dryland agriculture and rural public lands, that together form a diverse array of social-ecological systems [@aho2022]. 
 
@@ -300,30 +275,6 @@ The social-ecological systems [SES] framework first published in 2007 by Elinor 
 Data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variables associated with these data are Resource System (RS),  Resource Units (RU), and Actors (A). * indicates that principal components were used to reduce dimensions. Refer to Appendix A, sections 1.1 and 1.2 for full methods.
 
 :::
-<!--
-::: {#tbl-datasel-A}
-
-| Second-Tier Variable | Indicator Category / Sector | Indicator | Data Source |
-|--|--|---|---|
-| A1 -- Number of Relevant Actors | All | Population per unit area | US Decennial Census |
-| | | Percent population change (10 year period) | US Decennial Census |
-| A2 -- Socioeconomic Attributes | All | Percent employed in different industries* | CBP, Census of Governments, US Census of Agriculture |
-| | | Percent population 65+ and not in labor force | US Decennial Census |
-| | | Age of population (weighted average) | National Cancer Institute Surveillance, Epidemiology, and End Results Program |
-| | | Median household income | US Decennial Census |
-| | | Unemployment rate | US Bureau of Labor Statistics |
-| | | Percent population with high school, Bachelor's degree | US Decennial Census |
-| | | Racial composition of population* | US Decennial Census |
-| | | Percent population with Hispanic ethnicity | US Decennial Census |
-| | Agriculture | Percent farms full- or part-owned, or tenant operated* | US Census of Agriculture |
-| | | Percent farms with net loss | US Census of Agriculture |
-| | | Number of hired workers | US Census of Agriculture |
-| A4 -- Location | All | Geographical isolation* | IPUMS, US Decennial Census |
-
-Actors data used in the cluster analysis, mapped to relevant tiers in Ostrom's social-ecological framework. The first tier variable associated with these data is Actors. * indicates that principal components were used to reduce dimensions.
-
-:::
--->
 
 ##  Cluster Analysis
 
@@ -349,8 +300,6 @@ In the actors model, the following indicators were redundant: (1) the second pri
 
 To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
-<!-- For identifying most influential, consider methods from Pacheco-Romero, M., Vallejos, M., Paruelo, J. M., Alcaraz-Segura, D., Torres-García, M. T., Salinas-Bonillo, M. J., & Cabello, J. (2022). A data-driven methodological routine to identify key indicators for social-ecological system archetype mapping. Environmental Research Letters, 17(4), 045019. -->
-
 ## Measuring farmland loss
 
 To measure farmland loss, we used Farms Under Threat land use data for 2001 [@theobald2018], which contain agriculture-specific land classes (e.g. cropland, rangeland), and NLCD land use/land cover and impervious descriptor data for 2001 and 2025 [@nlcd12]. We isolated crops, grassland/herbaceous, pasture/hay, forest, and woody wetland areas from the 2001 NLCD data. We filtered the grassland/herbaceous and pasture/hay layers to areas identified as pastureland or rangeland in the 2001 Farms Under Threat land use data in order to separate agricultural grazing land from non-agricultural grasslands. We also filtered the forest and woody wetland layers to areas that were identified as farm-associated woodlands in the 2001 Farms Under Threat data to exclude non-agricultural woodlands and forests. We combined these layers to represent agricultural lands in 2001. Then, we isolated developed areas from the 2025 NLCD data, removing roads using the 2025 NLCD imperviousness descriptor to eliminate the effects of road positioning changes between the two NLCD years. Finally, we extracted the area of 2001 agricultural lands that were classified as developed in 2025 [@anderson2025].
@@ -360,8 +309,6 @@ We measured the average agricultural quality of converted lands using the Produc
 ## Qualitative Analysis
 
 Qualitative data were collected in Idaho's Snake River Plain from 2023 to 2026. Our efforts were concentrated in the Treasure, Magic, and Teton Valleys (western, central, and eastern areas of our study region, respectively), where we identified distinct drivers of farmland loss prior to the creation of the quantitative clusters: urban sprawl in Treasure Valley (Canyon County), agricultural industrialization in Magic Valley (Twin Falls County), and natural amenity migration in Teton Valley (Teton County). Participant recruitment relied on purposive, key-informant, and snowball sampling [@anderson2010]. The research team, working with community collaborators, identified four categories of research respondents: farmer, rancher, decision maker, and policy expert. Sampling continued until responses began to converge, consistent with the concept of saturation [@glaser2017].
-
-<!-- Among farmers of comparable operational scale within the same valley, later interviews increasingly echoed earlier ones in how participants described farmland loss threats and their adaptation strategies, suggesting saturation had been reached.  -->
 
 Data collection combined 39 in-depth, semi-structured interviews with over 200 hours of participant observation across a range of community and industry venues. Interviewees held roles as farmers, ranchers, policy experts, or local and state decision makers, and some participants occupied more than one of these categories at once. To support participant comfort and safety, interview locations were chosen by participants themselves; the large majority (87%) took place in person, with the remainder (13%) conducted via Zoom at participants' request. Interviews lasted between 51 and 196 minutes, averaging 72 minutes.
 
@@ -460,8 +407,6 @@ Characteristic resources of R1 are a higher extent of developed land, higher hou
 #### Cluster R2: Flat lands near urban services and with more agriculture
 
 Cluster R2 has less presence of natural land covers like forest and shrublands, and higher than average cover of cropland and developed land (@fig-R-CIs, @suppfigb-R-ranges). Though there are many rivers, access to other natural amenities such as lakes, forests, and recreation lands are lower (@suppfigb-R-ranges). There is less urban land in these counties, but almost all of their lands are within 30 miles of an urban area (@supptblb-data-r3). On average, over half the lands of these counties are part of farms, but developed land gain is the second highest after R1 (@supptblb-data-r5, @fig-R-CIs). This cluster contains four counties (@fig-cluster-maps).
-
-<!-- Because counties in this archetype have a considerable amount of agricultural lands and are moderately close to cities but do not contain cities themselves, they may be candidates for both agricultural industrialization, or amenity migration for migrants who are specifically seeking a rural agricultural setting. -->
 
 #### Cluster R3: Flat lands moderately near to natural amenities and urban services
 
@@ -684,8 +629,6 @@ ggplot(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A
 
 Between 2001 and 2025, agricultural land conversion generally occurred on lands with higher than average agricultural land quality, according to the Farms Under Threat productivity-versatility-resilience (PVR) index (@fig-resource-actor-combo). The resource-actor combined cluster with the most farmland loss is R1-A1. Farmland loss outcomes in clusters are mediated by both resource and actor archetypes. For example, the highest quality converted farmlands tend to be in R3, but the combined R3-A2 archetype converted a higher percentage of its farmland compared to other R3 counties. In other cases, the archetypes do not fully explain farmland loss outcomes. For example, R4-A5 counties have a fairly large spread of farmland loss and converted farmland quality. Notably, the county that experienced both a resource and actor archetype transition (R3➞R2, A5➞A4) also had a fairly high amount of farmland loss.
 
-<!-- Development outcomes are mediated by both resource and actor archetypes (@fig-resouce-actor-combo). The most development is in R1. In both R2 and R3, actor archetypes A2 (small cities) and A4 (rural counties with more urban influence) had greater gains in developed lands than A3 (small town counties grow as quickly as small cities) and A5 (geographically isolated rural counties with less economic opportunity). In R4, development gains decrease more linearly along the actor archetype gradient of most to least urban. A1 is the actor archetype associated with high population growth and density, yet those actors' impacts on developed land gains are mediated by the resource system. A1 counties are associated with more developed land gain in R1 counties than in the R3-A1 county. -->
-
 ## In what ways do actors in select counties describe drivers of community change, and do these insights validate archetypes indicating urban sprawl, industrialization, or amenity migration? {#sec-qualresults}
 
 For the following results, we combine insights from longitudinal public data used to generate the quantitative archetypes (described in Tables [-@tbl-datasel] and A[-@supptbla-means]) and qualitative data from interviews and participant observations in three key counties in different archetypes.
@@ -701,8 +644,6 @@ While zoning and planning policies could limit development, there has been littl
 ### Agricultural Industrialization in Twin Falls County {#sec-twinfalls}
 
 Twin Falls County is in resource archetype R3 -- flat lands moderately near to natural amenities and urban services -- and actor archetype A2 -- small cities. Farms in Twin Falls County have changed, with a decline in medium-sized farms. In 1992 there were 762 farms between 50-500 acres, while in 2022 there were 351. There was an increase in both small and large farms over the same period, with 1-50 acre farms increasing from 495 to 673 and farms over 2,000 acres increasing from 34 to 46 [@CofAg_1992_landinfarms; @CofAg_quickstats]. Developed land has increased from 3% to 5% of the county [@nlcd11], but agricultural land has declined roughly proportionally; in 2020, there was 3% less cropland and 5% less land in farms compared to 1990 [@nlcd11; @CofAg_1992_landinfarms; @CofAg_quickstats]. The population has increased from 53,580 in 1990 to 90,046 in 2020, yet employment in agriculture has remained around 5% [@cencounts; @decennial_2020; @cbp1997; @cbp2022; @CofAg_quickstats]. Some urban growth is evidenced by expanding service industries, with increasing employment in healthcare and hospitality [@cbp1997; @cbp2022]. The decline in medium-sized farms and of agricultural land, combined with an increase in large farms and the persistence of agriculture as a steady economic driver, suggest agricultural intensification.  Overall, these data indicate that Twin Falls County may be a case of agricultural industrialization fueling modest urban growth. 
-
-<!-- However, should growth persist as our overall actor archetype trajectories suggest, farmland loss in Twin Falls may become uncontrolled and jeopardize the stability and viability of the agribusiness economy driving the county’s economic and demographic change. -->
 
 Interview data in Twin Falls County suggests that agricultural industrialization is perceived to be the main driver of community and land use change. Interview participants observed that agribusinesses are expanding to the point of changing both the physical and socio-cultural landscape of Twin Falls. Physical shifts include an expansion of industrial agricultural facilities. As one resident noted, "Everybody now is within a stone's throw of some dairy facility of some kind." Respondents also discussed the increase in urbanization. This is reflected in the statement from a lifelong resident of the valley and self-identified "farm kid", who noted that "the demographic of Twin Falls has changed from a little tiny cowtown to a pretty urban area."
 
@@ -722,17 +663,11 @@ This amenity migration growth has led to land values skyrocketing. Under these n
 
 ### Implications for policy and planning
 
-<!-- add more citations to this paragraph? -->
 This analysis recontextualizes counties in the study area, linking counties that are spatially separated but that have similar resources and actors. In doing so, it can inform decision making at both state and county levels in two ways. First, the archetypes provide models for how growth might proceed. Counties can look to other counties within their own archetype, as well as in the next most urban archetype to envision possible futures for their counties and decide on interventions to bring about other possible futures [@oberlack2019]. Thus, the second way the archetypes inform decision making is by providing context for adaptations to community change that may bring desirable or undesirable results. For example, Teton and Adams counties are on the far east and west sides of the state, respectively, yet they have the same archetype: R4-A5 (mountain recreation moderately near urban services - rural counties). Based on quantitative and qualitative data for Teton County, we can predict that Adams County may also be experiencing agricultural and community change stemming from population growth. Ongoing qualitative data analysis is revealing that producers and old newcomers are allied in advocating for farmland protection in Teton County. Based on their shared archetype, this alliance for farmland protection may be possible in Adams County as well. A similar comparison process between counties in other shared archetypes may be used to guide policy and planning.
-
-<!-- For example, Twin Falls County and Bingham County are both R2-A2 in 2020 -- small cities with flat land near natural and urban amenities. The archetype shift in Bingham County occurred between 2000-2010, indicating that they will face similar agricultural changes and risks of farmland conversion to Twin Falls, but at a delayed rate. Bingham County may be able to learn from farmland protection interventions in Twin Falls. Unfortunately, our qualitative data suggests that farmland protection has been extremely limited in Twin Falls. Instead of suggesting transferable policies, we propose that Bingham County should consider its possible "no policy implemented" future may look similar to Twin Falls, and decide if they would like to implement policies that guide their county's future in a different direction. Another example is Teton County and Minidoka County, which are both in actor archetype A4 -- rural counties with more urban influence. Though they are in different resource archetypes, they are both dealing with agricultural and community change stemming from population growth. One example of this is new Latter-Day Saints temples under construction or newly completed in counties neighboring both Teton and Minidoka [@brugger2024; @wilt2025]. Ongoing qualitative data analysis is reavealing that producers and old newcomers are allied in advocating for farmland protection in Teton County [@daumale2026]. It is unclear if this alliance arises from Teton's combination of actors and resources, or if it is possible in multiple resource archetypes. If the producer-old newcomer alliance primarily arises from actor type alone, Minidoka County might pursue a similar alliance of farmland protection advocates. -->
 
 ### Archetypes shift in the absence of statewide policy interventions
 
-<!-- more citations? -->
 Absent major policy change applicable to all counties in our study area, counties generally transitioned towards archetypes associated with more urbanicity over time. Rural (that is non-urban, or less densely populated) areas have become increasingly urbanized and metropolitanized over time across the US [@lichter2021], a trend that is evident in Idaho counties with archetype shifts. Archetype trajectories reveal likely future scenarios [@locatelli2017], so we propose that the trajectory towards increased urbanicity can inform proactive policy design that steer counties towards or away from likely futures. Counties that did not shift towards greater urbanicity indicate one of two trajectories: (a) an area with no policy interventions that may shift to a more urban archetype in the future if growth is unchecked, or (b) a county with local policy interventions or farmer adaptations that are successfully controlling urban growth. Counties without an archetype shift may be sources of adaptations that could be successful in similar counties wishing to maintain their current character. Thus, "stable" counties without archetype shifts may be the most fruitful areas for research into successful agricultural adaptation. 
-
-<!--The identification of these "stable" counties requires longitudinally comparable datasets. In this analysis, we've laid the blueprint to use public data in this way for any region in the US.-->
 
 ### Advancing knowledge of farmland conversion processes
 
@@ -743,11 +678,7 @@ Archetype analysis revealed knowledge gaps that can be used for future studies o
 
 R1, the cluster losing the most cropland and land in farms and gaining the most developed land, contains counties that exhibit the traditional patterns of urban sprawl, i.e. Ada and Canyon Counties, where Idaho's largest city (Boise) and its metropolitan area are located. However, there is farmland conversion to more highly developed land in all resource archetypes. These outcomes are tied not only to the resource archetype, but also the actor archetype. For example, the highest percentage of farmland conversion in the R3 archetype occurred in A2 counties. Notably, Gem County, which experienced both a resource and actor archetype transition, also had a fairly high amount of farmland loss. This may indicate that archetype transitions, especially resource transitions, are accompanied by farmland conversion, although it is difficult to draw conclusions based on only one case in the study area.
 
-<!-- COMMENT: The purpose of the PP is to connect literature to the Q2 findings, but I'm not super happy with the way it's reading right now. Any suggestions to make this PP stronger are welcome! -->
 The three resource archetypes with the most farmland loss are on flat lands with access to urban amenities (R1, R2, and R3). Flat lands are prime sites for residential and commercial development as well as farming [@halperin2023], which can occur in the contexts of both urban sprawl and agricultural industrialization. However, the R2 archetype may reflect a newer type of political migration with less affluent amenity migrants [@matarrita2025], since it is near to urban areas but has more agriculture compared to R1. R2-A4, which has higher rates of farmland conversion compared to other R2 counties, may be an archetype where this political migration is having the greatest effect on agriculture. Though we found farmland loss and developed land gains were lower in R4 (counties near mountain recreation) compared to flatter lands, our qualitative analysis revealed meaningful community changes, particularly rising land values preventing agricultural persistence. Amenity migration often results in non-farm residential and commercial development that raises land prices and pushes locals to the margins or out of their communities [@abrams2012; @sherman2018].
-
-<!-- Our finding that some actor archetypes have higher rates of development than others, particularly that growing small town counties have lower rates of development than some rural counties in R2 and R3, was more surprising. This finding highlights both the strengths and limitations of the USDA Rural-Urban Commuting Area (RUCA) codes, which we adapted for this analysis and were strong drivers of the actor archetypes. The strength of the RUCA methodology is that the urban population threshold used to distinguish between small town and micropolitan counties is useful for delineating different rates of development in R2 and R3 counties. However, our clustering identified two distinct rural actor archetypes, one of which had higher rates of development (A4) than the other (A5), that are not reflected in the "rural"  RUCA category. -->
-
 
 ## Qualitative data enriches quantitative archetypes
 
@@ -766,68 +697,6 @@ In this analysis, we reveal the spatial and temporal arrangement of different so
 # Conclusions
 
 We used a mixed methods archetypes approach to identify recurring patterns of social-ecological subsystems across space and time in a region of the western US where agricultural lands are at risk of conversion. We identified five resource types and five actor types among the study area counties between 1990 and 2020. Resource archetypes were strongly influenced by housing density and developed land, while actor archetypes were strongly influenced by population density and geographical isolation. We found that multiple archetypes of resource systems were at risk of farmland loss, but these risks were mediated by actor archetypes, with some actor types associated with more development than others. Using qualitative data, we were able to validate some of these archetypes, matching them with cases of urban sprawl, amenity migration, and agricultural industrialization. Resource and actor archetype shifts across the study period revealed a progression by which population growth and urbanization drives counties to transition to more urban archetypes. On a regional scale, this work reveals counties with similar resources and actors, and further qualitative work can reveal farmland protection strategies that these similar counties may successfully share. This work advances archetype analysis by validating quantitative clusters with qualitative interview data and implementing dynamic archetype analysis in a study period with gradual social change instead of more sudden policy change.
-
-<!-- # Main Takeaways / Discussion
-
-## Farmlands are threatened by more than urban growth
-
-R1, the cluster losing the most cropland and land in farms and gaining the most developed land, contains both counties that exhibit the traditional patterns of urban sprawl (i.e. Ada and Canyon counties). However, other archetypes are also losing land in farms and gaining developed land (R2, R3), just at lower rates. Future research should study if these archetypes exhibit any spatial patterns of development that can be used to inform future spatial land use change models, since standard urban growth models are likely a poor fit and would not generate realistic predictions. For example, the Farms Under Theat models have underpredicted farmland loss in Idaho.
-
-## Building block archetypes for the resources and actors of a county as well as its history give us the fuller picture
-
-I'd like to argue that resource archetypes indicate risk of certain causes/phenomena of farmland loss (i.e. urban sprawl, amenity migration, industrialization), and actor archetypes are how we see those phenomena play out. For example, Ada County has both the "risk of urban sprawl" archetype (R1) and the actor archetype that indicates urban sprawl is occurring (A1). On the other hand, Canyon always has the "risk of urban sprawl" archetype (R1) but transitioned to A1 in 2010, indicating the process of urban sprawl spread there between 2000 and 2010. 
-
-Dynamic archetype analysis (finding archetypes through time) is an especially useful tool for considering multifaceted SES dynamics through time. Longitudinally comparable datasets are important for this work, but in this analysis, we've laid the blueprint to use public data in this way for any region in the US.
-
-## Archetype analysis links spatially disparate but thematically similar counties
-
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, the R5 (rural ag as amenity) counties north of the TV and around Jerome are spatially distant but show the same dynamics of migration for the amenity of agriculture (cite relevant studies).
-
-## Building middle range theories
-
-I'm thinking of linking known middle range theories (briefly referred to in my first introduction paragraph) to different archetypes since the aim of archetype analysis is to build toward middle range theory. This could also be done in the case studies section, or perhaps it's too much to take on in a single section of this discussion.
-
--- related to farmland loss in other archetypes beyond urban sprawl
-- build on idea: certain actor archetypes are more likely to fuel non-farm development on croplands
-- Future research should study if these archetypes exhibit any spatial patterns of development that can be used to inform future spatial land use change models, since standard urban growth models are likely a poor fit and would not generate realistic predictions. For example, the Farms Under Theat models have underpredicted farmland loss in Idaho.
-
-Possible references:
-
-P. Meyfroidt, R. Roy Chowdhury, A. de Bremond, E.C. Ellis, K.H. Erb, T. Filatova, R.D. Garrett, J.M. Grove, A. Heinimann, T. Kuemmerle, C.A. Kull, E.F. Lambin, Y. Landon, Y. le Polain De Waroux, P. Messerli, D. Müller, J.Ø. Nielsen, G.D. Peterson, V. Rodriguez García, ..., P.H. Verburg. Middle-range theories of land system change. Global Environmental Change, 53 (2018), pp. 52-67, 10.1016/j.gloenvcha.2018.08.006
-
-J.K. Brueckner, D.A. Fansler. The economics of urban sprawl: Theory and evidence on the spatial size of cities. The Review of Economics and Statistics, 65 (3) (1983), pp. 479-482
-
-Wei, Y. D., & Ewing, R. (2018). Urban expansion, sprawl and inequality. Landscape and urban planning, 177, 259-265.
-
-P. Mieszkowski, E.S. Mills. The causes of metropolitan suburbanization. Journal of Economic Perspectives, 7 (3) (1993), pp. 135-147
-
-## Limitations
-
-Some discussion of using counties as a base spatial unit is warranted, especially because some counties are really big. For example, bifurcated nature of Blaine County, urban sprawl reaching Owyhee masked by lots of public lands
-
-From Gwénaëlle: "the twin falls by the highway is a whole world different than the one south by nevada border, the same goes with jerome - development is only occurring right by the highway - this also explains why owyhee is a tricky county because it's so large and different but still geographically close to the sprawl of the treasure valley - this is where social science can provide nuance and contextualize the similarities and differences"
-
--->
-
-<!--
-
-# Main Takeaways
-
-## Farmlands are threatened by more than urban growth
-
-The original inspiration for this dissertation chapter was the observation that farmland loss prediction models underestimate farmland loss that isn't associated with urban growth. This analysis, and especially archetype R1, show that the average condition for this study area is farmland loss in places without large urban areas.
-
-## Archetype analysis links spatially disparate but thematically similar counties
-
-This analysis recontextualizes counties in the study area, allowing us to link counties that are spatially distant but have similar resources and actors. For example, though Twin Falls is far from Jefferson, both experience similar types of land use change and have the similar types of actors, and thus may borrow successful farmland protection strategies from each other. 
-
-## Resource systems did not transition, even when actors changed. However, A1 actors in particular can lead to within-cluster shifts
-
-Overall, I found that resource archetypes remained stable over this 40 year period while actor archetypes were more likely to change. This is reasonable for two reasons: (1) populations are more mobile than land systems, so it is easier for them to change, and (2) the difference between land systems (e.g. the dry shrublands of Owyhee and the forested recreation lands of Blaine) is greater than the difference between human populations, so it would require a greater change to shift resource archetypes compared to actor archetypes.
-
-The presence of A1 actors (educated, growing, urban population) is associated with changes in resource systems, even if no counties transitioned from one resource archetype to another. Counties with A1 actors tend to accelerate their developed land growth and housing density. However, A1 does not always mean accelerated development, as evidenced by Blaine County, which has had wealthy inhabitants for a long time and has implemented land protections so that their resource system more closely matches more isolated counties.
-
--->
 
 \newpage
 # References {.unnumbered}
@@ -1051,9 +920,7 @@ We then used the urban areas we computed (methods in @sec-urbareas) to designate
 In summary, our geographical isolation dataset contained the percentage of residents in each type of census block (4 categories total, summing to 100% of the population) and the percentage of residents with each commute type (8 categories total, summing to 100% of the population) for each county and year. We simplified these data through principal component analysis, retaining the first three components, which explained 79.1% of the variance.
 
 ## Summary Statistics
-<!--
-### Resources
--->
+
 ```{r}
 #| include: false
 #| label: "R data"
@@ -1165,54 +1032,6 @@ urb_dist_areas_r1 <- read.csv("data/clean_data_for_PCA/urb_dist_areas.csv") %>%
   summarise(urb_cat_perc = sum(perc))
 ```
 
-<!--
-::: {#supptbla-R-data}
-
-| Indicator  | Mean | Median  | Minimum  |  Maximum |
-|----------|---|---|---|---|
-|  Land in farms (% of county land) |  `r round(subset(r1_means, var_name_clean == "Land in Farms")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Land in Farms")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms")$max, 0)`%  |
-|  Cropland (% of county land) |  `r round(subset(r1_means, var_name_clean == "Cropland")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Cropland")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Cropland")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Cropland")$max, 0)`%  |
-|  Forest (% of county land) |  `r round(subset(r1_means, var_name_clean == "Forest")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Forest")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Forest")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Forest")$max, 0)`%  |
-|  Shrubland (% of county land) |  `r round(subset(r1_means, var_name_clean == "Shrubland")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Shrubland")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Shrubland")$max, 0)`%  |
-|  Federal Land (% of county land) |  `r round(subset(r1_means, var_name_clean == "Federal Land")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Federal Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Federal Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Federal Land")$max, 0)`%  |
-|  Total Lake Area |  `r round(subset(r1_means, var_name_clean == "Lake Area")$mean, 0)` km$^2$ | `r round(subset(r1_means, var_name_clean == "Lake Area")$median, 0)` km$^2$  |  `r round(subset(r1_means, var_name_clean == "Lake Area")$min, 0)` km$^2$ | `r round(subset(r1_means, var_name_clean == "Lake Area")$max, 0)` km$^2$  |
-|  Rivers (km per km$^2$) |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$mean, 2)` | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$median, 2)`  |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$min, 2)` | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$max, 2)`  |
-| Urban Area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% | `r round(median(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% | `r round(min(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% | `r round(max(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% |
-| Within 50 mi of an Urban Area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Within 50")$urb_cat_perc), 0)`% | `r round(median(subset(urb_dist_areas_r1, label == "Within 50")$urb_cat_perc), 0)`% | `r round(min(subset(urb_dist_areas_r1, label == "Within 50")$urb_cat_perc), 0)`% | `r round(max(subset(urb_dist_areas_r1, label == "Within 50")$urb_cat_perc), 0)`% |
-| >50 mi away from an Urban Area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Over 50")$urb_cat_perc), 0)`% | `r round(median(subset(urb_dist_areas_r1, label == "Over 50")$urb_cat_perc), 0)`% | `r round(min(subset(urb_dist_areas_r1, label == "Over 50")$urb_cat_perc), 0)`% | `r round(max(subset(urb_dist_areas_r1, label == "Over 50")$urb_cat_perc), 0)`% |
-|  Developed Land (% of county land) |  `r round(subset(r1_means, var_name_clean == "Developed Land")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Developed Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Developed Land")$max, 0)`%  |
-|  Farm Density (farms per km$^2$) |  `r round(subset(r1_means, var_name_clean == "Farm Density")$mean*247.1053814672, 2)` | `r round(subset(r1_means, var_name_clean == "Farm Density")$median*247.1053814672, 2)`  |  `r round(subset(r1_means, var_name_clean == "Farm Density")$min*247.1053814672, 2)` | `r round(subset(r1_means, var_name_clean == "Farm Density")$max*247.1053814672, 2)`  |
-|  Recreation Land (% of county land) |  `r round(subset(r1_means, var_name_clean == "Recreation Land")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Recreation Land")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Recreation Land")$min, 1)`% | `r round(subset(r1_means, var_name_clean == "Recreation Land")$max, 1)`%  |
-|  Distance to a Ski Area |  `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$mean, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$median, 0)` km  |  `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$min, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a Ski Area")$max, 0)` km  |
-|  Distance to a National Park |  `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$mean, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$median, 0)` km  |  `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$min, 0)` km | `r round(subset(r1_means, var_name_clean == "Distance to a National Park")$max, 0)` km  |
-|  Housing Density (houses per km$^2$) |  `r round(subset(r1_means, var_name_clean == "Housing Density")$mean*247.1053814672, 1)` | `r round(subset(r1_means, var_name_clean == "Housing Density")$median*247.1053814672, 1)`  |  `r round(subset(r1_means, var_name_clean == "Housing Density")$min*247.1053814672, 1)` | `r round(subset(r1_means, var_name_clean == "Housing Density")$max*247.1053814672, 1)`  |
-|  Non-Federal Land near Highway (% of county land) |  `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Non-Federal Land near Highway")$max, 0)`%  |
-|  Healthcare workers per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Healthcare Workers")$max, 0)`  |
-|  Change in number of farms (% difference, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$min, 0)`% | +`r round(subset(r1_means, var_name_clean == "Farm Loss/Gain")$max, 0)`%  |
-|  Land in Farms Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$min, 0)`% | +`r round(subset(r1_means, var_name_clean == "Land in Farms Loss/Gain")$max, 0)`%  |
-|  Cropland Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Cropland Loss/Gain")$max, 1)`%  |
-|  Forest Change (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Forest Loss/Gain")$max, 1)`%  |
-|  Shrubland Change (difference in % of county land, 5-yr period) |  `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Shrubland Loss/Gain")$max, 1)`%  |
-|  Developed Land Gain (difference in % of county land, 5-yr period) |  +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$mean, 1)`% | +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land Gain")$min, 1)`% | +`r round(subset(r1_means, var_name_clean == "Developed Land Gain")$max, 1)`%  |
-|  Farms with Net Loss (% of all farms) |  `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Farms with Net Loss")$max, 0)`%  |
-|  Workers supporting agriculture, per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs Supporting Ag")$max, 0)`  |
-|  Hospitality workers per 1000 residents |  `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$mean, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$median, 0)`  |  `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$min, 0)` | `r round(subset(r1_means, var_name_clean == "Jobs in Hospitality")$max, 0)`  |
-|  Median Home Value |  \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$mean, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$median, 0), big.mark=",", trim=TRUE)`  |  \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$min, 0), big.mark=",", trim=TRUE)` | \$`r format(round(subset(r1_means, var_name_clean == "Med Home Value")$max, 0), big.mark=",", trim=TRUE)`  |
-|  Small farms (1-49 acres, % of all farms) |  `r round(mean(farm_sizes_r1$small_farm_perc), 0)`% | `r round(median(farm_sizes_r1$small_farm_perc), 0)`%  |  `r round(min(farm_sizes_r1$small_farm_perc), 0)`% | `r round(max(farm_sizes_r1$small_farm_perc), 0)`%  |
-|  Mid-size farms (50-499 acres, % of all farms) |  `r round(mean(farm_sizes_r1$med_farm_perc), 0)`% | `r round(median(farm_sizes_r1$med_farm_perc), 0)`%  |  `r round(min(farm_sizes_r1$med_farm_perc), 0)`% | `r round(max(farm_sizes_r1$med_farm_perc), 0)`%  |
-|  Large farms (500+ acres, % of all farms) |  `r round(mean(farm_sizes_r1$large_farm_perc), 0)`% | `r round(median(farm_sizes_r1$large_farm_perc), 0)`%  |  `r round(min(farm_sizes_r1$large_farm_perc), 0)`% | `r round(max(farm_sizes_r1$large_farm_perc), 0)`%  |
-|  Average Slope |  `r round(subset(r1_means, var_name_clean == "Average Slope")$mean, 0)`$^{\circ}$ | `r round(subset(r1_means, var_name_clean == "Average Slope")$median, 0)`$^{\circ}$  |  `r round(subset(r1_means, var_name_clean == "Average Slope")$min, 0)`$^{\circ}$ | `r round(subset(r1_means, var_name_clean == "Average Slope")$max, 0)`$^{\circ}$  |
-
-
-Resource summary statistics for all counties.
-
-:::
-
-
-
-### Actors
-
--->
 
 ```{r}
 #| include: false
