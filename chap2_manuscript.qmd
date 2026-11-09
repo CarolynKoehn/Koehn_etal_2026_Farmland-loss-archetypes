@@ -91,6 +91,7 @@ library(patchwork)
 library(rnassqs)
 library(ggpattern)
 library(ggbreak)
+library(ggspatial)
 
 # set API keys
 readRenviron(".Renviron")
@@ -147,6 +148,96 @@ For example, @magliocca2019 combined a quantitative survival analysis that linke
 # Methods
 
 ## Study Area
+
+```{r}
+#| label: "study area map setup"
+#| warning: false
+
+landuse <- rast("/vsizip/data/raw_data/NLCD_LndCov_1985-2020.zip/Annual_NLCD_LndCov_2020_CU_C1V0_EDC63W7ICIT4U7N2fz8S.tiff")
+
+template <- rast(st_transform(aoi, st_crs(landuse)), 
+                 resolution=units::as_units(1000, "m"))
+
+landuse_srp <- project(landuse, template, method="mode")
+landuse_srp <- mask(landuse_srp, st_transform(aoi, st_crs(landuse_srp)))
+
+land_use_cats <- data.frame(value=c(11, 21, 22, 23, 24, 31, 41, 42, 52, 71, 81, 82, 90, 95),
+                            class=c("Open water", "Developed, open space", "Developed, low intensity", "Developed, medium intensity", "Developed high intensity", "Barren land", "Deciduous forest", "Evergreen forest", "Shrub/Scrub", "Grassland/Herbaceous", "Pasture/Hay", "Cultivated Crops", "Woody Wetlands", "Emergent Herbaceous Wetlands"),
+                            color=c("#466b9f","#dec5c5","#d99282","#eb0000","#ab0000","#b3ac9f","#68ab5f","#1c5f2c","#ccb879","#dfdfc2","#dcd939","#ab6c28","#b8d9eb","#6c9fb8"))
+
+# as categorical raster
+levels(landuse_srp) <- data.frame(ID=land_use_cats$value,
+                          landuse=land_use_cats$class)
+coltab(landuse_srp) <- data.frame(ID=land_use_cats$value,
+                            color=land_use_cats$color)
+
+idaho <- tigris::states() %>%
+  filter(NAME == "Idaho") %>%
+  st_transform(st_crs(landuse_srp))
+
+inset <- ggplot(idaho) +
+  geom_sf(fill="white") +
+  geom_sf(data=st_union(aoi), fill="gray") +
+  theme_void()
+inset_us <- tigris::states() %>% 
+  filter(!(STUSPS %in% c("HI", "AK", "VI", "MP", "GU", "AS", "PR"))) %>%
+  st_union(.) %>%
+  st_transform(st_crs(landuse_srp)) %>%
+  ggplot() +
+  geom_sf(fill="white") +
+  geom_sf(data=idaho, fill="gray") +
+  theme_void()
+
+lu_df <- as.data.frame(landuse_srp, xy=TRUE)
+
+land_plot <- ggplot(data=lu_df, aes(x=x, y=y, fill=landuse)) +
+  geom_raster() +
+  scale_fill_manual(values=land_use_cats$color, name="Land Use/Land Cover",
+                    labels=c(land_use_cats$class)) +
+  annotation_scale() +
+  annotation_north_arrow(height=unit(0.55, "cm"), width=unit(0.55, "cm"),
+                         pad_y = unit(0.7, "cm"),
+                         which_north="true",
+                         style = north_arrow_orienteering(text_size = 8)) +
+  theme_void() +
+  #coord_sf(default_crs=st_crs(landuse_srp), crs=st_crs(landuse_srp)) +
+  guides(fill = guide_legend(nrow=5)) +
+  theme(legend.position = "bottom",
+        legend.title.position = "top")
+
+map_w_counties <- land_plot +
+  geom_sf(data=st_transform(aoi, st_crs(landuse_srp)), 
+          fill=NA, linewidth=1, inherit.aes=FALSE) +
+  geom_segment(aes(x=-1540000, y=2240000, xend=-1518043, yend=2300228),
+               linewidth=1) +
+  annotate("label", x=-1540000, 2240000, label="Twin Falls", fill="white") +
+  geom_segment(aes(x=-1720000, y=2510000, xend=-1650945, yend=2473069),
+               linewidth=1) +
+  annotate("label", x=-1720000, 2510000, label="Canyon", fill="white") +
+  geom_segment(aes(x=-1165000, y=2390000, xend=-1214418, yend=2404842),
+               linewidth=1) +
+  annotate("label", x=-1165000, 2390000, label="Teton", fill="white") +
+  coord_sf(xlim = c(-1715664-15000, -1189292+30000),
+           ylim = c(2235470-10000, 2651393+10000))
+
+```
+
+```{r}
+#| label: fig-study-area
+#| fig-height: 6
+#| fig-width: 8.5
+#| fig-cap: "Land use and counties with qualitative data in Idaho's Snake River Plain"
+
+layout <- c(
+  patchwork::area(t = 1, l = 1, b = 6, r = 4),
+  patchwork::area(t = 7, l = 1, b = 9, r = 4),
+  patchwork::area(t = 3, l = 4, b = 4, r = 4),
+  patchwork::area(t = 6, l = 4, b = 7, r = 4)
+)
+
+map_w_counties + guide_area() + inset + inset_us + plot_layout(design=layout, guides="collect")
+```
+
 
 <!-- COMMENT: study area map needed? if so, what info? -->
 
@@ -662,7 +753,7 @@ The three resource archetypes with the most farmland loss are on flat lands with
 
 Qualitative data enhances archetype analysis by providing further context and validation of our findings. A limitation of the data driven archetypes is their failure to detect changes in counties without archetype shifts. Our quantitative actor archetypes were designed to reflect community change, but they are strongly tied to data on metropolitan, micropolitan, small town, and rural census blocks, determined by population and housing density thresholds [@ruca]. When urban areas in a county remain between these thresholds, changes in its actors are not as easily detected. Twin Falls is one county that did not shift in its actor archetype, yet interview data revealed community changes while at the same time affirming its unchanged economic reliance on agriculture. Our qualitative findings underscore the need to consider change even in places that did not shift archetypes through time.
 
-In the expanding field of archetype analysis for sustainability science, there has been a need to establish methods for archetype validation. Robust archetypes require both internal validation to demonstrate that cases in each archetype are indeed more similar to each other than to other cases and external validation to demonstrate the extent to which the archetypes are applicable outside the study [@eisenack2019; @piemontese2022]. We contend that qualitative methodologies are useful for both types of validation. In this study, we used data from semi-structured interviews for limited internal validation. These data build a fuller picture of community change in these archetypes than could be constructed with quantitative data alone. These case studies could be expanded to further develop archetype analysis by using qualitative methods in multiple cases of each archetype to reveal nuanced similarities and differences in outcomes and social-ecological attributes between cases. Qualitative methods can also be used for external validation when a rich literature of case studies exists for similar phenomena outside the study area. For example, amenity migration in the western US is a well studied phenomenon in rural sociology. Based on numerous case studies, we believe the R4 archetype is valid in areas near amenity-based communities across the western US [@sherman2018; @abrams2013]. Linking quantitative data, qualitative data, and published case studies of amenity migration in future research could validate the total extent of the "mountain recreation moderately near urban services" (R4) archetype.
+In the expanding field of archetype analysis for sustainability science, there has been a need to establish methods for archetype validation. Robust archetypes require both internal validation to demonstrate that cases in each archetype are indeed more similar to each other than to other cases and external validation to demonstrate the extent to which the archetypes are applicable outside the study [@eisenack2019; @piemontese2022]. We contend that qualitative methodologies are useful for both types of validation. In this study, we performed internal validation with quantitative methods (AIC) and qualitative methods (interview data). The qualitative data build a fuller picture of community change in these archetypes than could be constructed with quantitative data alone. These case studies could be expanded to further develop archetype analysis by using qualitative methods in multiple cases of each archetype to reveal nuanced similarities and differences in outcomes and social-ecological attributes between cases. Qualitative methods can also be used for external validation when a rich literature of case studies exists for similar phenomena outside the study area. For example, amenity migration in the western US is a well studied phenomenon in rural sociology. Based on numerous case studies, we believe the R4 archetype is valid in areas near amenity-based communities across the western US [@sherman2018; @abrams2013]. Linking quantitative data, qualitative data, and published case studies of amenity migration in future research could validate the total extent of the "mountain recreation moderately near urban services" (R4) archetype.
 
 ## Limitations
 
