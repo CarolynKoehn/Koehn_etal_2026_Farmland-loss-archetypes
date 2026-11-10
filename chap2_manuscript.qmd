@@ -76,8 +76,8 @@ date: last-modified
 number-sections: true
 ---
 
-<!-- after render: (1) resize landscape figure, (2) appendix numbering, (3) table lines, (4) text box under Fig 4? 
-Word count: 8800 + 1800 (tables, figs) + 2099 (~85 references)-->
+<!-- after render: (1) resize landscape figure, (2) appendix numbering, (3) table lines, (4) separate appendices
+Word count: 7748 + 1800 (tables, figs) + 1698 (~63 references)-->
 
 ```{r}
 #| label: setup
