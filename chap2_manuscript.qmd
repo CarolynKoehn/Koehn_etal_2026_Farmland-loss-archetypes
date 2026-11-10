@@ -208,8 +208,8 @@ map_w_counties <- land_plot +
 layout <- c(
   patchwork::area(t = 1, l = 1, b = 6, r = 4),
   patchwork::area(t = 7, l = 1, b = 9, r = 4),
-  patchwork::area(t = 3, l = 4, b = 4, r = 4),
-  patchwork::area(t = 6, l = 4, b = 7, r = 4)
+  patchwork::area(t = 1, l = 2, b = 2, r = 3),
+  patchwork::area(t = 1, l = 3, b = 2, r = 4)
 )
 
 map_w_counties + guide_area() + inset + inset_us + plot_layout(design=layout, guides="collect")
