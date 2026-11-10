@@ -139,14 +139,19 @@ template <- rast(st_transform(aoi, st_crs(landuse)),
 landuse_srp <- project(landuse, template, method="mode")
 landuse_srp <- mask(landuse_srp, st_transform(aoi, st_crs(landuse_srp)))
 
-land_use_cats <- data.frame(value=c(11, 21, 22, 23, 24, 31, 41, 42, 52, 71, 81, 82, 90, 95),
-                            class=c("Open water", "Developed, open space", "Developed, low intensity", "Developed, medium intensity", "Developed high intensity", "Barren land", "Deciduous forest", "Evergreen forest", "Shrub/Scrub", "Grassland/Herbaceous", "Pasture/Hay", "Cultivated Crops", "Woody Wetlands", "Emergent Herbaceous Wetlands"),
-                            color=c("#466b9f","#dec5c5","#d99282","#eb0000","#ab0000","#b3ac9f","#68ab5f","#1c5f2c","#ccb879","#dfdfc2","#dcd939","#ab6c28","#b8d9eb","#6c9fb8"))
+lu_rc <- ifel(landuse_srp %in% c(21,22,23,24), 20, landuse_srp)
+lu_rc <- ifel(lu_rc %in% c(81, 82), 80, lu_rc)
+lu_rc <- ifel(lu_rc %in% c(41, 42), 40, lu_rc)
+lu_rc <- ifel(lu_rc == 95, 90, lu_rc)
+
+land_use_cats <- data.frame(value=c(11, 20, 31, 40, 52, 71, 80, 90),
+                            class=c("Open water", "Developed", "Barren land", "Forest", "Shrub/Scrub", "Grassland/Herbaceous", "Cropland", "Wetlands"),
+                            color=c("#466b9f","#ab0000","#b3ac9f","#1c5f2c","#ccb879","#dfdfc2","#B5822B","#b8d9eb"))
 
 # as categorical raster
-levels(landuse_srp) <- data.frame(ID=land_use_cats$value,
+levels(lu_rc) <- data.frame(ID=land_use_cats$value,
                           landuse=land_use_cats$class)
-coltab(landuse_srp) <- data.frame(ID=land_use_cats$value,
+coltab(lu_rc) <- data.frame(ID=land_use_cats$value,
                             color=land_use_cats$color)
 
 idaho <- tigris::states() %>%
@@ -166,21 +171,24 @@ inset_us <- tigris::states() %>%
   geom_sf(data=idaho, fill="gray") +
   theme_void()
 
-lu_df <- as.data.frame(landuse_srp, xy=TRUE)
+lu_df <- as.data.frame(lu_rc, xy=TRUE)
 
 land_plot <- ggplot(data=lu_df, aes(x=x, y=y, fill=landuse)) +
   geom_raster() +
-  scale_fill_manual(values=land_use_cats$color, name="Land Use/Land Cover",
-                    labels=c(land_use_cats$class)) +
+  scale_fill_manual(limits=land_use_cats$class[c(5,6,7,4,2,3,1,8)],
+                    values=land_use_cats$color[c(5,6,7,4,2,3,1,8)],
+                    labels=c(land_use_cats$class[c(5,6,7,4,2,3,1,8)]), 
+                    name="Land Use/Land Cover") +
   annotation_scale() +
   annotation_north_arrow(height=unit(0.55, "cm"), width=unit(0.55, "cm"),
                          pad_y = unit(0.7, "cm"),
                          which_north="true",
                          style = north_arrow_orienteering(text_size = 8)) +
   theme_void() +
-  guides(fill = guide_legend(nrow=5)) +
+  guides(fill = guide_legend(ncol=4)) +
   theme(legend.position = "bottom",
-        legend.title.position = "top")
+        legend.title.position = "top",
+        legend.key.spacing.x = unit(15,"pt"))
 
 map_w_counties <- land_plot +
   geom_sf(data=st_transform(aoi, st_crs(landuse_srp)), 
@@ -207,7 +215,7 @@ map_w_counties <- land_plot +
 
 layout <- c(
   patchwork::area(t = 1, l = 1, b = 6, r = 4),
-  patchwork::area(t = 7, l = 1, b = 9, r = 4),
+  patchwork::area(t = 7, l = 1, b = 8, r = 4),
   patchwork::area(t = 1, l = 2, b = 2, r = 3),
   patchwork::area(t = 1, l = 3, b = 2, r = 4)
 )
