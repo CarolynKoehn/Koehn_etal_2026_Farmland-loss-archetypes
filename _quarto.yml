@@ -18,6 +18,7 @@ citeproc: false
 bibliography: 
   main: chap2.bib
   data: chap2_data.bib
+  clustering: chap2_clustering.bib
 csl: elsevier-harvard-modified.csl
 
 format:
