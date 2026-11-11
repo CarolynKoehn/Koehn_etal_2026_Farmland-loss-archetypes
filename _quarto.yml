@@ -2,7 +2,7 @@ project:
   type: manuscript
   
 manuscript: 
-  article: chap2_manuscript.qmd
+  article: Koehn_etal_2026_Farmland loss archetypes.qmd
 
 notebook-links: false
 
@@ -16,9 +16,9 @@ validate-yaml: false
 citeproc: false
   
 bibliography: 
-  main: chap2.bib
-  data: chap2_data.bib
-  clustering: chap2_clustering.bib
+  main: Koehn_etal_2026.bib
+  data: Koehn_etal_2026_data.bib
+  clustering: Koehn_etal_2026_clustering.bib
 csl: apa.csl
 
 format:
