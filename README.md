@@ -2,7 +2,7 @@ This repository contains the underlying code to generate a pre-print of the manu
 
 # Generating the pre-print
 
-The Quarto manuscript to generate the pre-print is [`Koehn_etal_2026_Farmland loss archetypes.qmd`](https://github.com/CarolynKoehn/Koehn_etal_2025_Key-targets-for-conservation-planning/blob/main/Koehn_etal_2026_Farmland%20loss%20archetypes.qmd). Open this file in RStudio and select `Render` to generate the pre-print as a `.docx` file.
+The Quarto manuscript to generate the pre-print is [`Koehn_etal_2026_Farmland loss archetypes.qmd`](https://github.com/CarolynKoehn/Koehn_etal_2026_Farmland-loss-archetypes/blob/main/Koehn_etal_2026_Farmland%20loss%20archetypes.qmd). Open this file in RStudio and select `Render` to generate the pre-print as a `.docx` file.
 
 # Data and Code
 
