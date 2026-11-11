@@ -292,7 +292,7 @@ We fit two separate Gaussian mixture models, one with the resource variables and
 
 While all of our chosen indicators convey important information about an agricultural social-ecological system, we decided to remove redundant indicators in order to test more clustering configurations. We identified redundant indicators using a stepwise greedy search, beginning with the full set of variables (@tbl-datasel), testing the exclusion of each indicator individually, dropping the single most redundant variable, and repeating with the remaining indicators until all indicators were identified as useful for clustering. See Appendix B for details on removed indicators and full clustering methods.
 
-To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
+To determine the most influential variables in each model, we used dimension reduction to maximally separate clusters, similar to principal component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. We used this value to identify the variables that were most important for creating the most separated clusters.
 
 ## Measuring farmland loss
 
@@ -821,13 +821,13 @@ Farms with net loss and total farms data for 2002-2022 are available in the Cens
 
 We used imputed values for private sector agriculture support workers for 1992-2012 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded data for private sector agriculture support workers for 2022 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used the following NAICS codes: 1151 (Support Activities for Crop Production) and 1152 (Support Activities for Animal Production). 
 
-We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
+We also downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of agriculture support workers by the total population count in each county and year.
 
 #### Hotel and restaurant jobs {#sec-hospitality-jobs-methods}
 
-We used imputed values for accomodation and food service workers for 1990-2010 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded data for accomodation and food service workers for 2020 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used NAICS code 72 (Accommodation and Food Services).
+We used imputed values for accommodation and food service workers for 1990-2010 from the County Business Patterns series from the U.S. Census Bureau [@eckert2021]. We downloaded data for accommodation and food service workers for 2020 from the County Business Patterns series from the U.S. Census Bureau [@cbp2022] using the `censusapi` package [v0.9.0, @censusapi]. We used NAICS code 72 (Accommodation and Food Services).
 
 Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We divided the total number of hospitality workers by the total population count in each county and year.
 
@@ -847,7 +847,7 @@ Population counts for each county for 2000-2020 were downloaded via the Census A
 
 #### Population change {#sec-pop-change-methods}
 
-Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10 year period; for example: $(population_{1990} - population_{1980}) / population_{1980}$.
+Population counts for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1980-1990 were downloaded from the National Bureau of Economic Research [@cencounts]. We used the percent different of population over a 10-year period; for example: $(population_{1990} - population_{1980}) / population_{1980}$.
 
 #### Percent employed in different industries {#sec-employ-indust-methods}
 
@@ -878,7 +878,7 @@ Data on the weighted average age of residents in each county from 1969-2023 were
 
 #### Median household income {#sec-avg-income-methods}
 
-Data for the median household income in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from from Table 148 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for all items in the Western US (series ID CUUR0400SA0) in December of each year [@cpiu_all].
+Data for the median household income in each county for 2000-2020 was downloaded via the Census API [@decennial_2000; @acs2010; @acs2020] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 148 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofHous_1990]. We adjusted for inflation by converting all dollar amounts to 2020 US dollars using the consumer price indices for all items in the Western US (series ID CUUR0400SA0) in December of each year [@cpiu_all].
 
 #### Unemployment rate {#sec-unemployment-methods}
 
@@ -890,7 +890,7 @@ Data for educational attainment for adults >25 in each county for 2000-2020 was 
 
 #### Racial composition {#sec-race-methods}
 
-Population counts for each race used by the US Census for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020_dhc] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. We simplified these data with principle component analysis, retaining the first component which explained 95.3% of the variance.
+Population counts for each race used by the US Census for each county for 2000-2020 were downloaded via the Census API [@decennial_2000; @decennial_2010; @decennial_2020_dhc] using the `tidycensus` package [v1.6.3, @tidycensus]. Data for 1990 were digitized from Table 6 of the 1990 Census of Population for Idaho [1990 CP-2-14, @CofPop_1990]. We simplified these data with principal component analysis, retaining the first component which explained 95.3% of the variance.
 
 #### Hispanic ethnicity {#sec-ethnicity-methods}
 
@@ -902,13 +902,13 @@ Number of farms in each tenure class (full-owned, part-owned, and tenant) and to
 
 #### Number of hired agricultural workers {#sec-hired-workers-methods}
 
-We downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
+We downloaded the number of hired workers from the Census of Agriculture for 2002-2022 using the USDA NASS API [@CofAg_quickstats] with R package `rnassqs` [v0.6.1, @rnassqs]. Data for 1992 were digitized from the Census of Agriculture Historical Archive, 1992, Idaho, Chapter 2, Table 5 [@CofAg_1992_hiredlabor].
 
 #### Geographical isolation {#sec-isolation-methods}
 
 We calculated a custom county-level proxy for the Rural-Urban Commuting Area [RUCA] codes [@ruca] that could be compared across time. First, we calculated the percentage of county residents living in metropolitan (within an urban area with population >50,000), micropolitan (within an urban area with population 10,000-49,999), small town (within an urban area with population <9,999), or rural (not within an urban area) census blocks (methods for urban area designation in @sec-urbareas).
 
-We then used the urban areas we computed (methods in @sec-urbareas) to designate counties commuted to as metropolitan (contain an urban area with population >50,000), micropolitan (largest urban area has population 10,000-49,999), small town (largest urban area has population <9,999), or rural (no urban area). Then, we used county-to-county commuting flow data [@commute1990; @commute2000; @commute2010; @commute2020] to calculate how many workers from each county commuted to six types of counties: metropolitan, micropolitan, small town, rural, >150 mile commute, or work and live in the same county. We also created two categories for residents of a metropolitan county who commuted to a county with a larger or smaller metropolitan area (by population size). 
+We then used the urban areas we computed (methods in @sec-urbareas) to designate counties commuted to as metropolitan (contain an urban area with population >50,000), micropolitan (largest urban area has population 10,000-49,999), small town (largest urban area has population <9,999), or rural (no urban area). Then, we used county-to-county commuting flow data [@commute1990; @commute2000; @commute2010; @commute2020] to calculate how many workers from each county commuted to six types of counties: metropolitan, micropolitan, small town, rural, >150-mile commute, or work and live in the same county. We also created two categories for residents of a metropolitan county who commuted to a county with a larger or smaller metropolitan area (by population size). 
 
 In summary, our geographical isolation dataset contained the percentage of residents in each type of census block (4 categories total, summing to 100% of the population) and the percentage of residents with each commute type (8 categories total, summing to 100% of the population) for each county and year. We simplified these data through principal component analysis, retaining the first three components, which explained 79.1% of the variance.
 
@@ -1094,7 +1094,7 @@ urb_a1 <- read.csv("data/clean_data_for_PCA/urbs_plus_commutes.csv") %>%
 |  RS3 - River length (km/km$^2$) |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$mean, 2)` | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$median, 2)`  |  `r round(subset(r1_means, var_name_clean == "Length of Rivers")$min, 2)` | `r round(subset(r1_means, var_name_clean == "Length of Rivers")$max, 2)`  |
 | RS3 - Urban area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% | `r round(median(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% | `r round(min(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% | `r round(max(subset(urb_dist_areas_r1, label == "Urban")$urb_cat_perc), 1)`% |
 | RS3 - Within 30 mi of an urban area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Within 30")$urb_cat_perc), 0)`% | `r round(median(subset(urb_dist_areas_r1, label == "Within 30")$urb_cat_perc), 0)`% | `r round(min(subset(urb_dist_areas_r1, label == "Within 30")$urb_cat_perc), 0)`% | `r round(max(subset(urb_dist_areas_r1, label == "Within 30")$urb_cat_perc), 0)`% |
-| RS3 - >30 mi away from an arban area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% | `r round(median(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% | `r round(min(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% | `r round(max(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% |
+| RS3 - >30 mi away from an urban area (% of county land) | `r round(mean(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% | `r round(median(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% | `r round(min(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% | `r round(max(subset(urb_dist_areas_r1, label == "Over 30")$urb_cat_perc), 0)`% |
 |  RS3 - Developed land (% of county land) |  `r round(subset(r1_means, var_name_clean == "Developed Land")$mean, 0)`% | `r round(subset(r1_means, var_name_clean == "Developed Land")$median, 0)`%  |  `r round(subset(r1_means, var_name_clean == "Developed Land")$min, 0)`% | `r round(subset(r1_means, var_name_clean == "Developed Land")$max, 0)`%  |
 |  RS4, RU5 - Farm density (farms/km$^2$) |  `r round(subset(r1_means, var_name_clean == "Farm Density")$mean*247.1053814672, 2)` | `r round(subset(r1_means, var_name_clean == "Farm Density")$median*247.1053814672, 2)`  |  `r round(subset(r1_means, var_name_clean == "Farm Density")$min*247.1053814672, 2)` | `r round(subset(r1_means, var_name_clean == "Farm Density")$max*247.1053814672, 2)`  |
 |  RS4, RU5 - Recreation land (% of county land) |  `r round(subset(r1_means, var_name_clean == "Recreation Land")$mean, 1)`% | `r round(subset(r1_means, var_name_clean == "Recreation Land")$median, 1)`%  |  `r round(subset(r1_means, var_name_clean == "Recreation Land")$min, 1)`% | `r round(subset(r1_means, var_name_clean == "Recreation Land")$max, 1)`%  |
@@ -1190,7 +1190,7 @@ Because clustering models are sensitive to their initialization, we ran each mod
 
 In the resource model, the following indicators were redundant: (1) land in farms, (2) percent cropland, (3) percent federal land, (4) percent non-federal land near a major roadway, (5) distance to a national park, (6) accommodation and food service jobs, (7) percent change in farms, (8) percent change in cropland, and (9) the second principal component for farm size. The optimal number of clusters was 5, and the optimal cluster shape was EVI [diagonal distribution, with equal volume, variable shape, and orientation on the coordinate axes in dimensional space, @scrucca2023].
 
-In the actors model, the following indicators were redundant: (1) the second principle component of employment, (2) percent retired, (3) average age, (4) median household income, (5) completion of high school, (6) attainment of a Bachelor's degree, (7) racial composition, (8) farm tenure, and (9) percent farms with net loss. The optimal number of clusters was 5, and the optimal cluster shape was EVI [diagonal distribution, with equal volume, variable shape, and orientation on the coordinate axes in dimensional space, @scrucca2023].
+In the actors model, the following indicators were redundant: (1) the second principal component of employment, (2) percent retired, (3) average age, (4) median household income, (5) completion of high school, (6) attainment of a Bachelor's degree, (7) racial composition, (8) farm tenure, and (9) percent farms with net loss. The optimal number of clusters was 5, and the optimal cluster shape was EVI [diagonal distribution, with equal volume, variable shape, and orientation on the coordinate axes in dimensional space, @scrucca2023].
 
 ## Resource Archetypes
 
@@ -1215,7 +1215,7 @@ read.csv("data/model results/drmod_resource.csv") %>%
   
 ```
 
-We used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Finally, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
+We used dimension reduction to maximally separate clusters, which is similar to principal component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Finally, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
 
 :::
 
@@ -1878,7 +1878,7 @@ read.csv("data/model results/drmod_actors.csv") %>%
   
 ```
 
-we used dimension reduction to maximally separate clusters, which is similar to principle component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Then, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
+we used dimension reduction to maximally separate clusters, which is similar to principal component analysis [@scrucca2023]. We multiplied the contribution of each indicator to each reduced dimension by the overall explanatory power of each dimension, then summed each variable's contributions. Then, we divided each variable's "contribution" by the sum of all contributions to get a relative contribution score.
 
 :::
 
