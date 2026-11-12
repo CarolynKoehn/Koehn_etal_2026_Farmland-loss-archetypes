@@ -223,6 +223,19 @@ layout <- c(
 map_w_counties + guide_area() + inset + inset_us + plot_layout(design=layout, guides="collect")
 ```
 
+```{r}
+#| label: "fig-study-area to PDF"
+#| eval: false
+
+cairo_pdf("figures/Figure_1.pdf",
+    width = 8.5,
+    height = 6,
+    fallback_resolution = 1200,
+    antialias = "none")
+map_w_counties + guide_area() + inset + inset_us + plot_layout(design=layout, guides="collect")
+dev.off()
+```
+
 
 The Snake River Plain ecoregion of the US [@ecoregions] intersects with 26 counties in the state of Idaho (109,700 km$^2$, @fig-study-area). It contains productive croplands [@freedgood2020], localized yet rapidly growing highly developed urban areas [@census_metro], and public rangelands grazed by livestock [@freedgood2020]. This region features two primary ecological zones, the river plain and the shrub steppe, and a diverse range of social systems, from urban and exurban systems to dryland agriculture and rural public lands, that together form a diverse array of social-ecological systems [@aho2022]. 
 
@@ -394,6 +407,36 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
         panel.grid.major.y = element_blank())
 ```
 
+```{r}
+#| label: "fig-R-CIs to EPS"
+#| eval: false
+
+cairo_ps("figures/Figure_2.eps",
+    width = 8,
+    height = 8.5,
+    fallback_resolution = 1200,
+    antialias = "none")
+ci_clust$Resource %>%
+  mutate(cluster = factor(cluster,
+                          levels = c("R1", "R5", "R4", "R2", "R3"),
+                          labels = c("R1", "R2", "R3", "R4", "R5"))) %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Resource$indicator,
+                                  labels = rel_inf$Resource$pretty_label)) %>%
+ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
+  geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
+  geom_point(show.legend = FALSE) +
+  geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
+  facet_wrap(vars(cluster)) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
+  scale_x_continuous(breaks = c(-0.5, 0, 0.5), limits = c(-0.55, 0.8)) +
+  labs(x = "Cluster mean\n(centered and scaled)", y = "") +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        panel.grid.major.y = element_blank())
+dev.off()
+```
+
 #### Cluster R1: Flattest land, with urban services
 
 Characteristic resources of R1 are a higher extent of developed land, higher housing density, higher access to highways and urban areas, more healthcare workers, and flatter land (@fig-R-CIs, @suppfigb-R-ranges). This cluster has the highest percentage of small farms of all the resource clusters (@supptblb-data-r1). These counties have experienced higher cropland loss and developed land gain compared to other resource clusters (@suppfigb-R-ranges). This cluster is home to Boise, the largest city in Idaho, and neighboring Canyon County, known for its high quality farmland but experiencing urban sprawl from the Boise metropolitan area (@fig-cluster-maps; see @sec-canyon for qualitative analysis).
@@ -446,6 +489,36 @@ ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
   theme_bw() +
   theme(text = element_text(size = 14),
         panel.grid.major.y = element_blank())
+```
+
+```{r}
+#| label: "fig-A-CIs to EPS"
+#| eval: false
+
+cairo_ps("figures/Figure_3.eps",
+    width = 7.5,
+    height = 6,
+    fallback_resolution = 1200,
+    antialias = "none")
+ci_clust$Actors %>%
+  mutate(cluster = factor(cluster,
+                          levels = c("A1", "A2", "A5", "A3", "A4"),
+                          labels = c("A1", "A2", "A3", "A4", "A5"))) %>%
+  mutate(input_data_name = factor(input_data_name,
+                                  levels = rel_inf$Actors$indicator,
+                                  labels = rel_inf$Actors$pretty_label)) %>%
+ggplot(aes(x = mean, y = input_data_name, colour = sig)) +
+  geom_vline(xintercept=0, color = "grey70", linetype="dashed") +
+  geom_point(show.legend = FALSE) +
+  geom_linerange(aes(xmin = `X2.5.`, xmax = `X97.5.`), show.legend = FALSE) +
+  facet_wrap(vars(cluster)) +
+  scale_color_manual(limits = c(TRUE, FALSE), values = c("black", "grey65")) +
+  scale_x_continuous(breaks = c(-0.5, 0, 0.5), limits = c(-0.55, 0.8)) +
+  labs(x = "Cluster mean\n(centered and scaled)", y = "Variable") +
+  theme_bw() +
+  theme(text = element_text(size = 14),
+        panel.grid.major.y = element_blank())
+dev.off()
 ```
 
 #### Cluster A1: Urban counties with high population growth
@@ -572,6 +645,19 @@ actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot
 
 :::
 
+```{r}
+#| label: "fig-cluster-maps to PDF"
+#| eval: false
+
+cairo_pdf("figures/Figure_4.pdf",
+    width = 13,
+    height = 7,
+    fallback_resolution = 1200,
+    antialias = "none")
+actor_map + resource_map + free(assoc_tbl) + plot_layout(design = design) + plot_annotation(tag_levels = "a")
+dev.off()
+```
+
 ### Change over time {#sec-transitions}
 
 There was one resource transition in the study period: Gem County transitioned from R3 (flat lands moderately near to natural amenities and urban services) to R2 (flat lands near urban services with more agriculture) in 2000 (@fig-cluster-maps). This can be attributed to Emmett, the largest town in the county, officially meeting the US Census standards for an urban area (see @sec-urbareas) in 2000 so that many more county lands were in or closer to an urban area compared to 1990. There were two types of actor transitions present that each occurred in multiple counties: a transition from A5 (rural counties) to A4 (small town counties) and a transition from A4 (small town counties) to A2 (small cities; @fig-cluster-maps). All these transitions, both in resource and actor archetypes, are the effects of growing populations and the creation or expansion of dense centers of population.
@@ -618,6 +704,44 @@ ggplot(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A
   scale_y_break(breaks = c(0.05,0.19), scales = c(10, 0.1), expand = FALSE, symbol="slash") +
   theme_bw() +
   theme(text = element_text(size = 14))
+```
+
+```{r}
+#| label: "fig-resource-actor-combo to PNG"
+#| eval: false
+
+png(filename = "figures/Figure_5.png",
+    width = 10.5,
+    height = 6,
+    units = "in",
+    res = 1200)
+ggplot(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+       data= county_barcodes) +
+  geom_hline(yintercept = mean_pvr_aoi, linetype="dashed") +
+  geom_text(aes(x=9.8, y=mean_pvr_aoi-0.01, label="Avg Study Area PVR"), hjust="right", inherit.aes = F, data=data.frame()) +
+  geom_segment(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+               inherit.aes = F,
+               aes(x=convert_perc+0.5, xend=convert_perc,
+                   y=convert_pvr-0.01, yend=convert_pvr)) +
+  geom_text(data=subset(county_barcodes, county %in% c("Teton", "Canyon", "Twin Falls")), 
+            inherit.aes = F,
+            aes(x=convert_perc+0.5, y=convert_pvr-0.01, label=county), hjust="left") +
+  geom_point(aes(x=convert_perc, y=convert_pvr, shape=barcode_R_lab, color = barcode_A_lab),
+             data= county_barcodes, size=4) +
+  labs(x="Farmland Converted to Development (%)",
+       y="Avg PVR of Converted Land") +
+  scale_color_manual(name="Actor Type", 
+                     values = c("black", viridis::turbo(n=6, direction=-1, begin=0.075, end=0.95)),
+                     limits = c("A1", "A2", "A3", "A4➞A2", "A4", "A5➞A4" ,"A5" )) +
+  scale_shape_manual(name = "Resource Type", values = c(7,17,18,16,15,9),
+                     limits = c("R1", "R2", "R3➞R2", "R3", "R4" ,"R5" )) +
+  scale_y_continuous(limits = c(0,0.5), expand = FALSE, breaks = c(0, seq(0.2,0.5,0.1))) +
+  scale_x_continuous(limits = c(-0.2,24), expand = FALSE, breaks = c(seq(0,10,2), 23,24)) +
+  scale_x_break(breaks = c(10,23), scales = c(0.1,10), expand = FALSE, symbol="slash", space = 0.5) +
+  scale_y_break(breaks = c(0.05,0.19), scales = c(10, 0.1), expand = FALSE, symbol="slash") +
+  theme_bw() +
+  theme(text = element_text(size = 14))
+dev.off()
 ```
 
 
